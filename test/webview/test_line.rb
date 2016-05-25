@@ -24,7 +24,7 @@
 
 if !(defined? $ENVIR)
   $ENVIR = true
-  require_relative '../env.rb'
+  require_relative '../../config.rb'
 end
 
 
@@ -33,6 +33,7 @@ require "test/unit"
 require 'shoulda'
 
 require 'mdarray'
+require 'mdarray-sol'
 
 class DCFXTest < Test::Unit::TestCase
 
@@ -50,6 +51,7 @@ class DCFXTest < Test::Unit::TestCase
 
       # Read the data
       ndx = MDArray.double("VALE_2014.csv", true)
+      
       # Assing heading to the columns.  We cannot read the header from the file as 
       # we are storing in an MDArray double.  Could maybe add headers to MDArrays, but
       # it might be better to let Datasets be done in SciCom only.
@@ -113,16 +115,16 @@ class DCFXTest < Test::Unit::TestCase
         .group(:reduce_sum)
         .x(:time, [date.min, date.max])  # sets the x scale
 
-      db.plot(1400, 600)
+      db.plot(1200, 600)
 
       # Example of executing a javascript inside the GUI window
       Sol.eval("d3.select(\"body\").append(\"div\").text(\"hi there\");")
       
       # Javascript in a here document (nice Ruby style!)
-      Sol.eval(<<EOS)
+      Sol.eval(<<-EOS)
            d3.select("body").append("div").text("hi there again!!");
            d3.select("body").append("div").text("hi there again the third time!!");
-EOS
+      EOS
 
       # wait three seconds before proceeding, allowing time for charts viewing
       sleep(3)
