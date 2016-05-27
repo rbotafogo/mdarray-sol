@@ -28,22 +28,37 @@ if !(defined? $ENVIR)
 end
 
 
+require 'rubygems'
+require "test/unit"
+require 'shoulda'
+
 require 'mdarray'
 require 'mdarray-sol'
 require 'jcsv'
 
+class DCFXTest < Test::Unit::TestCase
 
-# Read the data
-vale = Jcsv.reader("VALE_2014.csv", format: :mdarray, dtype: :double,
-                   dimensions: [:date])
-ndx = vale.read
+  context "Engine test" do
 
+    setup do
 
-# db = Sol.dashboard("VALE_2014", ndx, ndx[:_data_])
+    end
 
+    #-------------------------------------------------------------------------------------
+    #
+    #-------------------------------------------------------------------------------------
+
+    should "allow complex grid specification and slideshow" do
+
+      # Read the data
 =begin
+      # Right way of reading!
+      vale = Jcsv.reader("VALE_2014.csv", format: :mdarray, dtype: :double,
+                         dimensions: [:date])
+      data = vale.read
+      data.print
+=end
       ndx = MDArray.double("VALE_2014.csv", true)
-      ndx.print
       
       # Assing heading to the columns.  We cannot read the header from the file as 
       # we are storing in an MDArray double.  Could maybe add headers to MDArrays, but
@@ -115,8 +130,8 @@ ndx = vale.read
       
       # Javascript in a here document (nice Ruby style!)
       Sol.eval(<<-EOS)
-           d3.select("body").append("div").text("hi there again!!");
-           d3.select("body").append("div").text("hi there again the third time!!");
+        d3.select("body").append("div").text("hi there again!!");
+        d3.select("body").append("div").text("hi there again the third time!!");
       EOS
 
       # wait three seconds before proceeding, allowing time for charts viewing
@@ -167,4 +182,3 @@ ndx = vale.read
   
 end
 
-=end

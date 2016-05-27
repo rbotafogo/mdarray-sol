@@ -21,89 +21,13 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-require 'jrubyfx'
-require 'singleton'
-
-require_relative 'dcfx'
-require_relative 'scale'
-require_relative 'interval'
 require_relative 'bootstrap'
-
-#==========================================================================================
-#
-#==========================================================================================
 
 class Sol
 
-  #------------------------------------------------------------------------------------
-  #
-  #------------------------------------------------------------------------------------
-  
-  def self.camelcase(str, *separators)
-    
-    case separators.first
-      
-    when Symbol, TrueClass, FalseClass, NilClass
-      first_letter = separators.shift
-    end
-    
-    separators = ['_', '\s'] if separators.empty?
-    
-    # str = self.dup
-    
-    separators.each do |s|
-      str = str.gsub(/(?:#{s}+)([a-z])/){ $1.upcase }
-    end
-    
-    case first_letter
-    when :upper, true
-      str = str.gsub(/(\A|\s)([a-z])/){ $1 + $2.upcase }
-    when :lower, false
-      str = str.gsub(/(\A|\s)([A-Z])/){ $1 + $2.downcase }
-    end
-    
-    str
-    
-  end
-  
-  #------------------------------------------------------------------------------------
-  #
-  #------------------------------------------------------------------------------------
-
-  def self.dashboard(name, data, dimension_labels, date_columns = [])
-    return Dashboard.new(name, data, dimension_labels, date_columns)
-  end
-
-  #------------------------------------------------------------------------------------
-  #
-  #------------------------------------------------------------------------------------
-
-  def self.eval(scrpt)
-    Bridge.instance.send(:gui, :executeScript, scrpt)
-  end
-
-  #------------------------------------------------------------------------------------
-  #
-  #------------------------------------------------------------------------------------
-
-  def self.add_data(js_variable, data)
-    Bridge.instance.send(:window, :setMember, js_variable, data)
-  end
-
-  #------------------------------------------------------------------------------------
-  # Remove everything from the GUI
-  #------------------------------------------------------------------------------------
-
-  def self.delete_all
-
-    eval(<<EOS)
-      d3.selectAll(\"div\").remove();
-EOS
-    
-  end
-
   #==========================================================================================
-  #
+  # This class executes in another thread than the GUI thread.  Communication between the
+  # Dashboard and the GUI (WebView) is done through the Bridge class.
   #==========================================================================================
   
   class Dashboard
@@ -112,9 +36,13 @@ EOS
     attr_reader :data
     attr_reader :dimension_labels
     attr_reader :date_columns     # columns that have date information
-    attr_reader :properties
+    
+    # list of properties to be added to the dashboard.  These are Javascript sentences
+    # that will be added at the right time to the embeded browser.  Dashboard properties
+    # should be added before charts are added.
+    attr_reader :properties       
 
-    attr_reader :charts
+    attr_reader :charts           # All the charts to be added to the dashboard
     attr_reader :scene
     attr_reader :script           # automatically generated javascript script for this dashboard
 
@@ -139,20 +67,20 @@ EOS
 
       # Access the bridge to communicate with DCFX. Bridge is a singleton class
       @bridge = Bridge.instance
+
       # prepare a bootstrap scene specification for this dashboard
       @scene = Bootstrap.new
+      
       @charts = Hash.new
       @properties = Hash.new
       @base_dimensions = Hash.new
       @has_data = false           # initialy dashboard has no data
       @demo_script = false
       
-      super()
-
     end
    
     #------------------------------------------------------------------------------------
-    #
+    # Property that defines how to format date information.  Uses d3 time format.
     #------------------------------------------------------------------------------------
  
     def time_format(val = nil)
@@ -162,7 +90,8 @@ EOS
     end
 
     #------------------------------------------------------------------------------------
-    # 
+    # @arg dim_name: name of the dimension
+    # @arg dim: the actual crossfilter dimension (a column in the dataset)
     #------------------------------------------------------------------------------------
 
     def prepare_dimension(dim_name, dim)
@@ -203,7 +132,6 @@ EOS
       chart.elastic_y(true)
       chart.x_axis_label(x_column)
       chart.y_axis_label(y_column)
-      # p "type: #{type}, x_column #{x_column}, y_column #{y_column}, name #{name}"
       chart.group(:reduce_sum)
 
       @charts[name] = chart
@@ -212,7 +140,8 @@ EOS
     end
 
     #------------------------------------------------------------------------------------
-    #
+    # Converts the @base_dimensions into Javascript code to define the crossfilters´
+    # dimensions.
     #------------------------------------------------------------------------------------
 
     def dimensions_spec
@@ -238,16 +167,17 @@ EOS
       data = "#{@name.downcase}_data"
       
       # convert the data to JSON format
-      scrpt = <<EOS
+      scrpt = <<-EOS
 
-      var #{dashboard} = new DCDashboard();
-      #{dashboard}.convert(#{@date_columns});
-      // Make variable data accessible to all charts
-      var #{data} = #{dashboard}.getData();
-      //$('#help').append(JSON.stringify(#{data}));
-      // add data to crossfilter and call it 'facts'.
-      #{facts} = crossfilter(#{data});
-EOS
+        var #{dashboard} = new DCDashboard();
+        #{dashboard}.convert(#{@date_columns});
+        // Make variable data accessible to all charts
+        var #{data} = #{dashboard}.getData();
+        //$('#help').append(JSON.stringify(#{data}));
+        // add data to crossfilter and call it 'facts'.
+        #{facts} = crossfilter(#{data});
+
+      EOS
 
       @properties.each_pair do |key, value|
         scrpt << value
@@ -265,56 +195,67 @@ EOS
 
       # scrpt will have the javascript specification
       scrpt = String.new
+      
       # add dashboard properties
       scrpt << props
 
+      # Only for debbugin.  If a demo_script is given then it will be executed.
       if (@demo_script)
         add_message(@demo_script)
         return
       end
 
-      # add bootstrap container if it wasn't specified by the user
+      # add bootstrap container if it wasn't specified by the user.  
       @scene.create_grid((keys = @charts.keys).size, keys) if !@scene.specified?
       scrpt << @scene.bootstrap
+      
       # add dimensions (the x dimension)
       scrpt << dimensions_spec
+      
       # add charts
       @charts.each do |name, chart|
         # add the chart specification
         scrpt << chart.js_spec if !chart.nil?
       end
+      
       # render all charts
       scrpt += "dc.renderAll();"
 
+      # sends a message to the gui to execute the given script
       add_message(:gui, :executeScript, scrpt)
 
     end
     
     #------------------------------------------------------------------------------------
-    #
+    # When we re_run a script, there is no need to add the dashboard properties
+    # again
     #------------------------------------------------------------------------------------
     
     def re_run
 
+      # scrpt will have the javascript specification
+      scrpt = String.new
+
       # add bootstrap container if it wasn't specified by the user
       @scene.create_grid((keys = @charts.keys).size, keys) if !@scene.specified?
-
-      scrpt = String.new
       scrpt << @scene.bootstrap
+
       # add charts
       @charts.each do |name, chart|
         # add the chart specification
         scrpt << chart.js_spec if !chart.nil?
       end
+      
       # render all charts
       scrpt += "dc.renderAll();"
 
+      # sends a message to the gui to execute the given script
       add_message(:gui, :executeScript, scrpt)
       
     end
     
     #------------------------------------------------------------------------------------
-    #
+    # Cleans the scene and the charts, preparing for new visualization.
     #------------------------------------------------------------------------------------
 
     def clean
@@ -359,7 +300,8 @@ EOS
     private
     
     #------------------------------------------------------------------------------------
-    # This method is to be called only by the GUI
+    # To add data to the WebView we should use Sol.add_data that uses the proper
+    # communication channel.
     #------------------------------------------------------------------------------------
 
     def add_data
@@ -378,47 +320,6 @@ EOS
     
   end
   
-  private
-  
-  #==========================================================================================
-  #
-  #==========================================================================================
-
-  class Bridge
-    include Singleton
-
-    attr_reader :queue            # comunication queue
-    attr_reader :cv               # conditional variable
-    attr_reader :mutex            # mutex
-
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-    
-    def initialize
-      @queue = java.util.concurrent::LinkedBlockingQueue.new(1)
-      @cv = ConditionVariable.new
-      @mutex = Mutex.new
-    end
-
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def send(*message)
-      @queue.put(message)
-    end
-
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def take
-      @queue.take()
-    end
-    
-  end
-
 end
 
 require_relative 'chart'

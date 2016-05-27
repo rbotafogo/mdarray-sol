@@ -26,6 +26,9 @@ require_relative "base_chart"
 require_relative "coordinate_chart"
 require_relative "margins"
 require_relative "stack"
+require_relative 'scale'
+require_relative 'interval'
+
 
 #==========================================================================================
 #
@@ -111,10 +114,10 @@ class Sol
 
     def header
 
-    <<EOS
+    <<-EOS
     var #{@name} = dc.#{@jstype}(\"##{@spot}\"); 
     #{@group}
-EOS
+    EOS
 
     end
 

@@ -21,6 +21,7 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-require_relative '../config'
+require 'jrubyfx'
 
-require_relative 'webview/dashboard'
+require_relative '../config'
+require_relative 'webview/sol'
