@@ -32,7 +32,6 @@ require 'rubygems'
 require "test/unit"
 require 'shoulda'
 
-require 'mdarray'
 require 'mdarray-sol'
 require 'jcsv'
 
@@ -123,13 +122,13 @@ class DCFXTest < Test::Unit::TestCase
         .group(:reduce_sum)
         .x(:time, [date.min, date.max])  # sets the x scale
 
-      db.plot(1200, 600)
+      db.plot
 
       # Example of executing a javascript inside the GUI window
-      Sol.eval("d3.select(\"body\").append(\"div\").text(\"hi there\");")
-      
+      db.eval("d3.select(\"body\").append(\"div\").text(\"hi there\");")
+
       # Javascript in a here document (nice Ruby style!)
-      Sol.eval(<<-EOS)
+      db.eval(<<-EOS)
         d3.select("body").append("div").text("hi there again!!");
         d3.select("body").append("div").text("hi there again the third time!!");
       EOS

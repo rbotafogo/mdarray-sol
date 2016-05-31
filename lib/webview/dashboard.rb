@@ -21,6 +21,7 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
+require_relative 'js'
 require_relative 'bootstrap'
 
 class Sol
@@ -30,7 +31,7 @@ class Sol
   # Dashboard and the GUI (WebView) is done through the Bridge class.
   #==========================================================================================
   
-  class Dashboard
+  class Dashboard < JS
 
     attr_reader :name
     attr_reader :data
@@ -38,28 +39,22 @@ class Sol
     attr_reader :date_columns     # columns that have date information
     
     # list of properties to be added to the dashboard.  These are Javascript sentences
-    # that will be added at the right time to the embeded browser.  Dashboard properties
+    # that will be added at the right time to the embedded browser.  Dashboard properties
     # should be added before charts are added.
-    attr_reader :properties       
+    attr_reader :properties
 
     attr_reader :charts           # All the charts to be added to the dashboard
     attr_reader :scene
     attr_reader :script           # automatically generated javascript script for this dashboard
 
-    attr_reader :bridge           # communication channel
-
     attr_reader :base_dimensions  # dimensions used by crossfilter
 
-    # If a javascript script is added to demo_script, then this script will be executed
-    # by the dashboard.
-    attr_reader :demo_script
-
     #------------------------------------------------------------------------------------
-    # Launches the UI and passes self so that it can add elements to it.
+    #
     #------------------------------------------------------------------------------------
 
     def initialize(name, data, dimension_labels, date_columns = [])
-
+      
       @name = name
       @data = data
       @dimension_labels = dimension_labels
@@ -74,8 +69,10 @@ class Sol
       @charts = Hash.new
       @properties = Hash.new
       @base_dimensions = Hash.new
-      @has_data = false           # initialy dashboard has no data
-      @demo_script = false
+      @runned  = false                      # dashboard has never executed
+
+      # adds the dashboard data to the Browser
+      add_data
       
     end
    
@@ -95,7 +92,6 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def prepare_dimension(dim_name, dim)
-      # @base_dimensions[Sol.camelcase(dim_name.to_s)] = dim
       @base_dimensions[dim_name + "Dimension"] = dim
       return self
     end
@@ -199,12 +195,6 @@ class Sol
       # add dashboard properties
       scrpt << props
 
-      # Only for debbugin.  If a demo_script is given then it will be executed.
-      if (@demo_script)
-        add_message(@demo_script)
-        return
-      end
-
       # add bootstrap container if it wasn't specified by the user.  
       @scene.create_grid((keys = @charts.keys).size, keys) if !@scene.specified?
       scrpt << @scene.bootstrap
@@ -222,7 +212,7 @@ class Sol
       scrpt += "dc.renderAll();"
 
       # sends a message to the gui to execute the given script
-      add_message(:gui, :executeScript, scrpt)
+      @bridge.send(:gui, :executeScript, scrpt)
 
     end
     
@@ -250,7 +240,7 @@ class Sol
       scrpt += "dc.renderAll();"
 
       # sends a message to the gui to execute the given script
-      add_message(:gui, :executeScript, scrpt)
+      @bridge.send(:gui, :executeScript, scrpt)
       
     end
     
@@ -267,26 +257,20 @@ class Sol
     # Launches the UI and passes self so that it can add elements to it.
     #------------------------------------------------------------------------------------
     
-    def plot(width = 1000, height = 500)
-
-      Thread.new { DCFX.launch(self, width, height) }  if !DCFX.launched?
+    def plot
 
       # Remove all elements from the dashboard.  This could be changed in future releases
       # of the library.
-      Sol.delete_all
+      delete_all
 
-      if (!@has_data)
-        add_data
+      if (!@runned )
         run
         clean
+        runned = true
       else
         re_run
       end
-      
-      @bridge.mutex.synchronize {
-        @bridge.cv.wait(@bridge.mutex)
-      }
-      
+
     end
 
     #------------------------------------------------------------------------------------
@@ -307,15 +291,6 @@ class Sol
     def add_data
       Sol.add_data("native_array", @data.nc_array)
       Sol.add_data("labels", @dimension_labels.nc_array)
-      @has_data = true
-    end
-
-    #------------------------------------------------------------------------------------
-    # Adds a new message to the dashboard.  This message will be consumed by the GUI
-    #------------------------------------------------------------------------------------
-    
-    def add_message(*message)
-      @bridge.queue.put(message)
     end
     
   end

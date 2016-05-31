@@ -3,7 +3,7 @@
 ##########################################################################################
 # @author Rodrigo Botafogo
 #
-# Copyright © 2015 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
+# Copyright © 2013 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
 # and distribute this software and its documentation, without fee and without a signed 
 # licensing agreement, is hereby granted, provided that the above copyright notice, this 
 # paragraph and the following two paragraphs appear in all copies, modifications, and 
@@ -21,8 +21,16 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-require 'jrubyfx'
-require 'mdarray'
+if !(defined? $ENVIR)
+  $ENVIR = true
+  require_relative '../../config.rb'
+end
 
-require_relative '../config'
-require_relative 'webview/sol'
+require 'mdarray-sol'
+
+js = Sol.js
+js.eval("d3.select(\"body\").append(\"div\").text(\"hi there\");")
+
+js.eval(<<-EOF)
+  d3.select("body").append("div").text("hi there again!");
+EOF

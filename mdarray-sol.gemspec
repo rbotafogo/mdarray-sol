@@ -33,6 +33,7 @@ EOF
 
   gem.add_dependency('jrubyfx','~>1.1')
   gem.add_runtime_dependency('mdarray', '~> 0.5')
+  gem.add_runtime_dependency('opal', '~> 0.9')
   
   gem.add_development_dependency('shoulda')
   gem.add_development_dependency('simplecov', [">= 0.7.1"])

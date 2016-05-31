@@ -61,9 +61,13 @@ class Sol
       # sets the communication between the GUI and the dashboard so that we can add new
       # graphics and visualizations to the Web browser without going through the GUI, i.e,
       # we want to drive the visualization through our Ruby scripts and not directly
-      # through the GUI.
-      service = MyService.new
-      service.set_on_succeeded(MyHandle.new(@web_engine, service))
+      # through the GUI. Creates a GuiCommunication service that will execute in a loop
+      # and will wait for messages that should be executed on the Gui thread (JavaFX
+      # Application).  In order to actually send a message one needs to use the
+      # communication "Bridge" by doing:
+      # Bridge.instance.send(<receiver>, :executeScript, <javascript>)
+      service = GuiCommunication.new
+      service.set_on_succeeded(ExecMessages.new(@web_engine, service))
       
       #--------------------------------------------------------------------------------------
       # User Interface
@@ -125,9 +129,9 @@ class Sol
     #
     #----------------------------------------------------------------------------------------
     
-    def self.launch(dashboard, width, height)
+    # def self.launch(dashboard, width, height)
+    def self.launch(width, height)
       DCFX.launched = true
-      DCFX.dashboard = dashboard
       DCFX.width = width
       DCFX.height = height
       super()
