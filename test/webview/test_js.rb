@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
 ##########################################################################################
-# @author Rodrigo Botafogo
-#
 # Copyright © 2013 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
 # and distribute this software and its documentation, without fee and without a signed 
 # licensing agreement, is hereby granted, provided that the above copyright notice, this 
@@ -21,16 +19,79 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-if !(defined? $ENVIR)
-  $ENVIR = true
-  require_relative '../../config.rb'
-end
+require 'rubygems'
+require "test/unit"
+require 'shoulda'
 
+require '../../config' if @platform == nil
 require 'mdarray-sol'
 
+
+class SciComTest < Test::Unit::TestCase
+
+  context "B environment" do
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    setup do 
+
+    end
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "interface with simple objects" do
+      
+      assert_equal(1, B.eval("1"))
+      assert_equal(true, B.eval("true"))
+      assert_equal(false, B.eval("false"))
+      assert_equal(nil, B.eval("null"))
+      assert_equal("this is a string", B.eval("'this is a string'"))
+      assert_equal(10.345, B.eval("10.345"))
+      
+    end
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "obtain javascript objects" do
+      
+      # B.eval("var car = {type:\"Fiat\", model:\"500\", color:\"white\"};")
+      B.eval(<<-EOF)
+        var car = {
+          type: "Fiat",
+          model: "500",
+          color: "white",
+          print: function(par) {return par.type;}
+        }
+      EOF
+      
+      car = B.eval("car;")
+      # p B.eval("typeof car['print']")
+      assert_equal("Fiat", car.type)
+      assert_equal("500", car.model)
+      assert_equal("white", car.color)
+
+    end
+    
+  end
+
+end
+
+
+=begin
 js = Sol.js
 js.eval("d3.select(\"body\").append(\"div\").text(\"hi there\");")
 
 js.eval(<<-EOF)
   d3.select("body").append("div").text("hi there again!");
+  var numberFloat = 123.45678;
+  d3.select("body").append("div").text(numberFloat.$round(2));
+  var myVar = Opal.Variable.$new();
+  d3.select("body").append("div").text(myVar.$hello());
 EOF
+=end

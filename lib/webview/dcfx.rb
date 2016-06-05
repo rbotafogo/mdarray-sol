@@ -25,7 +25,7 @@
 class Sol  
   
   #==========================================================================================
-  # This is the GUI thread.  It is the mais JRubyFX application.
+  # This is JRubyFX application.
   #==========================================================================================
 
   class DCFX < JRubyFX::Application
@@ -48,26 +48,13 @@ class Sol
     #----------------------------------------------------------------------------------------
     
     def start(stage)
-      
-      browser = WebView.new
-      @web_engine = browser.getEngine()
-      
-      # Load configuration file.  This loads all the Javascript scripts onto the embbeded
-      # web browser
-      f = Java::JavaIo.File.new("#{File.dirname(__FILE__)}/config.html")
-      fil = f.toURI().toURL().toString()
-      @web_engine.load(fil)
-      
-      # sets the communication between the GUI and the dashboard so that we can add new
-      # graphics and visualizations to the Web browser without going through the GUI, i.e,
-      # we want to drive the visualization through our Ruby scripts and not directly
-      # through the GUI. Creates a GuiCommunication service that will execute in a loop
-      # and will wait for messages that should be executed on the Gui thread (JavaFX
-      # Application).  In order to actually send a message one needs to use the
-      # communication "Bridge" by doing:
-      # Bridge.instance.send(<receiver>, :executeScript, <javascript>)
-      service = GuiCommunication.new
-      service.set_on_succeeded(ExecMessages.new(@web_engine, service))
+
+      # Create the singleton Webview with the webview instance variable as a pointer
+      # to a javaFX WebView
+      Webview.instance.webview = WebView.new
+      webview = Webview.instance.webview
+      web_engine = Webview.instance.web_engine
+      comm_channel = Webview.instance.comm_channel
       
       #--------------------------------------------------------------------------------------
       # User Interface
@@ -85,18 +72,18 @@ class Sol
       # add filters to the filter menu
       # add_filters
       # menu_bar.get_menus.add_all(menu_filters)
-      
-      @web_engine.getLoadWorker().stateProperty().
+
+      web_engine.getLoadWorker().stateProperty().
         addListener(ChangeListener.impl do |ov, old_state, new_state|
-                      service.start()
+                      comm_channel.start()
                     end)
-      
+
       with(stage, title: "Sol Charting Library (based on DC.js)") do
         Platform.set_implicit_exit(false)
         layout_scene(DCFX.width, DCFX.height, :oldlace) do
           pane = border_pane do
             top menu_bar 
-            center browser
+            center webview
             # right script_button
           end
         end
@@ -129,7 +116,6 @@ class Sol
     #
     #----------------------------------------------------------------------------------------
     
-    # def self.launch(dashboard, width, height)
     def self.launch(width, height)
       DCFX.launched = true
       DCFX.width = width

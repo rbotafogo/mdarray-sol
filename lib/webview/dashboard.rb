@@ -297,4 +297,3 @@ class Sol
   
 end
 
-require_relative 'chart'
