@@ -25,7 +25,7 @@ require 'shoulda'
 
 require '../../config' if @platform == nil
 require 'mdarray-sol'
-
+require 'json'
 
 class SciComTest < Test::Unit::TestCase
 
@@ -59,19 +59,21 @@ class SciComTest < Test::Unit::TestCase
     #--------------------------------------------------------------------------------------
 
     should "obtain javascript objects" do
+
+      struct = {:type => "Fiat", :model => "500"}
+      p struct.to_json
       
-      # B.eval("var car = {type:\"Fiat\", model:\"500\", color:\"white\"};")
       B.eval(<<-EOF)
         var car = {
           type: "Fiat",
           model: "500",
           color: "white",
-          print: function(par) {return par.type;}
+          print: function(val1, val2) {return this.type + val1 + val2;}
         }
       EOF
       
-      car = B.eval("car;")
-      # p B.eval("typeof car['print']")
+      car = B.pull("car")
+      p car.print(1, 2)
       assert_equal("Fiat", car.type)
       assert_equal("500", car.model)
       assert_equal("white", car.color)

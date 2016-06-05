@@ -125,10 +125,10 @@ class DCFXTest < Test::Unit::TestCase
       db.plot
 
       # Example of executing a javascript inside the GUI window
-      db.eval("d3.select(\"body\").append(\"div\").text(\"hi there\");")
+      B.eval("d3.select(\"body\").append(\"div\").text(\"hi there\");")
 
       # Javascript in a here document (nice Ruby style!)
-      db.eval(<<-EOS)
+      B.eval(<<-EOS)
         d3.select("body").append("div").text("hi there again!!");
         d3.select("body").append("div").text("hi there again the third time!!");
       EOS

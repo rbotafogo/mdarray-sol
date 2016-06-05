@@ -31,7 +31,7 @@ class Sol
   # Dashboard and the GUI (WebView) is done through the Bridge class.
   #==========================================================================================
   
-  class Dashboard < JS
+  class Dashboard
 
     attr_reader :name
     attr_reader :data
@@ -261,7 +261,7 @@ class Sol
 
       # Remove all elements from the dashboard.  This could be changed in future releases
       # of the library.
-      delete_all
+      B.delete_all
 
       if (!@runned )
         run
