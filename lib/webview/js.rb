@@ -22,94 +22,9 @@
 ##########################################################################################
 
 require 'thread'
+require_relative 'jsobject'
 
 class Sol
-
-  class JSObject
-
-    attr_reader :jsobject
-    attr_reader :jsvar
-    attr_reader :refresh
-
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def initialize(jsobject)
-      @jsobject = jsobject
-      @jsvar = nil
-      @refresh = false
-      js
-    end
-
-    #----------------------------------------------------------------------------------------
-    # Push the object into the JS evaluator.  Check to see if this object already has an JS
-    # value (jsvar).  The jsvar is just a string of the form sc_xxxxxxxx. This string will be
-    # an JS variable that holds the JSObject.  
-    #----------------------------------------------------------------------------------------
-    
-    def js
-
-      if (@jsvar == nil)
-        
-        # create a new variable name to hold this object inside JS
-        @jsvar = "sc_#{SecureRandom.hex(8)}"
-        
-        # if this object already has a jsobject value then assign to @jsvar the existing
-        # jsobject, otherwise, assign itself to @jsvar.  If a jsobject already exists
-        # then set the refresh flag to true, so that we know that the jsobject was
-        # changed.
-        if (@jsobject.nil?)
-          B.assign(@jsvar, self)
-        else
-          @refresh = true
-          B.assign(@jsvar, @jsobject)
-        end
-        
-        # Whenever a variable is injected in JS, it is also added to the stack.
-        # After eval, every injected variable is removed from JS making sure that we
-        # do not have memory leak.
-        # Renjin.stack << self
-        
-      end
-      
-      @jsvar
-      
-    end
-
-    #----------------------------------------------------------------------------------------
-    # * @return true if this JSObject already points to a jsobject in JS environment
-    #----------------------------------------------------------------------------------------
-    
-    def jsobject?
-      jsobject != nil
-    end
-    
-    #----------------------------------------------------------------------------------------
-    #
-    #----------------------------------------------------------------------------------------
-
-    def typeof(var)
-      B.eval("typeof #{@jsvar}['#{var}']")
-    end
-
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def method_missing(symbol, *args)
-      name = symbol.id2name
-      # checks the type of this JSObject
-      if (typeof(name) == "function")
-        (args.size > 0)? B.eval("#{@jsvar}['#{name}'](#{args.join(",")})") :
-          B.eval("#{@jsvar}['#{name}']()")
-      else
-        @jsobject.getMember(name)
-      end
-      
-    end
-    
-  end
   
   #==========================================================================================
   # Class to communicate with the embedded browser (Webview), by sending javascript
@@ -119,6 +34,43 @@ class Sol
   class Js
     include Singleton
 
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def typeof(obj)
+      case obj
+      when String
+        "string"
+      when Numeric
+        "number"
+      when TrueClass
+        "boolean"
+      else
+        B.eval("typeof #{obj.js}")
+      end
+    end
+    
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def instanceof(obj, type)
+      
+      case type
+      when "array"
+        B.eval("#{obj.js} instanceof Array")
+      when "function"
+        B.eval("#{obj.js} instanceof Function")
+      when "object"
+        B.eval("#{obj.js} instanceof Object")
+      else
+        raise "Wrong type: #{type} for instanceof operator"
+      end
+
+    end
+
+      
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------

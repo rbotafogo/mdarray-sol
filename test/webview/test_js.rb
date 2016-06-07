@@ -43,6 +43,14 @@ class SciComTest < Test::Unit::TestCase
     #
     #--------------------------------------------------------------------------------------
 
+    should "test" do
+
+    end
+    
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
     should "interface with simple objects" do
       
       assert_equal(1, B.eval("1"))
@@ -60,23 +68,51 @@ class SciComTest < Test::Unit::TestCase
 
     should "obtain javascript objects" do
 
-      struct = {:type => "Fiat", :model => "500"}
-      p struct.to_json
-      
       B.eval(<<-EOF)
         var car = {
           type: "Fiat",
-          model: "500",
+          model: 500,
           color: "white",
-          print: function(val1, val2) {return this.type + val1 + val2;}
+          sold: true,
+          info: [1, 2, 3, 4],
+          print: function() {return this.type;}
+        }
+
+        var out = {
+          data: car
         }
       EOF
       
       car = B.pull("car")
-      p car.print(1, 2)
+
       assert_equal("Fiat", car.type)
-      assert_equal("500", car.model)
+      assert_equal(500, car.model)
       assert_equal("white", car.color)
+      assert_equal(true, car.sold)
+
+      assert_equal("object", B.typeof(car))
+      assert_equal("string", B.typeof(car.type))
+      assert_equal("number", B.typeof(car.model))
+      assert_equal("boolean", B.typeof(car.sold))
+      assert_equal("function", B.typeof(car.print))
+
+      # Fix arguments
+      p car.print.call("#{car.js}")
+      p car.print.exec
+                   
+      assert_equal(true, B.instanceof(car, "object"))
+      assert_equal(true, B.instanceof(car.info, "array"))
+      assert_equal(true, B.instanceof(car.print, "function"))
+      assert_equal(true, B.instanceof(car.print, "object"))
+      assert_equal(false, B.instanceof(car, "array"))
+      assert_equal(false, B.instanceof(car.info, "function"))
+      assert_equal(false, B.instanceof(car.print, "array"))
+
+      assert_equal(4, car.info.length)
+      
+      out = B.pull("out")
+      assert_equal("Fiat", out.data.type)
+      
 
     end
     
