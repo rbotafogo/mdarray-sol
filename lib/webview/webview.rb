@@ -95,12 +95,20 @@ class Sol
     def handle(event)
       
       receiver, method, *args = event.getSource().getValue()
+
+      p receiver
+      p method
+      p args
       
       case receiver
       when :gui
         receiver = @web_engine
       when :window
         receiver = @window
+      when Java::ComSunWebkitDom::JSObject
+        # it´s ok to be a JSOBject as a receiver
+        # p method
+        # p args
       else
         raise "Unknown message receiver #{receiver}"
       end

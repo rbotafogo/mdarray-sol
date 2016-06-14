@@ -114,15 +114,81 @@ class Sol
     end
 
     #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+    
+    def method_missing(symbol, *args)
+      
+      name = symbol.id2name
+      
+      if name =~ /(.*)=$/
+        ret = assign($1,args[0])
+      else
+        if (eval("#{name} instanceof Function") )
+          ret = eval("#{name}(#{parse(*args)})")
+        else
+          ret = eval("#{name}")
+        end
+      end
+      
+      ret
+      
+    end
+    
+    #------------------------------------------------------------------------------------
     # Deletes all divs from the Browser
     #------------------------------------------------------------------------------------
-
+    
     def delete_all
       eval(<<-EOS)
         d3.selectAll(\"div\").remove();
       EOS
     end
-
+    
+    #----------------------------------------------------------------------------------------
+    # Parse an argument and returns a piece of R script needed to build a complete R
+    # statement.
+    #----------------------------------------------------------------------------------------
+    
+    def parse(*args)
+      
+      p "parse called"
+      
+      params = Array.new
+      
+      args.each do |arg|
+        case arg
+        when Numeric
+          params << arg
+        when String
+          params << "\"#{arg}\""
+        when Symbol
+          var = eval("#{arg.to_s}")
+          params << var.r
+        when TrueClass
+          params << "true"
+        when FalseClass
+          params << "false"
+        when nil
+          params << "null"
+        when Hash
+          arg.each_pair do |key, value|
+            # k = key.to_s.gsub(/__/,".")
+            params << "#{key.to_s.gsub(/__/,'.')} = #{parse(value)}"
+            # params << "#{k} = #{parse(value)}"
+          end
+        when Sol::JSObject, Array, MDArray
+          params << arg.js
+        else
+          raise "Unknown parameter type for JS: #{arg}"
+        end
+        
+      end
+      
+      params.join(",")
+      
+    end
+    
   end
   
   #------------------------------------------------------------------------------------
@@ -190,4 +256,3 @@ class Sol
   
 end
 
-B = Sol::Js.instance

@@ -63,8 +63,9 @@ class Sol
     #
     #------------------------------------------------------------------------------------
 
-    def exec(*args)
-      B.eval("#{@exec.js}()")
+    def send(*args)
+      args = parse(*args)
+      B.eval("#{@exec.js}(#{args})")
     end
     
     #------------------------------------------------------------------------------------
@@ -72,8 +73,8 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def method_missing(symbol, *args)
-      name = symbol.id2name
-      build(B.eval("#{@jsvar}.call(#{args.join(",")})"))
+      args = parse(*args)
+      build(B.eval("#{@jsvar}.call(#{args})"))
     end
 
   end

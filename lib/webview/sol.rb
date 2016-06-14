@@ -93,13 +93,18 @@ class Sol
     @height = height
     Thread.new { DCFX.launch(@width, @height) }  if !DCFX.launched?
   end
-
   
 end
 
 require_relative 'webview'
 require_relative 'dashboard'
 require_relative 'js'
+require_relative 'callback'
+
+B = Sol::Js.instance
 
 # start the Gui
 Sol.start(1300, 500)
+
+$d3 = B.eval("d3")
+$dc = B.eval("dc")

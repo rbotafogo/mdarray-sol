@@ -3,6 +3,7 @@ require 'opal-jquery'
 require 'rake/testtask'
 
 require_relative 'version'
+require_relative 'config'
 
 name = "#{$gem_name}-#{$version}.gem"
 
@@ -26,12 +27,35 @@ task :build do
 end
 
 #==========================================================================================
-# Compiling Java classes (Not working!)
+# Compiling Java classes
 #==========================================================================================
 
-rule '.class' => '.java' do |t|
-  sh "javac #{t.source}"
+desc "Compile java to mdarray-sol.jar"
+task :javac do
+  files = Dir["#{Sol.src_dir}/**/*.java"]
+  jars = Dir["#{Sol.vendor_dir}/*.jar"]
+  classpath_directive = (jars.size > 0)? "-classpath #{jars.join(';')}" : ""
+
+  sh "javac #{classpath_directive} -d #{Sol.classes_dir} #{files.join(' ')}"
 end
+
+#==========================================================================================
+#
+#==========================================================================================
+
+desc 'Make jar file'
+task :make_jar do
+
+  Dir.chdir(Sol.classes_dir)
+  classes = Dir['**/*.class']
+  p classes
+  sh "jar -cf #{Sol.target_dir}/mdarray_sol.jar #{classes.join(' ')}"
+
+end
+
+#==========================================================================================
+#
+#==========================================================================================
 
 Rake::TestTask.new do |t|
   t.libs << "test"
