@@ -152,8 +152,6 @@ class Sol
     
     def parse(*args)
       
-      p "parse called"
-      
       params = Array.new
       
       args.each do |arg|

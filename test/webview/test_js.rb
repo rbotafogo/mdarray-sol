@@ -43,6 +43,67 @@ class MDArraySolTest < Test::Unit::TestCase
     #
     #--------------------------------------------------------------------------------------
 
+    should "callback Ruby classes" do
+
+      # class Log < Java::RbMdarray_sol.Callback
+      class Log
+        include Java::RbMdarray_sol.RubyCallbackInterface
+        
+        def run(*args)
+          message = args[0]
+        end
+        
+      end
+
+      class RBObject
+        include Java::RbMdarray_sol.RubyCallbackInterface
+
+        attr_reader :rbobject
+        
+        def initialize(rbobject)
+          @rbobject = rbobject
+        end
+
+        def run(args)
+          message = args[0]
+          args.shift
+          @rbobject.send(message, *args)
+        end
+          
+      end
+
+      mdarray = RBObject.new(MDArray.double([2, 2], [1, 2, 3, 4]))
+      # p mdarray.run(["get", [1, 1]])
+      
+      B.assign("mdarray", mdarray)
+      B.args = ["get", [1, 1]]
+      B.eval("var val = mdarray.run(args)")
+      p B.val
+      
+=begin      
+      log = Log.new
+      B.assign("log", log)
+      B.eval("var mes = log.run('this is a message to log')")
+      p B.mes
+      
+      cb = Java::RbMdarray_sol.Callback.new
+      
+      B.assign("cb", cb)
+      B.eval("var str = cb.run('hello world')")
+      p B.str
+
+      B.jarray = [1, 2]
+      
+      B.eval("var obj = cb.run(jarray)")
+      p B.obj
+=end      
+    end
+    
+=begin
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
     should "access and retrieve javascript objects and functions" do
 
       B.js_obj = "This is a string"
@@ -61,7 +122,7 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal("hello world", B.func3("hello", "world"))
       
     end
-
+=end
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------

@@ -40,11 +40,12 @@ class Sol
     #
     #----------------------------------------------------------------------------------------
 
-    def send(method, *args)
+    def run(*args)
       # puts "method #{method} called with args: #{args}"
       # The returned value from the called method should be packed.
-      raise method
-      Callback.pack(@ruby_obj.send(method, *args))
+      # $d3.select("body").append("div").text("hello there")
+      raise "I´m running #{args}"
+      # Callback.pack(@ruby_obj.send(method, *args))
     end
     
     #----------------------------------------------------------------------------------------
@@ -60,6 +61,7 @@ class Sol
     #----------------------------------------------------------------------------------------
 
     def build(class_name, *args)
+      raise "#{class_name} #{args}"
       klass = get_class(class_name)
       klass.send("new", *args)
     end

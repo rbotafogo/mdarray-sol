@@ -23,11 +23,12 @@ package rb.mdarray_sol;
 
 public interface RubyCallbackInterface {
 
-    public Object run();
-    public Object run(Object... args);
-    public Object get_class(String class_name);
-    public Object build(String class_name);
-    public Object build(String class_name, Object... args);
+    public Object run(Object obj1);
+    public Object run(Object[] args);
+    // public Object run(Object... args);
+    // public Object get_class(String class_name);
+    // public Object build(String class_name);
+    // public Object build(String class_name, Object... args);
 
     /*
     public Object send();
