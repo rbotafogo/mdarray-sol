@@ -29,8 +29,8 @@ class Sol
   #==========================================================================================
 
   class RubyRich < JRubyFX::Application
-    java_import com.teamdev.jxbrowser.chromium.Browser;
-    java_import com.teamdev.jxbrowser.chromium.javafx.BrowserView;
+    java_import com.teamdev.jxbrowser.chromium.Browser
+    java_import com.teamdev.jxbrowser.chromium.javafx.BrowserView
     
     #----------------------------------------------------------------------------------------
     #
@@ -65,12 +65,6 @@ class Sol
       #--------------------------------------------------------------------------------------
       # User Interface
       #--------------------------------------------------------------------------------------
-=begin      
-      web_engine.getLoadWorker().stateProperty().
-        addListener(ChangeListener.impl do |ov, old_state, new_state|
-                      comm_channel.start()
-                    end)
-=end
       
       with(stage, title: "Ruby Rich Client Interface - RubyRich") do
         Platform.set_implicit_exit(false)

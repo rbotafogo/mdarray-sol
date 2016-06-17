@@ -21,7 +21,8 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-require 'thread'
+require 'singleton'
+
 require_relative 'jsobject'
 
 class Sol
@@ -90,17 +91,8 @@ class Sol
     def eval(scrpt)
 
       # p scrpt
-      ret = @browser.executeJavaScriptAndReturnValue(scrpt)
+      JSObject.build(@browser.executeJavaScriptAndReturnValue(scrpt))
 
-=begin      
-      # if the return value is a Webview JSObject then wrap it in a Ruby JSObject
-      if (@browser.return_value.is_a? Java::ComSunWebkitDom::JSObject)
-        JSObject.new(@browser.return_value)
-      else
-        @browser.return_value
-      end
-=end
-      
     end
     
     #------------------------------------------------------------------------------------
@@ -108,7 +100,7 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def assign(name, data)
-      @browser.send(:window, :setMember, name, data)      
+      @browser.executeJavaScriptAndReturnValue("var name = #{data}")
     end
 
     #------------------------------------------------------------------------------------

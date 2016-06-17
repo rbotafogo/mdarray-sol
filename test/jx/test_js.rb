@@ -45,7 +45,16 @@ class MDArraySolTest < Test::Unit::TestCase
 
     should "interface with simple objects" do
 
-      p B.eval("1")
+      assert_equal(1, B.eval("1").int)
+      assert_equal(1.35, B.eval("1.35").double)
+
+
+      
+      B.eval(<<-EOT)
+        d3.select("body").append("div").text("hi there")
+      EOT
+      
+      
 =begin
       assert_equal(1, B.eval("1"))
       assert_equal(true, B.eval("true"))

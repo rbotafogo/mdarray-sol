@@ -21,14 +21,13 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-require 'singleton'
-
 #==========================================================================================
 #
 #==========================================================================================
 
 class Sol
-
+  java_import com.teamdev.jxbrowser.chromium.events.LoadAdapter
+  
   #------------------------------------------------------------------------------------
   #
   #------------------------------------------------------------------------------------
@@ -89,17 +88,41 @@ class Sol
   #------------------------------------------------------------------------------------
 
   def self.start(width, height)
+    
     @width = width
     @height = height
     Thread.new { RubyRich.launch(@width, @height) }  if !RubyRich.launched?
+    
     # wait for the browser to initialize.  browser should call B.resource.signal
     # after initialization
     B.mutex.synchronize {
       B.resource.wait(B.mutex)
     }
+
+    # Load configuration file.  This loads all the Javascript scripts onto the embbeded
+    # web browser
+    f = Java::JavaIo.File.new("#{File.dirname(__FILE__)}/config.html")
+    fil = f.toURI().toURL().toString()
+
+    B.browser.addLoadListener(
+      Class.new(LoadAdapter) {
+        def onFinishLoadingFrame(event)
+          if (event.isMainFrame)
+            # Just wait for the browser to finish loading
+            # the configuration file
+          end
+        end
+      }.new)
+    
+    B.browser.loadURL(fil)
+        
   end
   
 end
+
+#==========================================================================================
+#
+#==========================================================================================
 
 require_relative 'js'
 B = Sol::Js.instance
@@ -111,5 +134,5 @@ require_relative 'ruby_rich'
 # start the Gui
 Sol.start(1300, 500)
 
-# $d3 = B.eval("d3")
-# $dc = B.eval("dc")
+$d3 = B.eval("d3")
+$dc = B.eval("dc")

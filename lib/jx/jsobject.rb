@@ -21,79 +21,58 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-class JsArray
-  include Java::RbMdarray_sol.RubyCallbackInterface
-
-  attr_reader :array
-
-  def initialize(array)
-    @array = array
-  end
-  
-  def run()
-    return 1
-  end
-
-  #----------------------------------------------------------------------------------------
-  #
-  #----------------------------------------------------------------------------------------
-  
-  def get_class(class_name)
-    run("const_get", class_name)
-  end
-  
-  def build(class_name, *args)
-    klass = get_class(class_name)
-    klass.run("new", *args)
-  end
-  
-end
-
-
-require 'thread'
-
 class Sol
 
   class JSObject
 
-    attr_reader :jsobject
+    attr_reader :jsvalue
     attr_reader :jsvar
     attr_reader :refresh
     
     #------------------------------------------------------------------------------------
-    #
+    # Builds a new Ruby JSObject or one of its more specific subclasses from the given
+    # java jsvalue
     #------------------------------------------------------------------------------------
 
-    def initialize(jsobject)
-      @jsobject = jsobject
-      @jsvar = nil
-      @refresh = false
-      js
+    def self.build(jsvalue)
+
+      if (jsvalue.isArray())
+        p "Array"
+      elsif (jsvalue.isBoolean())
+        p "Boolean"
+      elsif (jsvalue.isBooleanObject())
+        p "BooleanObject"
+      elsif (jsvalue.isFunction())
+        p "Function"
+      elsif (jsvalue.isNull())
+        p "Null"
+      elsif (jsvalue.isNumber())
+        JSNumber.new(jsvalue.asNumber())
+      elsif (jsvalue.isNumberObject())
+        p "NumberObject"
+      elsif (jsvalue.isObject())
+        p "Object"
+      elsif (jsvalue.isString())
+        p "String"
+      elsif (jsvalue.isStringObject())
+        p "StringObject"
+      elsif (jsvalue.isUndefined())
+        p "Undefined"
+      else
+
+      end
+
     end
 
     #------------------------------------------------------------------------------------
-    # Builds a new Ruby JSObject or one of its more specific subclasses from the given
-    # java jsobject or basic type
+    #
     #------------------------------------------------------------------------------------
 
-    def build(jsobject, *args)
-
-      tmp_obj = nil
-
-      if (jsobject.is_a? Java::ComSunWebkitDom::JSObject)
-        tmp_obj = JSObject.new(jsobject)
-      else
-        return jsobject
-      end
-      
-      if (tmp_obj.function?)
-        func = JSFunction.new(@jsvar, jsobject)
-      elsif (tmp_obj.array?)
-        JSArray.new(jsobject)
-      else
-        tmp_obj
-      end
-      
+    def initialize(jsvalue)
+      @jsvalue = jsvalue
+      @jsvar = nil
+      @refresh = false
+      js
     end
 
     #----------------------------------------------------------------------------------------
@@ -113,11 +92,11 @@ class Sol
         # jsobject, otherwise, assign itself to @jsvar.  If a jsobject already exists
         # then set the refresh flag to true, so that we know that the jsobject was
         # changed.
-        if (@jsobject.nil?)
+        if (@jsvalue.nil?)
           B.assign(@jsvar, self)
         else
           @refresh = true
-          B.assign(@jsvar, @jsobject)
+          B.assign(@jsvar, @jsvalue)
         end
         
         # Whenever a variable is injected in JS, it is also added to the stack.
@@ -135,32 +114,8 @@ class Sol
     # * @return true if this JSObject already points to a jsobject in JS environment
     #----------------------------------------------------------------------------------------
     
-    def jsobject?
-      jsobject != nil
-    end
-    
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def function?
-      B.typeof(self) == "function"
-    end
-    
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def array?
-      B.instanceof(self, "array")
-    end
-
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def typeof
-      return "object"
+    def jsvalue?
+      jsvalue != nil
     end
     
     #------------------------------------------------------------------------------------
@@ -168,7 +123,7 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def set_member(name, value)
-      Bridge.instance.send(@jsobject, :setMember, name, value)
+      Bridge.instance.send(@jsvalue, :setMember, name, value)
     end
     
     #------------------------------------------------------------------------------------
@@ -178,9 +133,8 @@ class Sol
     def method_missing(symbol, *args)
       
       name = symbol.id2name
-      member = @jsobject.getMember(name)
-      # can be either a basic type or a JSObject.  Should create a method build and
-      # build should check the type a wrap it if necessary
+      member = @jsvalue.getMember(name)
+
       if (member.is_a? Java::ComSunWebkitDom::JSObject)
         if (B.eval("#{@jsvar}['#{name}'] instanceof Function"))
           if (args.size > 0)
@@ -200,6 +154,7 @@ class Sol
   end
   
 end
-  
+
+require_relative 'jsnumber'
 require_relative 'jsfunction'
 require_relative 'jsarray'
