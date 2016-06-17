@@ -62,22 +62,35 @@ class MDArraySolTest < Test::Unit::TestCase
         
         def initialize(rbobject)
           @rbobject = rbobject
+          @jarray = [].to_java
         end
 
         def run(args)
-          message = args[0]
-          args.shift
+          args = args.to_a
+          raise args.to_s
           @rbobject.send(message, *args)
+        end
+
+        def jsarray(args)
+          return @jarray
         end
           
       end
+
+      rb = RBObject.new(1)
+      p rb.jsarray(1)
 
       mdarray = RBObject.new(MDArray.double([2, 2], [1, 2, 3, 4]))
       # p mdarray.run(["get", [1, 1]])
       
       B.assign("mdarray", mdarray)
       B.args = ["get", [1, 1]]
-      B.eval("var val = mdarray.run(args)")
+      # B.eval("var val = mdarray.run(args)")
+      B.eval(<<-EOT)
+        var args = mdarray.jsarray(1)
+        args.append(1)
+        var val = mdarray.run(args)
+      EOT
       p B.val
       
 =begin      

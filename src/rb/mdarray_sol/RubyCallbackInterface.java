@@ -24,7 +24,7 @@ package rb.mdarray_sol;
 public interface RubyCallbackInterface {
 
     public Object run(Object obj1);
-    public Object run(Object[] args);
+    public Object jsarray(Object obj);
     // public Object run(Object... args);
     // public Object get_class(String class_name);
     // public Object build(String class_name);

@@ -26,5 +26,6 @@ require 'mdarray'
 
 require_relative '../config'
 
-require_relative 'webview/sol'
-require_relative 'charts/chart'
+# require_relative 'webview/sol'
+# require_relative 'charts/chart'
+require_relative 'jx/sol'

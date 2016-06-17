@@ -29,8 +29,8 @@ public class Callback implements RubyCallbackInterface {
 	return arg;
     }
     
-    public Object run(Object[] args) {
-	return args[0];
+    public Object jsarray(Object arg) {
+	return new String[1];
     }
     
 }
