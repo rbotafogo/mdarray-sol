@@ -45,31 +45,59 @@ class MDArraySolTest < Test::Unit::TestCase
 
     should "interface with simple objects" do
 
+      # Numbers
+      assert_equal(1, B.eval("1").byte)
+      assert_equal(1.345, B.eval("1.345").double)
+      assert_equal(10.345000267028809, B.eval("10.345").float)
       assert_equal(1, B.eval("1").int)
-      assert_equal(1.35, B.eval("1.35").double)
+      assert_equal(1234567890987654400, B.eval("1234567890987654321").long)
+      assert_equal(1.35, B.eval("1.35").value)      
 
+      # Boolean
+      assert_equal(true, B.eval("true").value)
+      assert_equal(false, B.eval("false").value)
 
-      
+      # Array
       B.eval(<<-EOT)
-        d3.select("body").append("div").text("hi there")
+        var cars = ["Saab", "Volvo", "BMW"];
       EOT
+
+      js_array = B.pull("cars")
+      assert_equal("Saab", js_array.get(0).value)
+      assert_equal("Volvo", js_array.get(1).value)
+      assert_equal("BMW", js_array.get(2).value)
       
-      
-=begin
-      assert_equal(1, B.eval("1"))
-      assert_equal(true, B.eval("true"))
-      assert_equal(false, B.eval("false"))
-      assert_equal(nil, B.eval("null"))
-      assert_equal("this is a string", B.eval("'this is a string'"))
-      assert_equal(10.345, B.eval("10.345"))
-=end
+      # assert_equal(nil, B.eval("null"))
+      # assert_equal("this is a string", B.eval("'this is a string'"))
       
     end
 
+=begin    
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
-=begin
+
+    should "interface with Java objects" do
+      
+      dbl = MDArray.double([2, 2], [1, 2, 3, 4])
+      B.assign("dbl", dbl.nc_array)
+      B.eval(<<-EOT)
+        var dbl2 = dbl.toString();
+      EOT
+
+      # jclass = java.lang.Class.forName("ucar.ma2.ArrayDouble$D2")
+      # p jclass
+      
+      p B.eval("dbl.get(0,0)").double
+      p B.eval("dbl.get(1,1)").double
+      # p B.eval("dbl2").double
+      
+    end
+    
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
     should "callback Ruby classes" do
 
       # class Log < Java::RbMdarray_sol.Callback
@@ -342,7 +370,7 @@ class MDArraySolTest < Test::Unit::TestCase
     #
     #--------------------------------------------------------------------------------------
 
-    should "work with d3" do
+    should "work with d3 and other javascript libraries" do
 
       $d3.select("body").append("div").text("hi there")
 
@@ -352,16 +380,3 @@ class MDArraySolTest < Test::Unit::TestCase
   end
 
 end
-
-=begin
-js = Sol.js
-js.eval("d3.select(\"body\").append(\"div\").text(\"hi there\");")
-
-js.eval(<<-EOF)
-  d3.select("body").append("div").text("hi there again!");
-  var numberFloat = 123.45678;
-  d3.select("body").append("div").text(numberFloat.$round(2));
-  var myVar = Opal.Variable.$new();
-  d3.select("body").append("div").text(myVar.$hello());
-EOF
-=end

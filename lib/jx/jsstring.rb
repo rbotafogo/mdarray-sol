@@ -3,7 +3,7 @@
 ##########################################################################################
 # @author Rodrigo Botafogo
 #
-# Copyright © 2013 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
+# Copyright © 2016 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
 # and distribute this software and its documentation, without fee and without a signed 
 # licensing agreement, is hereby granted, provided that the above copyright notice, this 
 # paragraph and the following two paragraphs appear in all copies, modifications, and 
@@ -23,38 +23,30 @@
 
 class Sol
 
-  class JSArray < JSObject
+  class JSString < JSObject
 
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
-
+    
     def typeof
-      return "array"
+      return "string"
     end
 
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
 
-    def array?
+    def value
+      @jsvalue.getStringValue()
+    end
+    
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def string?
       true
-    end
-    
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def get(index)
-      JSObject.build(@jsvalue.get(index))
-    end
-    
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def length
-      @jsvalue.length
     end
     
   end

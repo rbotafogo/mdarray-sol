@@ -21,6 +21,7 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
+require_relative 'js'
 
 class Sol  
   
@@ -37,12 +38,11 @@ class Sol
     #----------------------------------------------------------------------------------------
     
     class << self
-      
       attr_accessor :dashboard
       attr_accessor :width
       attr_accessor :height
       attr_accessor :launched
-      
+      attr_accessor :b
     end
     
     #----------------------------------------------------------------------------------------
@@ -51,16 +51,11 @@ class Sol
     
     def start(stage)
 
-      # Create the singleton Webview with the webview instance variable as a pointer
-      # to a javaFX WebView
-      # Webview.instance.webview = WebView.new
-      # webview = Webview.instance.webview
-      # web_engine = Webview.instance.web_engine
-      # comm_channel = Webview.instance.comm_channel
-
+      # Create a Browser and BrowserView and embedd it in FX.  Use the default Browser
+      # context.  Also create a javascript class for operating on this browser
       browser = Browser.new;
       browser_view = BrowserView.new(browser);
-      B.browser = browser
+      RubyRich.b = Js.new(browser)
       
       #--------------------------------------------------------------------------------------
       # User Interface
@@ -80,8 +75,28 @@ class Sol
         show
       end
 
-      B.resource.signal
-        
+      #--------------------------------------------------------------------------------------
+      # Load configuration file.  This loads all the Javascript scripts onto the embbeded
+      # web browser
+      #--------------------------------------------------------------------------------------
+
+      f = Java::JavaIo.File.new("#{File.dirname(__FILE__)}/config.html")
+      fil = f.toURI().toURL().toString()
+      
+      browser.addLoadListener(
+        Class.new(LoadAdapter) {
+          def onFinishLoadingFrame(event)
+            if (event.isMainFrame)
+              # Just wait for the browser to finish loading
+              # the configuration file
+            end
+          end
+        }.new)
+      
+      browser.loadURL(fil)
+      
+      Sol.resource.signal
+      
     end
     
     #----------------------------------------------------------------------------------------

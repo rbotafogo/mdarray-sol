@@ -21,12 +21,19 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
+require_relative 'ruby_rich'
+
 #==========================================================================================
 #
 #==========================================================================================
 
 class Sol
   java_import com.teamdev.jxbrowser.chromium.events.LoadAdapter
+
+    class << self
+      attr_accessor :mutex
+      attr_accessor :resource
+    end
   
   #------------------------------------------------------------------------------------
   #
@@ -71,51 +78,24 @@ class Sol
   #
   #------------------------------------------------------------------------------------
 
-  def self.js
-    return JS.new
-  end
-
-  #------------------------------------------------------------------------------------
-  #
-  #------------------------------------------------------------------------------------
-
-  def self.add_data(js_variable, data)
-    Bridge.instance.send(:window, :setMember, js_variable, data)
-  end
-
-  #------------------------------------------------------------------------------------
-  #
-  #------------------------------------------------------------------------------------
-
   def self.start(width, height)
     
+    @mutex = Mutex.new
+    @resource = ConditionVariable.new
     @width = width
     @height = height
+    
     Thread.new { RubyRich.launch(@width, @height) }  if !RubyRich.launched?
     
     # wait for the browser to initialize.  browser should call B.resource.signal
     # after initialization
-    B.mutex.synchronize {
-      B.resource.wait(B.mutex)
+    @mutex.synchronize {
+      @resource.wait(@mutex)
     }
-
-    # Load configuration file.  This loads all the Javascript scripts onto the embbeded
-    # web browser
-    f = Java::JavaIo.File.new("#{File.dirname(__FILE__)}/config.html")
-    fil = f.toURI().toURL().toString()
-
-    B.browser.addLoadListener(
-      Class.new(LoadAdapter) {
-        def onFinishLoadingFrame(event)
-          if (event.isMainFrame)
-            # Just wait for the browser to finish loading
-            # the configuration file
-          end
-        end
-      }.new)
     
-    B.browser.loadURL(fil)
-        
+    $d3 = RubyRich.b.eval("d3")
+    $dc = RubyRich.b.eval("dc")
+
   end
   
 end
@@ -124,15 +104,10 @@ end
 #
 #==========================================================================================
 
-require_relative 'js'
-B = Sol::Js.instance
-require_relative 'ruby_rich'
-
 # require_relative 'dashboard'
 # require_relative 'callback'
 
 # start the Gui
 Sol.start(1300, 500)
 
-$d3 = B.eval("d3")
-$dc = B.eval("dc")
+B = Sol::RubyRich.b

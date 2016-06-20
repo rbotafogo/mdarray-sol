@@ -37,13 +37,13 @@ class Sol
     def self.build(jsvalue)
 
       if (jsvalue.isArray())
-        p "Array"
+        JSArray.new(jsvalue)
       elsif (jsvalue.isBoolean())
-        p "Boolean"
+        JSBoolean.new(jsvalue)
       elsif (jsvalue.isBooleanObject())
         p "BooleanObject"
       elsif (jsvalue.isFunction())
-        p "Function"
+        JSFunction.new(jsvalue)
       elsif (jsvalue.isNull())
         p "Null"
       elsif (jsvalue.isNumber())
@@ -51,9 +51,9 @@ class Sol
       elsif (jsvalue.isNumberObject())
         p "NumberObject"
       elsif (jsvalue.isObject())
-        p "Object"
+        JSObject.new(jsvalue)
       elsif (jsvalue.isString())
-        p "String"
+        JSString.new(jsvalue)
       elsif (jsvalue.isStringObject())
         p "StringObject"
       elsif (jsvalue.isUndefined())
@@ -75,6 +75,54 @@ class Sol
       js
     end
 
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def array?
+      false
+    end
+
+    def boolean?
+      false
+    end
+
+    def boolean_object?
+      false
+    end
+
+    def function?
+      false
+    end
+
+    def nil?
+      false
+    end
+
+    def number?
+      false
+    end
+
+    def number_object?
+      false
+    end
+    
+    def object?
+      true
+    end
+    
+    def string?
+      false
+    end
+    
+    def string_object?
+      false
+    end
+    
+    def undefined?
+      false
+    end
+    
     #----------------------------------------------------------------------------------------
     # Push the object into the JS evaluator.  Check to see if this object already has an JS
     # value (jsvar).  The jsvar is just a string of the form sc_xxxxxxxx. This string will be
@@ -158,3 +206,5 @@ end
 require_relative 'jsnumber'
 require_relative 'jsfunction'
 require_relative 'jsarray'
+require_relative 'jsboolean'
+require_relative 'jsstring'

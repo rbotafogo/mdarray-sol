@@ -21,8 +21,6 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-require 'singleton'
-
 require_relative 'jsobject'
 
 class Sol
@@ -33,19 +31,15 @@ class Sol
   #==========================================================================================
 
   class Js
-    include Singleton
 
     attr_accessor :browser
-    attr_reader :mutex
-    attr_reader :resource
     
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
 
-    def initialize
-      @mutex = Mutex.new
-      @resource = ConditionVariable.new
+    def initialize(browser)
+      @browser = browser
     end
     
     #------------------------------------------------------------------------------------
@@ -53,16 +47,7 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def typeof(obj)
-      case obj
-      when String
-        "string"
-      when Numeric
-        "number"
-      when TrueClass
-        "boolean"
-      else
-        B.eval("typeof #{obj.js}")
-      end
+      obj.typeof
     end
     
     #------------------------------------------------------------------------------------
@@ -85,26 +70,24 @@ class Sol
     end
     
     #------------------------------------------------------------------------------------
-    #
+    # Evaluates the javascript script synchronously and then pack the result in a
+    # Ruby JSObject
     #------------------------------------------------------------------------------------
 
     def eval(scrpt)
-
-      # p scrpt
       JSObject.build(@browser.executeJavaScriptAndReturnValue(scrpt))
-
     end
     
     #------------------------------------------------------------------------------------
-    #
+    # Assign the data to the given named window property
     #------------------------------------------------------------------------------------
 
-    def assign(name, data)
-      @browser.executeJavaScriptAndReturnValue("var name = #{data}")
+    def assign(property_name, data)
+      browser.executeJavaScriptAndReturnValue("window").setProperty(property_name,data)
     end
 
     #------------------------------------------------------------------------------------
-    #
+    # Returns the given property from 'window'
     #------------------------------------------------------------------------------------
 
     def pull(name)
@@ -160,7 +143,7 @@ class Sol
           params << "\"#{arg}\""
         when Symbol
           var = eval("#{arg.to_s}")
-          params << var.r
+          params << var.js
         when TrueClass
           params << "true"
         when FalseClass

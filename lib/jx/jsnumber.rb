@@ -25,44 +25,78 @@ class Sol
 
   class JSNumber < JSObject
 
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def typeof
+      return "number"
+    end
+
+    #------------------------------------------------------------------------------------
     # Returns Byte presentation of the current number value.
+    #
+    #------------------------------------------------------------------------------------
+    
     def byte
       @jsvalue.getByte
     end
 
+    #------------------------------------------------------------------------------------
     # Returns Double presentation of the current number value.
+    #
+    #------------------------------------------------------------------------------------
+    
     def double
       @jsvalue.getDouble()
     end
 
+    #------------------------------------------------------------------------------------
     # Returns Float presentation of the current number value.
-    def Float
+    #------------------------------------------------------------------------------------
+
+    def float
       @jsvalue.getFloat()
     end
 
+    #------------------------------------------------------------------------------------
     #  Returns Integer presentation of the current number value.
+    #------------------------------------------------------------------------------------
+
     def int
       @jsvalue.getInteger()
     end
 
+    #------------------------------------------------------------------------------------
     # Returns Long presentation of the current number value.
+    #------------------------------------------------------------------------------------
+
     def long
       @jsvalue.getLong()
     end
 
+    #------------------------------------------------------------------------------------
     # Returns number value of the current JavaScript object if object
     # represents a primitive number or Number object, otherwise throws
     # IllegalStateException.
+    #------------------------------------------------------------------------------------
+
     def number_value
       @jsvalue.getNumberValue()
     end
 
+    #------------------------------------------------------------------------------------
     # Returns Short presentation of the current number value.
+    #------------------------------------------------------------------------------------
+
     def short
       @jsvalue.getShort()
     end
 
+    #------------------------------------------------------------------------------------
     # Returns the value of the current primitive instance.
+    #------------------------------------------------------------------------------------
+
     def value
       @jsvalue.getValue()
     end
