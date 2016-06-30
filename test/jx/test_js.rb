@@ -42,8 +42,8 @@ class MDArraySolTest < Test::Unit::TestCase
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
-
-    should "interface with simple objects" do
+=begin
+    should "interface with numbers" do
 
       # Numbers
       assert_equal(1, B.eval("1").byte)
@@ -51,15 +51,55 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal(10.345000267028809, B.eval("10.345").float)
       assert_equal(1, B.eval("1").int)
       assert_equal(1234567890987654400, B.eval("1234567890987654321").long)
-      assert_equal(1.35, B.eval("1.35").value)      
+      assert_equal(1.35, B.eval("1.35").value)
+      assert_equal(true, B.eval("1.35").number?)
+      assert_equal(false, B.eval("1.35").array?)
+      
+    end
 
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "interface with boolean" do
+      
       # Boolean
       assert_equal(true, B.eval("true").value)
       assert_equal(false, B.eval("false").value)
+      assert_equal(true, B.eval("false").boolean?)
 
+    end
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "interface with boolean objects" do
+      # BooleanValue
+      B.eval(<<-EOT)
+        var t = new Boolean(true)
+        var f = new Boolean(false)
+      EOT
+
+      t = B.pull("t")
+      f = B.pull("f")
+
+      assert_equal(true, t.value)
+      assert_equal(false, f.value)
+      assert_equal(true, t.boolean?)
+      assert_equal(false, t.nil?)
+
+    end
+      
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "interface with arrays" do
       # Array
       B.eval(<<-EOT)
         var cars = ["Saab", "Volvo", "BMW"];
+        console.log(typeof(cars))
       EOT
 
       js_array = B.pull("cars")
@@ -71,7 +111,22 @@ class MDArraySolTest < Test::Unit::TestCase
       # assert_equal("this is a string", B.eval("'this is a string'"))
       
     end
+=end
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
 
+    should "interface with functions" do
+
+      B.eval(<<-EOT)
+        var f = function sum(x, y) { return x + y; } 
+      EOT
+
+      f = B.pull("f")
+      p f.send(2, 3).value
+      
+    end
+    
 =begin    
     #--------------------------------------------------------------------------------------
     #

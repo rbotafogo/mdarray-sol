@@ -3,7 +3,7 @@
 ##########################################################################################
 # @author Rodrigo Botafogo
 #
-# Copyright © 2013 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
+# Copyright © 2016 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
 # and distribute this software and its documentation, without fee and without a signed 
 # licensing agreement, is hereby granted, provided that the above copyright notice, this 
 # paragraph and the following two paragraphs appear in all copies, modifications, and 
@@ -23,39 +23,32 @@
 
 class Sol
 
-  class JSFunction < JSObject
+  class JSBooleanObject < JSObject
 
-=begin    
-    def initialize(jsvalue)
-      p "I´m a function"
-      super(jsvalue)
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+    
+    def typeof
+      return "boolean"
     end
-=end
+
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def value
+      @jsvalue.getBooleanValue()
+    end
     
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
 
-    def typeof
-      return "function"
-    end
-
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def function?
+    def boolean?
       true
-    end
-
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def send(*args)
-      JSObject.build(@jsvalue.invoke(B.document, *args))
     end
     
   end
-  
+
 end

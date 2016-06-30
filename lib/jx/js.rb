@@ -24,6 +24,7 @@
 require_relative 'jsobject'
 
 class Sol
+
   
   #==========================================================================================
   # Class to communicate with the embedded browser (Webview), by sending javascript
@@ -31,15 +32,36 @@ class Sol
   #==========================================================================================
 
   class Js
-
-    attr_accessor :browser
+    java_import com.teamdev.jxbrowser.chromium.events.ConsoleListener
     
+    #========================================================================================
+    # Class RBListener listen for the Browser console.log messages
+    #========================================================================================
+    
+    class RBListener
+      include ConsoleListener
+      
+      def onMessage(event)
+        puts "JS> #{event.getMessage()}"
+      end
+    end
+
+    #========================================================================================
+    #
+    #========================================================================================
+    
+    attr_accessor :browser
+        
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
 
     def initialize(browser)
       @browser = browser
+
+      # listen for console events
+      @browser.addConsoleListener(RBListener.new)
+      
     end
     
     #------------------------------------------------------------------------------------
@@ -83,7 +105,15 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def assign(property_name, data)
-      browser.executeJavaScriptAndReturnValue("window").setProperty(property_name,data)
+      @browser.executeJavaScriptAndReturnValue("window").setProperty(property_name,data)
+    end
+
+    def window
+      @browser.executeJavaScriptAndReturnValue("window")
+    end
+
+    def document
+      @browser.executeJavaScriptAndReturnValue("document")
     end
 
     #------------------------------------------------------------------------------------

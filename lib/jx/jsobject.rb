@@ -41,11 +41,9 @@ class Sol
       elsif (jsvalue.isBoolean())
         JSBoolean.new(jsvalue)
       elsif (jsvalue.isBooleanObject())
-        p "BooleanObject"
+        JSBooleanObject.new(jsvalue)
       elsif (jsvalue.isFunction())
         JSFunction.new(jsvalue)
-      elsif (jsvalue.isNull())
-        p "Null"
       elsif (jsvalue.isNumber())
         JSNumber.new(jsvalue.asNumber())
       elsif (jsvalue.isNumberObject())
@@ -170,14 +168,6 @@ class Sol
     #
     #------------------------------------------------------------------------------------
 
-    def set_member(name, value)
-      Bridge.instance.send(@jsvalue, :setMember, name, value)
-    end
-    
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
     def method_missing(symbol, *args)
       
       name = symbol.id2name
@@ -207,4 +197,5 @@ require_relative 'jsnumber'
 require_relative 'jsfunction'
 require_relative 'jsarray'
 require_relative 'jsboolean'
+require_relative 'jsbooleanobject'
 require_relative 'jsstring'
