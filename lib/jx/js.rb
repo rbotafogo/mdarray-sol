@@ -21,6 +21,7 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
+require 'opal'
 require_relative 'jsobject'
 
 class Sol
@@ -108,9 +109,17 @@ class Sol
       @browser.executeJavaScriptAndReturnValue("window").setProperty(property_name,data)
     end
 
+    #------------------------------------------------------------------------------------
+    # Gets the Brwoser 'window' object
+    #------------------------------------------------------------------------------------
+
     def window
       @browser.executeJavaScriptAndReturnValue("window")
     end
+
+    #------------------------------------------------------------------------------------
+    # Gets the browser 'document' object
+    #------------------------------------------------------------------------------------
 
     def document
       @browser.executeJavaScriptAndReturnValue("document")
@@ -127,7 +136,7 @@ class Sol
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
-    
+
     def method_missing(symbol, *args)
       
       name = symbol.id2name
@@ -135,15 +144,17 @@ class Sol
       if name =~ /(.*)=$/
         ret = assign($1,args[0])
       else
-        if (eval("#{name} instanceof Function") )
-          ret = eval("#{name}(#{parse(*args)})")
-        else
-          ret = eval("#{name}")
+        if ((ret = B.pull(name)).function?)
+          if (args.size > 0)
+            if (args.size == 1 && args[0].nil?)
+              ret = ret.send
+            else
+              ret = ret.send(*args)
+            end
+          end
         end
       end
-      
       ret
-      
     end
     
     #------------------------------------------------------------------------------------

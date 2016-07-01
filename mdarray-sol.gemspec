@@ -34,13 +34,13 @@ EOF
   gem.add_dependency('jrubyfx','~>1.1')
   gem.add_runtime_dependency('mdarray', '~> 0.5')
   gem.add_runtime_dependency('mdarray-jCSV', '~> 0.6' )
+  gem.add_runtime_dependency('opal', '~> 0.9')
+  gem.add_runtime_dependency('opal-jquery', '~> 0.4')
   
   gem.add_development_dependency('shoulda')
   gem.add_development_dependency('simplecov', [">= 0.7.1"])
   gem.add_development_dependency('yard', [">= 0.8.5.2"])
   gem.add_development_dependency('kramdown', [">= 1.0.1"])
-  gem.add_development_dependency('opal', '~> 0.9')
-  gem.add_development_dependency('opal-jquery', '~> 0.4')
 
   # ensure the gem is built out of versioned files
   gem.files = Dir['Rakefile', 'version.rb', 'config.rb', '{lib,test}/**/*.rb', 'test/**/*.csv',

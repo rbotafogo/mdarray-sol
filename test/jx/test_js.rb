@@ -22,10 +22,11 @@
 require 'rubygems'
 require "test/unit"
 require 'shoulda'
+require 'json'
 
 require '../../config' if @platform == nil
 require 'mdarray-sol'
-require 'json'
+
 
 class MDArraySolTest < Test::Unit::TestCase
 
@@ -90,7 +91,7 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal(false, t.nil?)
 
     end
-      
+=end      
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
@@ -106,12 +107,18 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal("Saab", js_array.get(0).value)
       assert_equal("Volvo", js_array.get(1).value)
       assert_equal("BMW", js_array.get(2).value)
-      
-      # assert_equal(nil, B.eval("null"))
-      # assert_equal("this is a string", B.eval("'this is a string'"))
+
+      a2 = B.cars
+      assert_equal("Saab", a2.get(0).v)
+      assert_equal("Volvo", a2.get(1).v)
+      assert_equal("BMW", a2.get(2).v)
+            
+      assert_equal("Saab", a2[0].v)
+      assert_equal("Volvo", a2[1].v)
+      assert_equal("BMW", a2[2].v)
       
     end
-=end
+
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
@@ -119,11 +126,24 @@ class MDArraySolTest < Test::Unit::TestCase
     should "interface with functions" do
 
       B.eval(<<-EOT)
-        var f = function sum(x, y) { return x + y; } 
+        var f = function sum(x, y) { return x + y; };
+        var f2 = function myFunc() { return 1; } 
       EOT
 
       f = B.pull("f")
-      p f.send(2, 3).value
+      assert_equal(5, f.send(2, 3).value)
+
+      # Access function through '.' 
+      assert_equal(true, B.f2.function?)
+      assert_equal(17, B.f(8, 9).value)
+      
+      # In order to call a function with no arguments in javascript we need to either
+      # use the send method or call with nil as argument
+      assert_equal(1, B.f2(nil).v)
+
+      puts "json"
+      p [1, 2, 3].to_json
+      p ({a: 1, b: 2}).to_json
       
     end
     

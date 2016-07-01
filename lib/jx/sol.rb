@@ -93,8 +93,8 @@ class Sol
       @resource.wait(@mutex)
     }
     
-    $d3 = RubyRich.b.eval("d3")
-    $dc = RubyRich.b.eval("dc")
+    # $d3 = RubyRich.b.eval("d3")
+    # $dc = RubyRich.b.eval("dc")
 
   end
   
@@ -111,3 +111,4 @@ end
 Sol.start(1300, 500)
 
 B = Sol::RubyRich.b
+B.freeze
