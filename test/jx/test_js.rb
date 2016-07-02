@@ -22,7 +22,6 @@
 require 'rubygems'
 require "test/unit"
 require 'shoulda'
-require 'json'
 
 require '../../config' if @platform == nil
 require 'mdarray-sol'
@@ -43,18 +42,41 @@ class MDArraySolTest < Test::Unit::TestCase
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
-=begin
+
     should "interface with numbers" do
 
-      # Numbers
+      # Evaluate and return numbers
       assert_equal(1, B.eval("1").byte)
       assert_equal(1.345, B.eval("1.345").double)
       assert_equal(10.345000267028809, B.eval("10.345").float)
       assert_equal(1, B.eval("1").int)
       assert_equal(1234567890987654400, B.eval("1234567890987654321").long)
       assert_equal(1.35, B.eval("1.35").value)
+      
       assert_equal(true, B.eval("1.35").number?)
       assert_equal(false, B.eval("1.35").array?)
+
+      # Store a number into a javascript object
+      B.num = 1.234
+      assert_equal(1.234, B.num.double)
+      
+    end
+
+    #--------------------------------------------------------------------------------------
+    # A javascript NumberObject will be converted to a Number.
+    #--------------------------------------------------------------------------------------
+
+    should "interface with number objects" do
+
+      B.eval(<<-EOT)
+        var n1 = new Number(2.35)
+        var n2 = new Number(4.567)
+      EOT
+
+      assert_equal(2.35, B.n1.v)
+      assert_equal(4.567, B.n2.v)
+      
+      assert_equal(true, B.n2.number?)
       
     end
 
@@ -64,11 +86,18 @@ class MDArraySolTest < Test::Unit::TestCase
 
     should "interface with boolean" do
       
-      # Boolean
       assert_equal(true, B.eval("true").value)
       assert_equal(false, B.eval("false").value)
       assert_equal(true, B.eval("false").boolean?)
 
+      B.logt = true
+      B.logf = false
+      
+      assert_equal(true, B.logt.v)
+      assert_equal(false, B.logf.v)
+
+      assert_equal(true, B.logt.boolean?)
+      
     end
 
     #--------------------------------------------------------------------------------------
@@ -76,7 +105,7 @@ class MDArraySolTest < Test::Unit::TestCase
     #--------------------------------------------------------------------------------------
 
     should "interface with boolean objects" do
-      # BooleanValue
+
       B.eval(<<-EOT)
         var t = new Boolean(true)
         var f = new Boolean(false)
@@ -87,11 +116,44 @@ class MDArraySolTest < Test::Unit::TestCase
 
       assert_equal(true, t.value)
       assert_equal(false, f.value)
+
       assert_equal(true, t.boolean?)
       assert_equal(false, t.nil?)
 
+      assert_equal(true, B.t.v)
+      assert_equal(false, B.f.v)
+
     end
-=end      
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "interface with strings" do
+
+      B.str = "this is a string"
+      assert_equal("this is a string", B.str.v)
+      
+      assert_equal(true, B.str.string?)
+      
+    end
+    
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "interface with string objects" do
+
+      B.eval(<<-EOT)
+        var str = new String("this is a string")
+      EOT
+
+      assert_equal("this is a string", B.str.v)
+      
+      assert_equal(true, B.str.string?)
+      
+    end
+
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
@@ -100,7 +162,6 @@ class MDArraySolTest < Test::Unit::TestCase
       # Array
       B.eval(<<-EOT)
         var cars = ["Saab", "Volvo", "BMW"];
-        console.log(typeof(cars))
       EOT
 
       js_array = B.pull("cars")
@@ -118,7 +179,7 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal("BMW", a2[2].v)
       
     end
-
+    
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
@@ -141,11 +202,52 @@ class MDArraySolTest < Test::Unit::TestCase
       # use the send method or call with nil as argument
       assert_equal(1, B.f2(nil).v)
 
-      puts "json"
-      p [1, 2, 3].to_json
-      p ({a: 1, b: 2}).to_json
+      B.function(:add) { "function(num1, num2) { return num1 + num2; }" }
+      # p B.add(2, 3).v
       
     end
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "copy Ruby objects to javascript" do
+
+      # Create a Ruby Array
+      cars = ["Saab", "Volvo", "BMW"]
+
+      # Duplicate (copy) the Ruby Array as a javascript array
+      B.dup(:cars, cars)
+
+      assert_equal("Saab", B.cars[0].v)
+      assert_equal("Volvo", B.cars[1].v)
+      assert_equal("BMW", B.cars[2].v)
+
+      # A more complex array
+      data = [
+        {date: "2011-11-14T16:17:54Z", quantity: 2, total: 190, tip: 100, type: "tab"},
+        {date: "2011-11-14T16:20:19Z", quantity: 2, total: 190, tip: 100, type: "tab"},
+        {date: "2011-11-14T16:28:54Z", quantity: 1, total: 300, tip: 200, type: "visa"},
+        {date: "2011-11-14T16:30:43Z", quantity: 2, total: 90, tip: 0, type: "tab"},
+        {date: "2011-11-14T16:48:46Z", quantity: 2, total: 90, tip: 0, type: "tab"},
+        {date: "2011-11-14T16:53:41Z", quantity: 2, total: 90, tip: 0, type: "tab"},
+        {date: "2011-11-14T16:54:06Z", quantity: 1, total: 100, tip: 0, type: "cash"},
+        {date: "2011-11-14T16:58:03Z", quantity: 2, total: 90, tip: 0, type: "tab"},
+        {date: "2011-11-14T17:07:21Z", quantity: 2, total: 90, tip: 0, type: "tab"},
+        {date: "2011-11-14T17:22:59Z", quantity: 2, total: 90, tip: 0, type: "tab"},
+        {date: "2011-11-14T17:25:45Z", quantity: 2, total: 200, tip: 0, type: "cash"},
+        {date: "2011-11-14T17:29:52Z", quantity: 1, total: 200, tip: 100, type: "visa"}
+      ]
+
+      # Copy the data array to "data" element in javascript
+      B.dup(:data, data)
+      
+      assert_equal("2011-11-14T16:17:54Z", B.data[0].date.v)
+      assert_equal(1, B.data[2].quantity.v)
+      assert_equal(0, B.data[4].tip.v)
+
+    end
+
     
 =begin    
     #--------------------------------------------------------------------------------------

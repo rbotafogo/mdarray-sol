@@ -3,7 +3,7 @@
 ##########################################################################################
 # @author Rodrigo Botafogo
 #
-# Copyright © 2016 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
+# Copyright © 2013 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
 # and distribute this software and its documentation, without fee and without a signed 
 # licensing agreement, is hereby granted, provided that the above copyright notice, this 
 # paragraph and the following two paragraphs appear in all copies, modifications, and 
@@ -23,24 +23,24 @@
 
 class Sol
 
-  class JSBoolean < JSObject
+  class JSNumberObject < JSObject
 
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
 
     def value
-      @jsvalue.getBooleanValue()
+      return @jsvalue.valueOf()
     end
     
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
 
-    def boolean?
+    def number?
       true
     end
-    
+
   end
 
 end

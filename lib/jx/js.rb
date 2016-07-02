@@ -21,7 +21,8 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-require 'opal'
+# require 'opal'
+require 'json'
 require_relative 'jsobject'
 
 class Sol
@@ -34,6 +35,7 @@ class Sol
 
   class Js
     java_import com.teamdev.jxbrowser.chromium.events.ConsoleListener
+    java_import com.teamdev.jxbrowser.chromium.JSONString
     
     #========================================================================================
     # Class RBListener listen for the Browser console.log messages
@@ -66,50 +68,6 @@ class Sol
     end
     
     #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def typeof(obj)
-      obj.typeof
-    end
-    
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def instanceof(obj, type)
-      
-      case type
-      when "array"
-        B.eval("#{obj.js} instanceof Array")
-      when "function"
-        B.eval("#{obj.js} instanceof Function")
-      when "object"
-        B.eval("#{obj.js} instanceof Object")
-      else
-        raise "Wrong type: #{type} for instanceof operator"
-      end
-
-    end
-    
-    #------------------------------------------------------------------------------------
-    # Evaluates the javascript script synchronously and then pack the result in a
-    # Ruby JSObject
-    #------------------------------------------------------------------------------------
-
-    def eval(scrpt)
-      JSObject.build(@browser.executeJavaScriptAndReturnValue(scrpt))
-    end
-    
-    #------------------------------------------------------------------------------------
-    # Assign the data to the given named window property
-    #------------------------------------------------------------------------------------
-
-    def assign(property_name, data)
-      @browser.executeJavaScriptAndReturnValue("window").setProperty(property_name,data)
-    end
-
-    #------------------------------------------------------------------------------------
     # Gets the Brwoser 'window' object
     #------------------------------------------------------------------------------------
 
@@ -126,6 +84,34 @@ class Sol
     end
 
     #------------------------------------------------------------------------------------
+    # Evaluates the javascript script synchronously and then pack the result in a
+    # Ruby JSObject
+    #------------------------------------------------------------------------------------
+
+    def eval(scrpt)
+      JSObject.build(@browser.executeJavaScriptAndReturnValue(scrpt))
+    end
+    
+    #------------------------------------------------------------------------------------
+    # Assign the data to the given named window property
+    #------------------------------------------------------------------------------------
+
+    def assign(object, property_name, data)
+      @browser.object.setProperty(property_name,data)
+      object
+    end
+
+    #------------------------------------------------------------------------------------
+    # Assign the data to the given named window property
+    #------------------------------------------------------------------------------------
+
+    def assign_window(property_name, data)
+      window = B.window
+      window.setProperty(property_name, data)
+      window
+    end
+
+    #------------------------------------------------------------------------------------
     # Returns the given property from 'window'
     #------------------------------------------------------------------------------------
 
@@ -133,6 +119,14 @@ class Sol
       B.eval("#{name};")
     end
 
+    #------------------------------------------------------------------------------------
+    # Duplicates the given Ruby data into a javascript object in the Browser
+    #------------------------------------------------------------------------------------
+
+    def dup(name, data)
+      assign_window(name.to_s, JSONString.new(data.to_json))
+    end
+    
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
@@ -142,7 +136,7 @@ class Sol
       name = symbol.id2name
       
       if name =~ /(.*)=$/
-        ret = assign($1,args[0])
+        ret = assign_window($1,args[0])
       else
         if ((ret = B.pull(name)).function?)
           if (args.size > 0)

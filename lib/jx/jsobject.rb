@@ -26,8 +26,8 @@ class Sol
   class JSObject
 
     attr_reader :jsvalue
-    attr_reader :jsvar
-    attr_reader :refresh
+    # attr_reader :jsvar
+    # attr_reader :refresh
     
     #------------------------------------------------------------------------------------
     # Builds a new Ruby JSObject or one of its more specific subclasses from the given
@@ -45,17 +45,17 @@ class Sol
       elsif (jsvalue.isFunction())
         JSFunction.new(jsvalue)
       elsif (jsvalue.isNumber())
-        JSNumber.new(jsvalue.asNumber())
+        JSNumber.new(jsvalue)
       elsif (jsvalue.isNumberObject())
-        p "NumberObject"
-      elsif (jsvalue.isObject())
-        JSObject.new(jsvalue)
+        JSNumberObject.new(jsvalue)
       elsif (jsvalue.isString())
         JSString.new(jsvalue)
       elsif (jsvalue.isStringObject())
-        p "StringObject"
+        JSStringObject.new(jsvalue)
       elsif (jsvalue.isUndefined())
-        p "Undefined"
+        JSUndefined.new(jsvalue)
+      elsif (jsvalue.isObject())
+        JSObject.new(jsvalue)
       else
 
       end
@@ -68,9 +68,9 @@ class Sol
 
     def initialize(jsvalue)
       @jsvalue = jsvalue
-      @jsvar = nil
-      @refresh = false
-      js
+      # @jsvar = nil
+      # @refresh = false
+      # js
     end
 
     #------------------------------------------------------------------------------------
@@ -143,7 +143,7 @@ class Sol
     # value (jsvar).  The jsvar is just a string of the form sc_xxxxxxxx. This string will be
     # an JS variable that holds the JSObject.  
     #----------------------------------------------------------------------------------------
-    
+=begin
     def js
 
       if (@jsvar == nil)
@@ -172,7 +172,7 @@ class Sol
       @jsvar
       
     end
-
+=end
     #----------------------------------------------------------------------------------------
     # * @return true if this JSObject already points to a jsobject in JS environment
     #----------------------------------------------------------------------------------------
@@ -188,31 +188,38 @@ class Sol
     def method_missing(symbol, *args)
       
       name = symbol.id2name
-      member = @jsvalue.getMember(name)
+      member = @jsvalue.getProperty(name)
 
-      if (member.is_a? Java::ComSunWebkitDom::JSObject)
-        if (B.eval("#{@jsvar}['#{name}'] instanceof Function"))
-          if (args.size > 0)
-            if (args.size == 1 && args[0] == nil)
-              args.pop
-            end
-            return B.eval("#{@jsvar}['#{name}'](#{B.parse(*args)})")
-          end
-        end
-        build(member, *args)
+      if member =~ /(.*)=$/
+        ret = assign(self, $1, args[0])
       else
-        member
+        if (member.function?)
+          if (args.size > 0)
+            if (args.size == 1 && args[0].nil?)
+              ret = member.send
+            else
+              ret = member.send(*args)
+            end
+          end
+        else
+          ret = JSObject.build(member)
+        end
       end
-        
+      ret
+      
     end
-        
+    
   end
   
 end
 
 require_relative 'jsnumber'
+require_relative 'jsnumberobject'
 require_relative 'jsfunction'
 require_relative 'jsarray'
 require_relative 'jsboolean'
 require_relative 'jsbooleanobject'
 require_relative 'jsstring'
+require_relative 'jsstringobject'
+require_relative 'jsundefined'
+
