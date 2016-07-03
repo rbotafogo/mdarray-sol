@@ -202,9 +202,84 @@ class MDArraySolTest < Test::Unit::TestCase
       # use the send method or call with nil as argument
       assert_equal(1, B.f2(nil).v)
 
-      B.function(:add) { "function(num1, num2) { return num1 + num2; }" }
-      # p B.add(2, 3).v
+      # Define a function f3 in javascript.  This is  equivalent to the above
+      # B.eval...
+      B.function(:f3, <<-EOF)
+        add(x, y) { return x + y; } 
+      EOF
       
+      assert_equal(9, B.f3(4, 5).v)
+
+    end
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+    
+    should "access javascript objects" do
+
+      B.eval(<<-EOF)
+        var car = {
+          type: "Fiat",
+          model: 500,
+          color: "white",
+          sold: true,
+          info: [1, 2, 3, 4],
+          print: function(a, b) {return this.type + a + b;}
+        }
+
+        var out = {
+          data: car
+        }
+      EOF
+      
+      car = B.pull("car")
+      
+      assert_equal("Fiat", car.type.v)
+      assert_equal(500, car.model.v)
+      assert_equal("white", car.color.v)
+      assert_equal(true, car.sold.v)
+
+      assert_equal("object", B.typeof(car).v)
+      assert_equal("string", B.typeof(car.type).v)
+      assert_equal("number", B.typeof(car.model).v)
+      assert_equal("boolean", B.typeof(car.sold).v)
+      assert_equal("function", B.typeof(car.print).v)
+
+=begin            
+      assert_equal(true, B.instanceof(car, B.Object))
+      assert_equal(true, B.instanceof(car.info, "array"))
+      assert_equal(true, B.instanceof(car.print, "function"))
+      assert_equal(true, B.instanceof(car.print, "object"))
+      assert_equal(false, B.instanceof(car, "array"))
+      assert_equal(false, B.instanceof(car.info, "function"))
+      assert_equal(false, B.instanceof(car.print, "array"))
+=end
+      
+=begin                   
+      assert_equal(4, car.info.length)
+
+      # call the print function by passing parameters to it
+      assert_equal("Fiat_500", car.print("_", "500"))
+      
+      # call the print function.  Note that 'call' requires the environment (variable)
+      # for binding the call, while 'send' does not require binding, as it is
+      # already bound the the original environment
+      assert_equal("FiatType: 500", car.print.call(car, "Type: ", 500))
+      # Here car.print.send("_", "500") is identical do car.print("_", "500")
+      assert_equal("Fiat_500", car.print.send("_", "500"))
+
+      # However, doing
+      func = car.print
+      # we get an execption if we do
+      assert_raise ( NoMethodError ) { func("_", "500") }
+      # since 'func' is not a method, but a javascript method wrapped in a jsfunction
+      # object.  For this to work we need 'send' or 'call':
+      assert_equal("Fiat_500", func.send("_", "500"))
+
+      out = B.pull("out")
+      assert_equal("Fiat", out.data.type)
+=end      
     end
 
     #--------------------------------------------------------------------------------------
@@ -248,7 +323,6 @@ class MDArraySolTest < Test::Unit::TestCase
 
     end
 
-    
 =begin    
     #--------------------------------------------------------------------------------------
     #
@@ -476,72 +550,6 @@ class MDArraySolTest < Test::Unit::TestCase
     #--------------------------------------------------------------------------------------
 =begin
 
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
-
-    should "obtain javascript objects" do
-
-      B.eval(<<-EOF)
-        var car = {
-          type: "Fiat",
-          model: 500,
-          color: "white",
-          sold: true,
-          info: [1, 2, 3, 4],
-          print: function(a, b) {return this.type + a + b;}
-        }
-
-        var out = {
-          data: car
-        }
-      EOF
-      
-      car = B.pull("car")
-      
-      assert_equal("Fiat", car.type)
-      assert_equal(500, car.model)
-      assert_equal("white", car.color)
-      assert_equal(true, car.sold)
-
-      assert_equal("object", B.typeof(car))
-      assert_equal("string", B.typeof(car.type))
-      assert_equal("number", B.typeof(car.model))
-      assert_equal("boolean", B.typeof(car.sold))
-      assert_equal("function", B.typeof(car.print))
-                   
-      assert_equal(true, B.instanceof(car, "object"))
-      assert_equal(true, B.instanceof(car.info, "array"))
-      assert_equal(true, B.instanceof(car.print, "function"))
-      assert_equal(true, B.instanceof(car.print, "object"))
-      assert_equal(false, B.instanceof(car, "array"))
-      assert_equal(false, B.instanceof(car.info, "function"))
-      assert_equal(false, B.instanceof(car.print, "array"))
-
-      assert_equal(4, car.info.length)
-
-      # call the print function by passing parameters to it
-      assert_equal("Fiat_500", car.print("_", "500"))
-      
-      # call the print function.  Note that 'call' requires the environment (variable)
-      # for binding the call, while 'send' does not require binding, as it is
-      # already bound the the original environment
-      assert_equal("FiatType: 500", car.print.call(car, "Type: ", 500))
-      # Here car.print.send("_", "500") is identical do car.print("_", "500")
-      assert_equal("Fiat_500", car.print.send("_", "500"))
-
-      # However, doing
-      func = car.print
-      # we get an execption if we do
-      assert_raise ( NoMethodError ) { func("_", "500") }
-      # since 'func' is not a method, but a javascript method wrapped in a jsfunction
-      # object.  For this to work we need 'send' or 'call':
-      assert_equal("Fiat_500", func.send("_", "500"))
-
-      out = B.pull("out")
-      assert_equal("Fiat", out.data.type)
-      
-    end
     
     #--------------------------------------------------------------------------------------
     #
@@ -557,3 +565,36 @@ class MDArraySolTest < Test::Unit::TestCase
   end
 
 end
+
+
+=begin
+      B.eval(Opal.compile(<<-EOT)
+        class Tt
+          def tt(x, y)
+             x + y
+          end
+        end
+      EOT
+            )
+
+      p B.Opal.Tt.__new(nil)
+
+      ret = B.eval(<<-EOT)
+        Opal.Tt.$new().$tt(3, 4)
+      EOT
+
+      p ret.v
+
+
+      B.eval(<<-EOT)
+      var name;
+      for (name in Opal.Tt) {
+        if (Opal.Tt.hasOwnProperty(name)) {
+          console.log(name)
+       }
+       else {
+          console.log(name)
+       }
+      }
+      EOT
+=end

@@ -26,8 +26,8 @@ class Sol
   class JSObject
 
     attr_reader :jsvalue
-    # attr_reader :jsvar
-    # attr_reader :refresh
+    attr_reader :jsvar
+    attr_reader :refresh
     
     #------------------------------------------------------------------------------------
     # Builds a new Ruby JSObject or one of its more specific subclasses from the given
@@ -68,9 +68,9 @@ class Sol
 
     def initialize(jsvalue)
       @jsvalue = jsvalue
-      # @jsvar = nil
-      # @refresh = false
-      # js
+      @jsvar = nil
+      @refresh = false
+      js
     end
 
     #------------------------------------------------------------------------------------
@@ -143,7 +143,7 @@ class Sol
     # value (jsvar).  The jsvar is just a string of the form sc_xxxxxxxx. This string will be
     # an JS variable that holds the JSObject.  
     #----------------------------------------------------------------------------------------
-=begin
+
     def js
 
       if (@jsvar == nil)
@@ -156,10 +156,10 @@ class Sol
         # then set the refresh flag to true, so that we know that the jsobject was
         # changed.
         if (@jsvalue.nil?)
-          B.assign(@jsvar, self)
+          B.assign_window(@jsvar, self)
         else
           @refresh = true
-          B.assign(@jsvar, @jsvalue)
+          B.assign_window(@jsvar, @jsvalue)
         end
         
         # Whenever a variable is injected in JS, it is also added to the stack.
@@ -172,7 +172,7 @@ class Sol
       @jsvar
       
     end
-=end
+
     #----------------------------------------------------------------------------------------
     # * @return true if this JSObject already points to a jsobject in JS environment
     #----------------------------------------------------------------------------------------
@@ -185,21 +185,33 @@ class Sol
     #
     #------------------------------------------------------------------------------------
 
+    def jsend(function, *args)
+      JSObject.build(function.invoke(B.document, *args))
+    end
+
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
     def method_missing(symbol, *args)
       
       name = symbol.id2name
+      name.gsub!(/__/,"$")
+      
       member = @jsvalue.getProperty(name)
-
+      
       if member =~ /(.*)=$/
         ret = assign(self, $1, args[0])
       else
         if (member.function?)
           if (args.size > 0)
             if (args.size == 1 && args[0].nil?)
-              ret = member.send
+              ret = jsend(member)
             else
-              ret = member.send(*args)
+              ret = jsend(member, *args)
             end
+          else
+            ret = JSObject.build(member)
           end
         else
           ret = JSObject.build(member)
