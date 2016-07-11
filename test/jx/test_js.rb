@@ -153,32 +153,6 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal(true, B.str.string?)
       
     end
-
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
-
-    should "interface with arrays" do
-      # Array
-      B.eval(<<-EOT)
-        var cars = ["Saab", "Volvo", "BMW"];
-      EOT
-
-      js_array = B.pull("cars")
-      assert_equal("Saab", js_array.get(0).value)
-      assert_equal("Volvo", js_array.get(1).value)
-      assert_equal("BMW", js_array.get(2).value)
-
-      a2 = B.cars
-      assert_equal("Saab", a2.get(0).v)
-      assert_equal("Volvo", a2.get(1).v)
-      assert_equal("BMW", a2.get(2).v)
-            
-      assert_equal("Saab", a2[0].v)
-      assert_equal("Volvo", a2[1].v)
-      assert_equal("BMW", a2[2].v)
-      
-    end
     
     #--------------------------------------------------------------------------------------
     #
@@ -215,6 +189,32 @@ class MDArraySolTest < Test::Unit::TestCase
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
+
+    should "interface with arrays" do
+      # Array
+      B.eval(<<-EOT)
+        var cars = ["Saab", "Volvo", "BMW"];
+      EOT
+
+      js_array = B.pull("cars")
+      assert_equal("Saab", js_array.get(0).value)
+      assert_equal("Volvo", js_array.get(1).value)
+      assert_equal("BMW", js_array.get(2).value)
+
+      a2 = B.cars
+      assert_equal("Saab", a2.get(0).v)
+      assert_equal("Volvo", a2.get(1).v)
+      assert_equal("BMW", a2.get(2).v)
+            
+      assert_equal("Saab", a2[0].v)
+      assert_equal("Volvo", a2[1].v)
+      assert_equal("BMW", a2[2].v)
+      
+    end
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
     
     should "access javascript objects" do
 
@@ -225,27 +225,45 @@ class MDArraySolTest < Test::Unit::TestCase
           color: "white",
           sold: true,
           info: [1, 2, 3, 4],
-          print: function(a, b) {return this.type + a + b;}
+          print: function(a, b) {return this.type + a + b;},
+          no_args: function() {return "no args given";}
         }
 
         var out = {
           data: car
         }
+
+        console.log(car.print("_", "500"));
       EOF
       
-      car = B.pull("car")
+      rcar = B.pull("car")
       
-      assert_equal("Fiat", car.type.v)
-      assert_equal(500, car.model.v)
-      assert_equal("white", car.color.v)
-      assert_equal(true, car.sold.v)
+      assert_equal("Fiat", rcar.type.v)
+      assert_equal(500, rcar.model.v)
+      assert_equal("white", rcar.color.v)
+      assert_equal(true, rcar.sold.v)
 
-      assert_equal("object", B.typeof(car).v)
-      assert_equal("string", B.typeof(car.type).v)
-      assert_equal("number", B.typeof(car.model).v)
-      assert_equal("boolean", B.typeof(car.sold).v)
-      assert_equal("function", B.typeof(car.print).v)
+      assert_equal("object", B.typeof(rcar).v)
+      assert_equal("string", B.typeof(rcar.type).v)
+      assert_equal("number", B.typeof(rcar.model).v)
+      assert_equal("boolean", B.typeof(rcar.sold).v)
+      assert_equal("function", B.typeof(rcar.print).v)
 
+      # call function on a native javascript object
+      assert_equal(4, rcar.info.length)
+      
+      # call the print function by passing parameters to it
+      assert_equal("Fiat_500", rcar.print("_", "500").v)
+      
+      # note that to call a method with no arguments we need to provide nil as
+      # argument.  If we don't give nil as argument we will get the function
+      # in return.
+      assert_equal("no args given", rcar.no_args(nil).v)
+
+      # access a deep structure
+      assert_equal("Fiat", B.out.data.type.v)
+      assert_equal("Fiat_500", B.out.data.print("_", "500").v)
+      
 =begin            
       assert_equal(true, B.instanceof(car, B.Object))
       assert_equal(true, B.instanceof(car.info, "array"))
@@ -256,30 +274,6 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal(false, B.instanceof(car.print, "array"))
 =end
       
-=begin                   
-      assert_equal(4, car.info.length)
-
-      # call the print function by passing parameters to it
-      assert_equal("Fiat_500", car.print("_", "500"))
-      
-      # call the print function.  Note that 'call' requires the environment (variable)
-      # for binding the call, while 'send' does not require binding, as it is
-      # already bound the the original environment
-      assert_equal("FiatType: 500", car.print.call(car, "Type: ", 500))
-      # Here car.print.send("_", "500") is identical do car.print("_", "500")
-      assert_equal("Fiat_500", car.print.send("_", "500"))
-
-      # However, doing
-      func = car.print
-      # we get an execption if we do
-      assert_raise ( NoMethodError ) { func("_", "500") }
-      # since 'func' is not a method, but a javascript method wrapped in a jsfunction
-      # object.  For this to work we need 'send' or 'call':
-      assert_equal("Fiat_500", func.send("_", "500"))
-
-      out = B.pull("out")
-      assert_equal("Fiat", out.data.type)
-=end      
     end
 
     #--------------------------------------------------------------------------------------
@@ -419,30 +413,6 @@ class MDArraySolTest < Test::Unit::TestCase
     end
 =end
     
-=begin
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
-
-    should "access and retrieve javascript objects and functions" do
-
-      B.js_obj = "This is a string"
-      js_obj = B.pull("js_obj")
-      assert_equal("This is a string", js_obj)
-      assert_equal("This is a string", B.js_obj)
-
-      B.eval(<<-EOF)
-        var func1 = function() {return 1;};
-        var func2 = function(par1) {return par1;};
-        var func3 = function(par1, par2) {return par1 + " " + par2;};
-      EOF
-
-      assert_equal(1, B.func1)
-      assert_equal("hello", B.func2("hello"))
-      assert_equal("hello world", B.func3("hello", "world"))
-      
-    end
-=end
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------

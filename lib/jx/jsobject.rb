@@ -185,8 +185,9 @@ class Sol
     #
     #------------------------------------------------------------------------------------
 
-    def jsend(function, *args)
-      JSObject.build(function.invoke(B.document, *args))
+    def jsend(object, function, *args)
+      args = nil if (args.size == 1 && args[0].nil?)
+      JSObject.build(function.invoke(object, *(args.to_java)))
     end
 
     #------------------------------------------------------------------------------------
@@ -202,20 +203,10 @@ class Sol
       
       if member =~ /(.*)=$/
         ret = assign(self, $1, args[0])
+      elsif (member.function? && args.size > 0)
+        ret = jsend(@jsvalue, member, *args)
       else
-        if (member.function?)
-          if (args.size > 0)
-            if (args.size == 1 && args[0].nil?)
-              ret = jsend(member)
-            else
-              ret = jsend(member, *args)
-            end
-          else
-            ret = JSObject.build(member)
-          end
-        else
-          ret = JSObject.build(member)
-        end
+        ret = JSObject.build(member)
       end
       ret
       
