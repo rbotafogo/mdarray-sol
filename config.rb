@@ -50,6 +50,7 @@ class Sol
   @target_dir = Sol.home_dir + "/target"
   @test_dir = Sol.home_dir + "/test"
   @vendor_dir = Sol.home_dir + "/vendor"
+  @js_dir = Sol.home_dir + "/node_modules"
   
   class << self
     attr_reader :project_dir
@@ -59,6 +60,7 @@ class Sol
     attr_reader :target_dir
     attr_reader :test_dir
     attr_reader :vendor_dir
+    attr_reader :js_dir
   end
 
   @build_dir = Sol.src_dir + "/build"

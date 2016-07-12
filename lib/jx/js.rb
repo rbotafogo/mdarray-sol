@@ -53,7 +53,7 @@ class Sol
     #
     #========================================================================================
     
-    attr_accessor :browser
+    attr_reader :browser
         
     #------------------------------------------------------------------------------------
     #
@@ -106,9 +106,10 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def assign_window(property_name, data)
-      window = B.window
-      window.setProperty(property_name, data)
-      window
+      # w = B.window
+      w = window
+      w.setProperty(property_name, data)
+      w
     end
 
     #------------------------------------------------------------------------------------
@@ -116,7 +117,8 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def typeof(object)
-      B.eval("typeof(#{object.jsvar})")
+      # B.eval("typeof(#{object.jsvar})")
+      eval("typeof(#{object.jsvar})")
     end
     
     #------------------------------------------------------------------------------------
@@ -124,8 +126,9 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def instanceof(object, type)
-      p "#{object.jsvar} instanceof #{type.jsvalue}"
-      B.eval("#{object.jsvar} instanceof #{type.jsvalue}")
+      # p "#{object.jsvar} instanceof #{type.jsvalue}"
+      # B.eval("#{object.jsvar} instanceof #{type.jsvalue}")
+      eval("#{object.jsvar} instanceof #{type.jsvalue}")
     end
 
     #------------------------------------------------------------------------------------
@@ -133,7 +136,8 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def pull(name)
-      B.eval("#{name};")
+      # B.eval("#{name};")
+      eval("#{name};")
     end
 
     #------------------------------------------------------------------------------------
@@ -151,10 +155,19 @@ class Sol
     def function(symbol, definition)
       
       name = symbol.id2name
-      B.eval("var #{name} = function #{definition}")
+      # B.eval("var #{name} = function #{definition}")
+      eval("var #{name} = function #{definition}")      
       
     end
     
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def load(file)
+      @browser.executeJavaScriptAndReturnValue(file.read)
+    end
+
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
@@ -167,7 +180,8 @@ class Sol
       if name =~ /(.*)=$/
         ret = assign_window($1,args[0])
       else
-        if ((ret = B.pull(name)).function?)
+        # if ((ret = B.pull(name)).function?)
+        if ((ret = pull(name)).function?)
           if (args.size > 0)
             if (args.size == 1 && args[0].nil?)
               ret = ret.send

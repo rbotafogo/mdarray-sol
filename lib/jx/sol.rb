@@ -86,16 +86,15 @@ class Sol
     @height = height
     
     Thread.new { RubyRich.launch(@width, @height) }  if !RubyRich.launched?
-    
+
     # wait for the browser to initialize.  browser should call B.resource.signal
     # after initialization
     @mutex.synchronize {
       @resource.wait(@mutex)
     }
-    
-    # $d3 = RubyRich.b.eval("d3")
-    # $dc = RubyRich.b.eval("dc")
 
+    require_relative 'constants'
+    
   end
   
 end
@@ -104,11 +103,10 @@ end
 #
 #==========================================================================================
 
+require_relative 'js'
+
 # require_relative 'dashboard'
 # require_relative 'callback'
 
 # start the Gui
 Sol.start(1300, 500)
-
-B = Sol::RubyRich.b
-B.freeze

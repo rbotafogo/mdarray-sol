@@ -525,11 +525,6 @@ class MDArraySolTest < Test::Unit::TestCase
     #
     #--------------------------------------------------------------------------------------
 
-    should "work with d3 and other javascript libraries" do
-
-      $d3.select("body").append("div").text("hi there")
-
-    end
 =end
   
   end
