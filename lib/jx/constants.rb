@@ -21,12 +21,51 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
+=begin
 $js.load(File.open("#{Sol::js_dir}/dc/node_modules/d3/d3.js"))
 $js.load(File.open("#{Sol::js_dir}/dc/node_modules/crossfilter2/crossfilter.js"))
 $js.load(File.open("#{Sol::js_dir}/dc/dc.js"))
+=end
 
 B = $js
 B.freeze
 
 $d3 = B.pull("d3")
 $dc = B.pull("dc")
+
+$d3.freeze
+$dc.freeze
+
+# Create an arrayChangeHandler for Array proxy building
+B.eval(<<-EOT)
+        var arrayChangeHandler = {
+          get: function(target, property) {
+                 console.log('getting ' + property + ' for ' + target);
+               // property is index in this case
+                 return target[property];
+               },
+          set: function(target, property, value, receiver) {
+                 console.log('setting ' + property + ' for ' + target + ' with value ' + value);
+                 target[property] = value;
+                 // you have to return true to accept the changes
+                 return true;
+               }
+         };
+
+EOT
+
+B.eval(<<-EOT)
+
+function instanceOf(object, constructor) {
+   while (object != null) {
+      if (object == constructor.prototype)
+         return true;
+      if (typeof object == 'xml') {
+        return constructor.prototype == XML.prototype;
+      }
+      object = object.__proto__;
+   }
+   return false;
+}
+
+EOT

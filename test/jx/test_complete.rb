@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
 ##########################################################################################
-# @author Rodrigo Botafogo
-#
 # Copyright © 2013 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
 # and distribute this software and its documentation, without fee and without a signed 
 # licensing agreement, is hereby granted, provided that the above copyright notice, this 
@@ -21,34 +19,13 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-class Sol
+require 'rubygems'
+require "test/unit"
+require 'shoulda'
 
-  class JSArray < JSObject
+require '../../config' if @platform == nil
+require 'mdarray-sol'
 
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-    
-    def function?
-      false
-    end
-    
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def array?
-      true
-    end
-    
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def typeof
-      return "array"
-    end
-
-  end
-
-end
+require_relative 'test_js'
+require_relative 'test_rubyjs'
+require_relative 'test_d3'

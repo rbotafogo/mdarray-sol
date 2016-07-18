@@ -22,9 +22,9 @@
 ##########################################################################################
 
 class Sol
-
+  
   class Callback
-    include Java::RbMdarray_sol.RubyCallbackInterface
+    include Java::ComRbMdarray_sol.RubyCallbackInterface
     
     attr_reader :ruby_obj
     
@@ -40,12 +40,12 @@ class Sol
     #
     #----------------------------------------------------------------------------------------
 
-    def run(*args)
+    def send(*args)
+      method = args.shift
       # puts "method #{method} called with args: #{args}"
       # The returned value from the called method should be packed.
-      # $d3.select("body").append("div").text("hello there")
-      raise "I´m running #{args}"
       # Callback.pack(@ruby_obj.send(method, *args))
+      @ruby_obj.send(method, *args)
     end
     
     #----------------------------------------------------------------------------------------
@@ -84,7 +84,7 @@ class Sol
       
       case scope
       when :internal
-        raise "Cannot rpack object's internals as it does not respond to the :each method." if
+        raise "Cannot jspack object's internals as it does not respond to the :each method." if
           !obj.respond_to?(:each)
         obj.map { |pk| Callback.new(pk) }
       when :external

@@ -93,6 +93,22 @@ class Sol
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
+
+    def typeof
+      B.eval("'object'")
+    end
+
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def instanceof(constructor)
+      B.instanceOf(@jsvalue, constructor.jsvalue)
+    end
+
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
     
     def array?
       false
@@ -178,7 +194,7 @@ class Sol
     #----------------------------------------------------------------------------------------
     
     def jsvalue?
-      jsvalue != nil
+      @jsvalue != nil
     end
     
     #------------------------------------------------------------------------------------
@@ -194,16 +210,28 @@ class Sol
     #
     #------------------------------------------------------------------------------------
 
+    def assign(property_name, data)
+      
+      if (data.is_a? Sol::JSObject)
+        @jsvalue.setProperty(property_name, data.jsvalue)
+      else
+        @jsvalue.setProperty(property_name, data)
+      end
+      
+    end
+
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
     def method_missing(symbol, *args)
       
       name = symbol.id2name
-      name.gsub!(/__/,"$")
       
-      member = @jsvalue.getProperty(name)
-      
-      if member =~ /(.*)=$/
-        ret = assign(self, $1, args[0])
-      elsif (member.function? && args.size > 0)
+      if name =~ /(.*)=$/
+        ret = assign($1, args[0])
+        # elsif (member.function? && args.size > 0)
+      elsif ((member = @jsvalue.getProperty(name)).function? && args.size > 0)
         ret = jsend(@jsvalue, member, *args)
       else
         ret = JSObject.build(member)
@@ -225,4 +253,4 @@ require_relative 'jsbooleanobject'
 require_relative 'jsstring'
 require_relative 'jsstringobject'
 require_relative 'jsundefined'
-
+require_relative 'callback'

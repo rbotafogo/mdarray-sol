@@ -38,7 +38,8 @@ class MDArraySolTest < Test::Unit::TestCase
     setup do 
 
     end
-
+    
+#=begin    
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
@@ -166,6 +167,8 @@ class MDArraySolTest < Test::Unit::TestCase
       EOT
 
       f = B.pull("f")
+      # To call a javascript function we wee to call 'send' on the method with
+      # the necessary parameters
       assert_equal(5, f.send(2, 3).value)
 
       # Access function through '.' 
@@ -175,6 +178,9 @@ class MDArraySolTest < Test::Unit::TestCase
       # In order to call a function with no arguments in javascript we need to either
       # use the send method or call with nil as argument
       assert_equal(1, B.f2(nil).v)
+      # Instead of using send, we can also use '[]' to call a javascript function.
+      # This looks more like a function call
+      assert_equal(1, B.f2[].v)
 
       # Define a function f3 in javascript.  This is  equivalent to the above
       # B.eval...
@@ -184,14 +190,40 @@ class MDArraySolTest < Test::Unit::TestCase
       
       assert_equal(9, B.f3(4, 5).v)
 
+      # We can also create a javascript function with this notation bellow
+      f4 = B.function("(x, y) { return x + y; }")
+      assert_equal(9, f4.send(4, 5).v)
+      assert_equal(9, f4[4, 5].v)
+
+      f5 = B.function("(x, y) { return x - y; }")
+      # Just making sure that the creation of a new method does not affect
+      # the previous one.
+      assert_equal(1, f5[5, 4].v)
+      assert_equal(9, f4[5, 4].v)
+
+      B.dup(:a, [1, 2, 3])
+
+      # Javascript function that receives a JSObject as argument
+      f6 = B.function(<<-EOT)
+        (x) { text = ""
+                for (i = 0; i < x.length; i++) { 
+                  text += x[i];
+                }
+              return text
+            }
+      EOT
+
+      assert_equal("123", f6[B.a].v)
+      
     end
 
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
 
-    should "interface with arrays" do
-      # Array
+    should "interface with js arrays" do
+      
+      # cars is a js array
       B.eval(<<-EOT)
         var cars = ["Saab", "Volvo", "BMW"];
       EOT
@@ -243,12 +275,20 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal("white", rcar.color.v)
       assert_equal(true, rcar.sold.v)
 
+      # check the type of the object by calling B.typeof
       assert_equal("object", B.typeof(rcar).v)
       assert_equal("string", B.typeof(rcar.type).v)
       assert_equal("number", B.typeof(rcar.model).v)
       assert_equal("boolean", B.typeof(rcar.sold).v)
       assert_equal("function", B.typeof(rcar.print).v)
 
+      # check the type of the object directly
+      assert_equal("object", rcar.typeof.v)
+      assert_equal("string", rcar.type.typeof.v)
+      assert_equal("number", rcar.model.typeof.v)
+      assert_equal("boolean", rcar.sold.typeof.v)
+      assert_equal("function", rcar.print.typeof.v)
+      
       # call function on a native javascript object
       assert_equal(4, rcar.info.length)
       
@@ -263,19 +303,41 @@ class MDArraySolTest < Test::Unit::TestCase
       # access a deep structure
       assert_equal("Fiat", B.out.data.type.v)
       assert_equal("Fiat_500", B.out.data.print("_", "500").v)
-      
-=begin            
-      assert_equal(true, B.instanceof(car, B.Object))
-      assert_equal(true, B.instanceof(car.info, "array"))
-      assert_equal(true, B.instanceof(car.print, "function"))
-      assert_equal(true, B.instanceof(car.print, "object"))
-      assert_equal(false, B.instanceof(car, "array"))
-      assert_equal(false, B.instanceof(car.info, "function"))
-      assert_equal(false, B.instanceof(car.print, "array"))
-=end
-      
+            
     end
 
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "properly return instanceof" do
+
+      C = B.function("(){}")
+      D = B.function("(){}")
+
+      o = B.C.new
+      
+      JSObject =  B.eval("Object")
+      p rcar.instanceof(JSObject).v
+
+    end
+      
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "add data to a javascript object" do
+
+      B.eval(<<-EOT)
+        var car = {}
+      EOT
+
+      rcar = B.pull("car")
+      rcar.type = "VW"
+      assert_equal("VW", rcar.type.v)
+
+    end
+    
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
@@ -316,250 +378,52 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal(0, B.data[4].tip.v)
 
     end
+    
 
-=begin    
+
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
 
-    should "interface with Java objects" do
-      
-      dbl = MDArray.double([2, 2], [1, 2, 3, 4])
-      B.assign("dbl", dbl.nc_array)
-      B.eval(<<-EOT)
-        var dbl2 = dbl.toString();
-      EOT
+    should "Create javascript objects from a Ruby hash" do
 
-      # jclass = java.lang.Class.forName("ucar.ma2.ArrayDouble$D2")
-      # p jclass
+      car = {
+        type: "Fiat",
+        model: 500,
+        color: "white",
+        sold: true,
+        info: [1, 2, 3, 4]
+      }
+
+      B.dup(:jscar, car)
+      jscar = B.jscar
+
+      # Add a function to the jscar object.  Functions cannot be create in the
+      # ruby hash above.
+      jscar.print =
+        B.function(<<-EOT)
+          (x, y) { return x + y; } 
+        EOT
       
-      p B.eval("dbl.get(0,0)").double
-      p B.eval("dbl.get(1,1)").double
-      # p B.eval("dbl2").double
+      assert_equal("Fiat", jscar.type.v)
+      assert_equal(500, jscar.model.v)
+      assert_equal("white", jscar.color.v)
+      assert_equal(true, jscar.sold.v)
+      assert_equal(1, jscar.info[0].v)
+      assert_equal(8, jscar.print[3, 5].v)
       
     end
-    
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
-
-    should "callback Ruby classes" do
-
-      # class Log < Java::RbMdarray_sol.Callback
-      class Log
-        include Java::RbMdarray_sol.RubyCallbackInterface
-        
-        def run(*args)
-          message = args[0]
-        end
-        
-      end
-
-      class RBObject
-        include Java::RbMdarray_sol.RubyCallbackInterface
-
-        attr_reader :rbobject
-        
-        def initialize(rbobject)
-          @rbobject = rbobject
-          @jarray = [].to_java
-        end
-
-        def run(args)
-          args = args.to_a
-          raise args.to_s
-          @rbobject.send(message, *args)
-        end
-
-        def jsarray(args)
-          return @jarray
-        end
-          
-      end
-
-      rb = RBObject.new(1)
-      p rb.jsarray(1)
-
-      mdarray = RBObject.new(MDArray.double([2, 2], [1, 2, 3, 4]))
-      # p mdarray.run(["get", [1, 1]])
-      
-      B.assign("mdarray", mdarray)
-      B.args = ["get", [1, 1]]
-      # B.eval("var val = mdarray.run(args)")
-      B.eval(<<-EOT)
-        var args = mdarray.jsarray(1)
-        args.append(1)
-        var val = mdarray.run(args)
-      EOT
-      p B.val
-=end      
-=begin      
-      log = Log.new
-      B.assign("log", log)
-      B.eval("var mes = log.run('this is a message to log')")
-      p B.mes
-      
-      cb = Java::RbMdarray_sol.Callback.new
-      
-      B.assign("cb", cb)
-      B.eval("var str = cb.run('hello world')")
-      p B.str
-
-      B.jarray = [1, 2]
-      
-      B.eval("var obj = cb.run(jarray)")
-      p B.obj
-
-    end
-=end
-    
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
-    
-=begin
-    should "callback rpacked classes Array and Hash" do
-
-      # create an array of data in Ruby
-      array = [1, 2, 3]
-
-      # Pack the array and assign it to an R variable.  Remember that ruby__array, becomes
-      # ruby.array inside the R script
-      R.ruby__array = R.rpack(array)
-
-      # note that this calls Ruby method 'length' on the array and not R length function.
-      R.eval("val <- ruby.array$run('length')")
-      assert_equal(3, R.val.gz)
-
-      # Let's use a more interesting array method '<<'.  This method adds elements to the
-      # end of the array.  
-
-      R.eval(<<-EOT)
-        print(typeof(ruby.array))
-        ruby.array$run('<<', 4)
-        ruby.array$run('<<', 5)
-      EOT
-      assert_equal(4, array[3])
-      assert_equal(5, array[4])
-
-      # Although the concept of chainning is foreign to R, it does apply to packed
-      # classes
-      R.eval(<<-EOT)
-        ruby.array$run('<<', 6)$run('<<', 7)$run('<<', 8)$run('<<', 9)
-      EOT
-      assert_equal(9, array[8])
-      
-      # Let's try another method... remove a given element from the array
-      R.eval(<<-EOT)
-        ruby.array$run('delete', 4)
-      EOT
-      assert_equal(5, array[3])
-
-      # We can also acess any array element inside the R script, but note that we have
-      # to use Ruby indexing, i.e., the first element of the array is index 0
-      R.eval(<<-EOT)
-        print(ruby.array$run('[]', 0))
-        print(ruby.array$run('[]', 2))
-        print(ruby.array$run('[]', 4))
-        print(ruby.array$run('[]', 6))
-      EOT
-
-      # Try the same with a hash
-      hh = {"a" => 1, "b" =>2}
-
-      # Pack the hash and store it in R variable r.hash
-      R.r__hash = R.rpack(hh, scope: :external)
-
-      # Retrieve the value of a key
-      R.eval(<<-EOT)
-        h1 <- r.hash$run('[]', "a")
-        h2 <- r.hash$run('[]', "b")
-      EOT
-      assert_equal(1, R.h1.gz)
-      assert_equal(2, R.h2.gz)
-
-      # Add values to the hash
-      R.eval(<<-EOT)
-        h1 <- r.hash$run('[]=', "c", 3)
-        h2 <- r.hash$run('[]=', "d", 4)
-      EOT
-      assert_equal(3, hh["c"])
-      assert_equal(4, hh["d"])
-      
-    end
-
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
-
-    should "access Ruby objects from JavaScript" do
-
-      B.eval(<<-EOF)
-        var car = { }
-      EOF
-
-      array = JsArray.new([1, 2, 3, 4])
-      B.assign("car", array)
-      car = B.pull("car")
-      
-      f1 = B.eval("car")
-      p "data set"
-      f2 = B.eval("car.external.notset")
-      p f2
-
-      p B.eval("car.external.send('[]', 0)")
-      p "message send"
-      
-      # array = B.eval("car.external")
-      # p array
-
-    end
-=end        
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
-=begin
-
-    
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
-
-=end
-  
+#=end    
   end
-
+  
 end
 
-
-=begin
-      B.eval(Opal.compile(<<-EOT)
-        class Tt
-          def tt(x, y)
-             x + y
-          end
-        end
-      EOT
-            )
-
-      p B.Opal.Tt.__new(nil)
-
-      ret = B.eval(<<-EOT)
-        Opal.Tt.$new().$tt(3, 4)
-      EOT
-
-      p ret.v
-
-
-      B.eval(<<-EOT)
-      var name;
-      for (name in Opal.Tt) {
-        if (Opal.Tt.hasOwnProperty(name)) {
-          console.log(name)
-       }
-       else {
-          console.log(name)
-       }
-      }
-      EOT
+=begin            
+      assert_equal(true, B.instanceof(car, B.Object))
+      assert_equal(true, B.instanceof(car.info, "array"))
+      assert_equal(true, B.instanceof(car.print, "function"))
+      assert_equal(true, B.instanceof(car.print, "object"))
+      assert_equal(false, B.instanceof(car, "array"))
+      assert_equal(false, B.instanceof(car.info, "function"))
+      assert_equal(false, B.instanceof(car.print, "array"))
 =end

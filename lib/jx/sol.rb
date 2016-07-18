@@ -94,7 +94,7 @@ class Sol
     }
 
     require_relative 'constants'
-    
+        
   end
   
 end

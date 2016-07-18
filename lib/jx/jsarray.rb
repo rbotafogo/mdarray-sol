@@ -23,8 +23,64 @@
 
 class Sol
 
-  class JSArray < JSObject
+  #==========================================================================================
+  # 
+  #==========================================================================================
+  
+  class ProxyArray < JSObject
 
+    attr_reader :ruby_array  # this is the ruby array that will be proxied
+
+    #------------------------------------------------------------------------------------
+    # Gets a ruby array and proxy it in javascript so that it becomes the storage
+    # medium for the array
+    #------------------------------------------------------------------------------------
+
+    def initialize(array)
+      
+      @ruby_array = array
+      @jsvar = nil
+      @refresh = false
+      
+      js
+      proxy_array(@jsvar)
+      
+    end
+    
+    #------------------------------------------------------------------------------------
+    # Gets a ruby array and proxy it in javascript so that it becomes the storage
+    # medium for the array
+    #------------------------------------------------------------------------------------
+
+    def proxy_array(name)
+      
+      B.eval(<<-EOF)
+        var arrayChangeHandler = {
+          get: function(target, property) {
+                 console.log('getting ' + property + ' for ' + target);
+               // property is index in this case
+                 return target[property];
+               },
+          set: function(target, property, value, receiver) {
+                 console.log('setting ' + property + ' for ' + target + ' with value ' + value);
+                 target[property] = value;
+                 // you have to return true to accept the changes
+                 return true;
+               }
+         };
+
+      EOF
+
+      B.eval(<<-EOF)
+         var #{name} = new Proxy([], arrayChangeHandler);
+
+         #{name}.push('Test');
+         console.log(#{name}[0]);
+
+      EOF
+
+    end
+    
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
@@ -32,6 +88,22 @@ class Sol
     def typeof
       return "array"
     end
+
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def array?
+      true
+    end
+
+  end
+  
+  #==========================================================================================
+  # 
+  #==========================================================================================
+
+  class JSArray < JSObject
 
     #------------------------------------------------------------------------------------
     #

@@ -21,12 +21,11 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-require 'opal'
+# require 'opal'
 require 'json'
 require_relative 'jsobject'
 
 class Sol
-
   
   #==========================================================================================
   # Class to communicate with the embedded browser (Webview), by sending javascript
@@ -68,6 +67,14 @@ class Sol
     end
     
     #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def proxy(array)
+      ProxyArray.new(array).jsvar
+    end
+    
+    #------------------------------------------------------------------------------------
     # Gets the Brwoser 'window' object
     #------------------------------------------------------------------------------------
 
@@ -93,32 +100,27 @@ class Sol
     end
     
     #------------------------------------------------------------------------------------
-    # Assign the data to the given named window property
+    # Evaluate a javascript 
     #------------------------------------------------------------------------------------
 
-    def assign(object, property_name, data)
-      @browser.object.setProperty(property_name,data)
-      object
-    end
+    def jseval(scrpt)
 
+    end
+    
     #------------------------------------------------------------------------------------
     # Assign the data to the given named window property
     #------------------------------------------------------------------------------------
 
     def assign_window(property_name, data)
-      # w = B.window
-      w = window
-      w.setProperty(property_name, data)
-      w
+      window.setProperty(property_name, data)
     end
-
+    
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
 
     def typeof(object)
-      # B.eval("typeof(#{object.jsvar})")
-      eval("typeof(#{object.jsvar})")
+      object.typeof
     end
     
     #------------------------------------------------------------------------------------
@@ -129,6 +131,7 @@ class Sol
       # p "#{object.jsvar} instanceof #{type.jsvalue}"
       # B.eval("#{object.jsvar} instanceof #{type.jsvalue}")
       eval("#{object.jsvar} instanceof #{type.jsvalue}")
+
     end
 
     #------------------------------------------------------------------------------------
@@ -136,7 +139,6 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def pull(name)
-      # B.eval("#{name};")
       eval("#{name};")
     end
 
@@ -152,11 +154,11 @@ class Sol
     #
     #------------------------------------------------------------------------------------
 
-    def function(symbol, definition)
-      
-      name = symbol.id2name
-      # B.eval("var #{name} = function #{definition}")
-      eval("var #{name} = function #{definition}")      
+    def function(symbol = nil, definition)
+
+      name = (symbol)? symbol.id2name : "_tmpvar_"
+      eval("var #{name} = function #{definition}")
+      eval("#{name}")
       
     end
     
@@ -172,15 +174,24 @@ class Sol
     #
     #------------------------------------------------------------------------------------
 
+    def jspack(obj, scope: :external)
+      Callback.pack(obj, scope: scope)
+    end
+    
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
     def method_missing(symbol, *args)
 
       name = symbol.id2name
       name.gsub!(/__/,"$")
-      
+
       if name =~ /(.*)=$/
         ret = assign_window($1,args[0])
+        # p "pulling"
+        # assign(pull($1).jsvalue, "Type", "RubyCallback") 
       else
-        # if ((ret = B.pull(name)).function?)
         if ((ret = pull(name)).function?)
           if (args.size > 0)
             if (args.size == 1 && args[0].nil?)
@@ -203,6 +214,14 @@ class Sol
         d3.selectAll(\"div\").remove();
       EOS
     end
+    
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    # JSObject = eval("Object")
+    # p JSObject
+    # Object.freeze
     
     #----------------------------------------------------------------------------------------
     # Parse an argument and returns a piece of R script needed to build a complete R
