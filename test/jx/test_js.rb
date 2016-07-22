@@ -136,7 +136,12 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal("this is a string", B.str.v)
       
       assert_equal(true, B.str.string?)
-      
+
+      # in order to evaluate a string, we need to double quote it, since the first quote
+      # if for the javascript script
+      str2 = B.eval("'this is a string'")
+      assert_equal("this is a string", str2.v)
+
     end
     
     #--------------------------------------------------------------------------------------
@@ -214,6 +219,9 @@ class MDArraySolTest < Test::Unit::TestCase
       EOT
 
       assert_equal("123", f6[B.a].v)
+
+      # NEEDS TO BE FIXED!!!!
+      # assert_equal("123", f6[[1, 2, 3]].v)
       
     end
 
@@ -312,14 +320,70 @@ class MDArraySolTest < Test::Unit::TestCase
 
     should "properly return instanceof" do
 
+      # need to define JSObject in the code!!!!!!
+      # JSObject =  B.eval("Object")
+
+      # The instanceof operator tests presence of constructor.prototype in object's
+      # prototype chain.      
+
+      # We are using here the javascript convention of writing constructor functions
+      # with a capital letter.  In Ruby, this indicates a constant, which is not the
+      # case here...
+      # Defining constructors in the Browser 
       C = B.function("(){}")
       D = B.function("(){}")
 
-      o = B.C.new
-      
-      JSObject =  B.eval("Object")
-      p rcar.instanceof(JSObject).v
+      # ...; however, this looks like a new class creation in Ruby and it is
+      # actually creating a new javascript object from the C function.
+      o = C.new
+      # true, because: Object.getPrototypeOf(o) === C.prototype      
+      assert_equal(true, o.instanceof(C).v)
 
+      # false, since D.prototype is not in the prototype chain of 'o'
+      assert_equal(false, o.instanceof(D).v)
+
+      # 'o' is an instance of a JSObject
+      assert_equal(true, o.instanceof(B.Object).v)
+
+      # C.prototype is also an instance of a JSObject
+      assert_equal(true, C.prototype.instanceof(B.Object).v)
+
+      C.prototype = {}
+      o2 = C.new
+
+      assert_equal(true, o2.instanceof(C).v)
+      
+      # false, because C.prototype is nowhere in o's prototype chain anymore      
+      assert_equal(false, o.instanceof(C).v)
+
+      #  use inheritance
+      D.prototype = C.new
+      o3 = D.new
+      assert_equal(true, o3.instanceof(D).v)
+      assert_equal(true, o3.instanceof(C).v)
+
+      # simpleStr = B.eval("This is a simple string")
+      myString  = B.String.new
+      newStr    = B.String.new("String created with constructor")
+      myDate    = B.Date.new;
+      # myObj     = {}
+
+      assert_equal(true, myString.instanceof(B.String).v)
+      assert_equal(true, newStr.instanceof(B.String).v)
+      assert_equal(true, myString.instanceof(B.Object).v)
+      
+      # p simpleStr.instanceof(B.String).v # // returns false, checks the prototype chain, finds undefined
+      # p myObj.instanceof(B.Object).v    # // returns true, despite an undefined prototype
+      assert_equal(false, myString.instanceof(B.Date).v)
+      assert_equal(true, myDate.instanceof(B.Date).v)
+      assert_equal(true, myDate.instanceof(B.Object).v)
+      assert_equal(false, myDate.instanceof(B.String).v)
+
+=begin
+      
+      # ({})  instanceof Object;    // returns true, same case as above
+      
+=end      
     end
       
     #--------------------------------------------------------------------------------------

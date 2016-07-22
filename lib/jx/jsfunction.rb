@@ -48,8 +48,16 @@ class Sol
     def send(*args)
       # if any of the args is a JSObject, then we need to treat it in another way, as
       # invoke is defined only for java objects
+
       args.map! { |x| (x.is_a? Sol::JSObject)? x.jsvalue : x }
       JSObject.build(@jsvalue.invoke(B.document, *args))
+
+=begin
+      p args
+      par = process_args(*args)
+      p par
+      JSObject.build(@jsvalue.invoke(B.document, *process_args(args)))
+=end      
     end
 
     #------------------------------------------------------------------------------------
@@ -60,6 +68,15 @@ class Sol
       send(*args)
     end
           
+    #------------------------------------------------------------------------------------
+    # Create a new object using this function as a constructor
+    #------------------------------------------------------------------------------------
+
+    def new(*args)
+      p "new #{jsvar}(\"#{args.join(',')}\")"
+      B.eval("new #{jsvar}(\"#{args.join(',')}\")")
+    end
+    
   end
   
 end

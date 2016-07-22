@@ -229,8 +229,8 @@ class Sol
       name = symbol.id2name
       
       if name =~ /(.*)=$/
-        ret = assign($1, args[0])
-        # elsif (member.function? && args.size > 0)
+      # ret = assign($1, args[0])
+        ret = assign($1, B.process_args(args)[0])
       elsif ((member = @jsvalue.getProperty(name)).function? && args.size > 0)
         ret = jsend(@jsvalue, member, *args)
       else

@@ -98,15 +98,7 @@ class Sol
     def eval(scrpt)
       JSObject.build(@browser.executeJavaScriptAndReturnValue(scrpt))
     end
-    
-    #------------------------------------------------------------------------------------
-    # Evaluate a javascript 
-    #------------------------------------------------------------------------------------
-
-    def jseval(scrpt)
-
-    end
-    
+        
     #------------------------------------------------------------------------------------
     # Assign the data to the given named window property
     #------------------------------------------------------------------------------------
@@ -128,10 +120,7 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def instanceof(object, type)
-      # p "#{object.jsvar} instanceof #{type.jsvalue}"
-      # B.eval("#{object.jsvar} instanceof #{type.jsvalue}")
-      eval("#{object.jsvar} instanceof #{type.jsvalue}")
-
+      instanceOf(object, type)
     end
 
     #------------------------------------------------------------------------------------
@@ -188,9 +177,8 @@ class Sol
       name.gsub!(/__/,"$")
 
       if name =~ /(.*)=$/
-        ret = assign_window($1,args[0])
-        # p "pulling"
-        # assign(pull($1).jsvalue, "Type", "RubyCallback") 
+      # ret = assign_window($1, args[0])
+        ret = assign_window($1, process_args(args)[0])
       else
         if ((ret = pull(name)).function?)
           if (args.size > 0)
@@ -214,58 +202,27 @@ class Sol
         d3.selectAll(\"div\").remove();
       EOS
     end
-    
+
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
 
-    # JSObject = eval("Object")
-    # p JSObject
-    # Object.freeze
-    
-    #----------------------------------------------------------------------------------------
-    # Parse an argument and returns a piece of R script needed to build a complete R
-    # statement.
-    #----------------------------------------------------------------------------------------
-    
-    def parse(*args)
-      
-      params = Array.new
-      
-      args.each do |arg|
-        case arg
-        when Numeric
-          params << arg
-        when String
-          params << "\"#{arg}\""
-        when Symbol
-          var = eval("#{arg.to_s}")
-          params << var.js
-        when TrueClass
-          params << "true"
-        when FalseClass
-          params << "false"
-        when nil
-          params << "null"
-        when Hash
-          arg.each_pair do |key, value|
-            # k = key.to_s.gsub(/__/,".")
-            params << "#{key.to_s.gsub(/__/,'.')} = #{parse(value)}"
-            # params << "#{k} = #{parse(value)}"
-          end
-        when Sol::JSObject, Array, MDArray
-          params << arg.js
+    def process_args(args)
+
+      args.map do |x|
+        case x
+        when Sol::JSObject
+          x.jsvalue
+        when Hash, Array
+          JSONString.new(x.to_json)
         else
-          raise "Unknown parameter type for JS: #{arg}"
+          x
         end
-        
       end
       
-      params.join(",")
-      
     end
-    
+        
   end
-    
+  
 end
 
