@@ -26,8 +26,6 @@ class Sol
   class JSObject
 
     attr_reader :jsvalue
-    attr_reader :jsvar
-    attr_reader :refresh
     
     #------------------------------------------------------------------------------------
     # Builds a new Ruby JSObject or one of its more specific subclasses from the given
@@ -68,11 +66,8 @@ class Sol
 
     def initialize(jsvalue)
       @jsvalue = jsvalue
-      @jsvar = nil
-      @refresh = false
-      js
     end
-
+    
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
@@ -154,41 +149,6 @@ class Sol
       false
     end
     
-    #----------------------------------------------------------------------------------------
-    # Push the object into the JS evaluator.  Check to see if this object already has an JS
-    # value (jsvar).  The jsvar is just a string of the form sc_xxxxxxxx. This string will be
-    # an JS variable that holds the JSObject.  
-    #----------------------------------------------------------------------------------------
-
-    def js
-
-      if (@jsvar == nil)
-        
-        # create a new variable name to hold this object inside JS
-        @jsvar = "sc_#{SecureRandom.hex(8)}"
-        
-        # if this object already has a jsobject value then assign to @jsvar the existing
-        # jsobject, otherwise, assign itself to @jsvar.  If a jsobject already exists
-        # then set the refresh flag to true, so that we know that the jsobject was
-        # changed.
-        if (@jsvalue.nil?)
-          B.assign_window(@jsvar, self)
-        else
-          @refresh = true
-          B.assign_window(@jsvar, @jsvalue)
-        end
-        
-        # Whenever a variable is injected in JS, it is also added to the stack.
-        # After eval, every injected variable is removed from JS making sure that we
-        # do not have memory leak.
-        # Renjin.stack << self
-        
-      end
-      
-      @jsvar
-      
-    end
-
     #----------------------------------------------------------------------------------------
     # * @return true if this JSObject already points to a jsobject in JS environment
     #----------------------------------------------------------------------------------------

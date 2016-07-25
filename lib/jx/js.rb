@@ -43,7 +43,7 @@ class Sol
     class RBListener
       include ConsoleListener
       
-      def onMessage(event)
+      def Message(event)
         puts "JS> #{event.getMessage()}"
       end
     end

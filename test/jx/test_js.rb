@@ -166,23 +166,27 @@ class MDArraySolTest < Test::Unit::TestCase
 
     should "interface with functions" do
 
+      # functions f and f2 are defined in the B namespace
       B.eval(<<-EOT)
         var f = function sum(x, y) { return x + y; };
         var f2 = function myFunc() { return 1; } 
       EOT
 
+      # pulling function 'f' from the B namespace to the Ruby namespace
       f = B.pull("f")
-      # To call a javascript function we wee to call 'send' on the method with
+      
+      # To call a javascript function we need to call 'send' on the method with
       # the necessary parameters
       assert_equal(5, f.send(2, 3).value)
 
-      # Access function through '.' 
+      # Access function through '.' Functions f and f2 are defined in the B namespace
       assert_equal(true, B.f2.function?)
       assert_equal(17, B.f(8, 9).value)
       
       # In order to call a function with no arguments in javascript we need to either
       # use the send method or call with nil as argument
       assert_equal(1, B.f2(nil).v)
+      
       # Instead of using send, we can also use '[]' to call a javascript function.
       # This looks more like a function call
       assert_equal(1, B.f2[].v)
@@ -192,21 +196,26 @@ class MDArraySolTest < Test::Unit::TestCase
       B.function(:f3, <<-EOF)
         add(x, y) { return x + y; } 
       EOF
-      
-      assert_equal(9, B.f3(4, 5).v)
 
-      # We can also create a javascript function with this notation bellow
+      # use standard notation for method call in the B namespace
+      assert_equal(9, B.f3(4, 5).v)
+      # or use '[]'
+      assert_equal(9, B.f[4, 5].v)
+
+      # We can also create a javascript function with the notation bellow. In
+      # this case the function f4 lives in the Ruby namespace.
       f4 = B.function("(x, y) { return x + y; }")
       assert_equal(9, f4.send(4, 5).v)
       assert_equal(9, f4[4, 5].v)
 
-      f5 = B.function("(x, y) { return x - y; }")
+      # in the Ruby namespace, standard '()' function call does not work
+      assert_raise (NoMethodError) { f4(4,5).v }
+
       # Just making sure that the creation of a new method does not affect
       # the previous one.
+      f5 = B.function("(x, y) { return x - y; }")
       assert_equal(1, f5[5, 4].v)
       assert_equal(9, f4[5, 4].v)
-
-      B.dup(:a, [1, 2, 3])
 
       # Javascript function that receives a JSObject as argument
       f6 = B.function(<<-EOT)
@@ -218,10 +227,15 @@ class MDArraySolTest < Test::Unit::TestCase
             }
       EOT
 
+      # add variable 'a' into the B namespace 
+      B.dup(:a, [1, 2, 3])
+
+      # call function f6 passign a JSObject
       assert_equal("123", f6[B.a].v)
 
-      # NEEDS TO BE FIXED!!!!
-      # assert_equal("123", f6[[1, 2, 3]].v)
+      # passing an Ruby array directly '[1, 2, 3]' directly to a javascript
+      # function.  The Ruby array is copied to the javascript array
+      assert_equal("123", f6[[1, 2, 3]].v)
       
     end
 
@@ -317,12 +331,9 @@ class MDArraySolTest < Test::Unit::TestCase
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
-
+#=begin
     should "properly return instanceof" do
-
-      # need to define JSObject in the code!!!!!!
-      # JSObject =  B.eval("Object")
-
+      
       # The instanceof operator tests presence of constructor.prototype in object's
       # prototype chain.      
 
@@ -371,25 +382,26 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal(true, myString.instanceof(B.String).v)
       assert_equal(true, newStr.instanceof(B.String).v)
       assert_equal(true, myString.instanceof(B.Object).v)
-      
-      # p simpleStr.instanceof(B.String).v # // returns false, checks the prototype chain, finds undefined
-      # p myObj.instanceof(B.Object).v    # // returns true, despite an undefined prototype
+
+      # returns false, checks the prototype chain, finds undefined      
+      # p simpleStr.instanceof(B.String).v
+      # returns true, despite an undefined prototype      
+      # p myObj.instanceof(B.Object).v    
       assert_equal(false, myString.instanceof(B.Date).v)
       assert_equal(true, myDate.instanceof(B.Date).v)
       assert_equal(true, myDate.instanceof(B.Object).v)
       assert_equal(false, myDate.instanceof(B.String).v)
 
-=begin
-      
       # ({})  instanceof Object;    // returns true, same case as above
-      
-=end      
     end
+    
+#=end      
+
       
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
-
+    
     should "add data to a javascript object" do
 
       B.eval(<<-EOT)
