@@ -74,14 +74,29 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def new(*args)
-      # p "new #{jsvar}(\"#{args.join(',')}\")"
-      js
+
+      # assign this function to a temporary variable in javascript
+      B.assign_window(:_tmp_func, jsvalue)
+
+      # process every argument and obtain a JSObject or primitive
       params = B.process_args(args)
-      p params
-      # Store a reference to the function in jsvar
-      # js
-      p "new #{jsvar}(\"#{args.join(',')}\")"
-      B.eval("new #{jsvar}(\"#{args.join(',')}\")")
+
+      # assign every parameter to a variable in javascript
+      params.map! do | param |
+        var = "sc_#{SecureRandom.hex(8)}"
+        B.assign_window(var, param)
+        var
+      end
+
+      # Call 'new' using the function and the parameter list
+      new_func = (params.size > 0)? B.eval("new _tmp_func(#{params.join(',')})") :
+                   B.eval("new _tmp_func()")
+
+      # let the garbage collector work
+      params.map { | param | B.eval("#{param} = null") }
+
+      new_func
+      
     end
 
     #----------------------------------------------------------------------------------------

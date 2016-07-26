@@ -60,7 +60,7 @@ class MDArraySolTest < Test::Unit::TestCase
       # Store a number into a javascript object
       B.num = 1.234
       assert_equal(1.234, B.num.double)
-      
+
     end
 
     #--------------------------------------------------------------------------------------
@@ -78,6 +78,10 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal(4.567, B.n2.v)
       
       assert_equal(true, B.n2.number?)
+
+      # use the 'new' constructor function on function 'Number'
+      num = B.Number.new(2.35)
+      assert_equal(2.35, num.v)
       
     end
 
@@ -377,7 +381,8 @@ class MDArraySolTest < Test::Unit::TestCase
       myString  = B.String.new
       newStr    = B.String.new("String created with constructor")
       myDate    = B.Date.new;
-      # myObj     = {}
+      # myObj     = {}.jsdup
+      # p myObj
 
       assert_equal(true, myString.instanceof(B.String).v)
       assert_equal(true, newStr.instanceof(B.String).v)

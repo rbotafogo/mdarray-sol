@@ -100,7 +100,57 @@ class Sol
     def instanceof(constructor)
       B.instanceOf(@jsvalue, constructor.jsvalue)
     end
+    
+    #----------------------------------------------------------------------------------------
+    # * @return true if this JSObject already points to a jsobject in JS environment
+    #----------------------------------------------------------------------------------------
+    
+    def jsvalue?
+      @jsvalue != nil
+    end
+    
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
 
+    def jsend(object, function, *args)
+      args = nil if (args.size == 1 && args[0].nil?)
+      JSObject.build(function.invoke(object, *(args.to_java)))
+    end
+
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def assign(property_name, data)
+      
+      if (data.is_a? Sol::JSObject)
+        @jsvalue.setProperty(property_name, data.jsvalue)
+      else
+        @jsvalue.setProperty(property_name, data)
+      end
+      
+    end
+
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def method_missing(symbol, *args)
+      
+      name = symbol.id2name
+      
+      if name =~ /(.*)=$/
+        ret = assign($1, B.process_args(args)[0])
+      elsif ((member = @jsvalue.getProperty(name)).function? && args.size > 0)
+        ret = jsend(@jsvalue, member, *args)
+      else
+        ret = JSObject.build(member)
+      end
+      ret
+      
+    end
+    
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
@@ -148,58 +198,7 @@ class Sol
     def undefined?
       false
     end
-    
-    #----------------------------------------------------------------------------------------
-    # * @return true if this JSObject already points to a jsobject in JS environment
-    #----------------------------------------------------------------------------------------
-    
-    def jsvalue?
-      @jsvalue != nil
-    end
-    
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
 
-    def jsend(object, function, *args)
-      args = nil if (args.size == 1 && args[0].nil?)
-      JSObject.build(function.invoke(object, *(args.to_java)))
-    end
-
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def assign(property_name, data)
-      
-      if (data.is_a? Sol::JSObject)
-        @jsvalue.setProperty(property_name, data.jsvalue)
-      else
-        @jsvalue.setProperty(property_name, data)
-      end
-      
-    end
-
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def method_missing(symbol, *args)
-      
-      name = symbol.id2name
-      
-      if name =~ /(.*)=$/
-      # ret = assign($1, args[0])
-        ret = assign($1, B.process_args(args)[0])
-      elsif ((member = @jsvalue.getProperty(name)).function? && args.size > 0)
-        ret = jsend(@jsvalue, member, *args)
-      else
-        ret = JSObject.build(member)
-      end
-      ret
-      
-    end
-    
   end
   
 end

@@ -51,6 +51,23 @@ class Sol
     #========================================================================================
     #
     #========================================================================================
+
+    module Dup
+      
+      refine Hash do
+        def jsdup
+          p "doing dup"
+          var = B.assign_window("_tmp_var", self)
+          p var
+        end
+      end
+
+    end
+    
+
+    #========================================================================================
+    #
+    #========================================================================================
     
     attr_reader :browser
         
@@ -59,21 +76,14 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def initialize(browser)
+      
       @browser = browser
 
       # listen for console events
       @browser.addConsoleListener(RBListener.new)
       
     end
-    
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def proxy(array)
-      ProxyArray.new(array).jsvar
-    end
-    
+        
     #------------------------------------------------------------------------------------
     # Gets the Brwoser 'window' object
     #------------------------------------------------------------------------------------
@@ -91,22 +101,24 @@ class Sol
     end
 
     #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def load(file)
+      @browser.executeJavaScriptAndReturnValue(file.read)
+    end
+
+    #------------------------------------------------------------------------------------
     # Evaluates the javascript script synchronously and then pack the result in a
     # Ruby JSObject
+    # @param scrpt [String] a javascript script to be executed synchronously
+    # @return [JSObject] a JSObject or one of its subclasses
     #------------------------------------------------------------------------------------
 
     def eval(scrpt)
       JSObject.build(@browser.executeJavaScriptAndReturnValue(scrpt))
     end
-        
-    #------------------------------------------------------------------------------------
-    # Assign the data to the given named window property
-    #------------------------------------------------------------------------------------
-
-    def assign_window(property_name, data)
-      window.setProperty(property_name, data)
-    end
-    
+            
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
@@ -133,6 +145,8 @@ class Sol
 
     #------------------------------------------------------------------------------------
     # Duplicates the given Ruby data into a javascript object in the Browser
+    # @param name [Symbol, String] the name of the javascript variable into which to dup
+    # @param data [Object] a Ruby object
     #------------------------------------------------------------------------------------
 
     def dup(name, data)
@@ -140,44 +154,30 @@ class Sol
     end
     
     #------------------------------------------------------------------------------------
-    #
+    # Creates a new function in javascript and returns it as a jsfunction
+    # @param symbol [Symbol] the name of the function in javascript namespace.  If not
+    # given, then a temporary name is used just to be able to create the function.
+    # @return [JSFunction] a jsfunction.
     #------------------------------------------------------------------------------------
 
     def function(symbol = nil, definition)
 
-      name = (symbol)? symbol.id2name : "_tmpvar_"
+      name = (symbol)? symbol.to_s : "_tmpvar_"
       eval("var #{name} = function #{definition}")
       eval("#{name}")
       
     end
-    
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def load(file)
-      @browser.executeJavaScriptAndReturnValue(file.read)
-    end
-
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def jspack(obj, scope: :external)
-      Callback.pack(obj, scope: scope)
-    end
-    
+        
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
 
     def method_missing(symbol, *args)
 
-      name = symbol.id2name
+      name = symbol.to_s
       name.gsub!(/__/,"$")
 
       if name =~ /(.*)=$/
-      # ret = assign_window($1, args[0])
         ret = assign_window($1, process_args(args)[0])
       else
         if ((ret = pull(name)).function?)
@@ -221,8 +221,41 @@ class Sol
       end
       
     end
+
+
+    
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def jspack(obj, scope: :external)
+      Callback.pack(obj, scope: scope)
+    end
+
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def proxy(array)
+      ProxyArray.new(array).jsvar
+    end
+
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    # private
+    
+    #------------------------------------------------------------------------------------
+    # Assign the data to the given named window property
+    #------------------------------------------------------------------------------------
+
+    def assign_window(property_name, data)
+      window.setProperty(property_name, data)
+    end
         
   end
   
 end
 
+using Sol::Js::Dup
