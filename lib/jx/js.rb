@@ -43,7 +43,7 @@ class Sol
     class RBListener
       include ConsoleListener
       
-      def Message(event)
+      def onMessage(event)
         puts "JS> #{event.getMessage()}"
       end
     end
@@ -56,7 +56,6 @@ class Sol
       
       refine Hash do
         def jsdup
-          p "doing dup"
           var = B.assign_window("_tmp_var", self)
           p var
         end

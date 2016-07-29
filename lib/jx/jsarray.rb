@@ -39,10 +39,6 @@ class Sol
     def initialize(array)
       
       @ruby_array = array
-      @jsvar = nil
-      @refresh = false
-      
-      js
       proxy_array(@jsvar)
       
     end
@@ -118,7 +114,7 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def get(index)
-      JSObject.build(@jsvalue.get(index))
+      JSObject.build(@jsvalue.get(index), @jsvalue) # @jsvalue
     end
     
     #------------------------------------------------------------------------------------

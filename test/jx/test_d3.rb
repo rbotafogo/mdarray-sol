@@ -43,10 +43,16 @@ class MDArraySolTest < Test::Unit::TestCase
     #--------------------------------------------------------------------------------------
 
     should "work with d3 and other javascript libraries" do
-      $d3.select("body").append("div").text("hi there")
       
-      dataset = [5, 10, 15, 20, 25]
+      $d3.select("body").append("p").text("New paragraph!");
+      $d3.select("body").append("div").text("hi there")
 
+      dataset = [ 5, 10, 15, 20, 25 ]
+      
+      data = $d3.select("body").selectAll("p")
+              .data(dataset).enter[].append("p").text("New paragraph!")
+      p data
+      
 =begin      
       $d3.select("body").selectAll("p")
         .data(dataset)

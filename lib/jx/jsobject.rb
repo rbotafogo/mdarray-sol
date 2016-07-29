@@ -26,34 +26,35 @@ class Sol
   class JSObject
 
     attr_reader :jsvalue
+    attr_reader :scope
     
     #------------------------------------------------------------------------------------
     # Builds a new Ruby JSObject or one of its more specific subclasses from the given
     # java jsvalue
     #------------------------------------------------------------------------------------
 
-    def self.build(jsvalue)
+    def self.build(jsvalue, scope = B.document)
 
       if (jsvalue.isArray())
-        JSArray.new(jsvalue)
+        JSArray.new(jsvalue, scope)
       elsif (jsvalue.isBoolean())
-        JSBoolean.new(jsvalue)
+        JSBoolean.new(jsvalue, scope)
       elsif (jsvalue.isBooleanObject())
-        JSBooleanObject.new(jsvalue)
+        JSBooleanObject.new(jsvalue, scope)
       elsif (jsvalue.isFunction())
-        JSFunction.new(jsvalue)
+        JSFunction.new(jsvalue, scope)
       elsif (jsvalue.isNumber())
-        JSNumber.new(jsvalue)
+        JSNumber.new(jsvalue, scope)
       elsif (jsvalue.isNumberObject())
-        JSNumberObject.new(jsvalue)
+        JSNumberObject.new(jsvalue, scope)
       elsif (jsvalue.isString())
-        JSString.new(jsvalue)
+        JSString.new(jsvalue, scope)
       elsif (jsvalue.isStringObject())
-        JSStringObject.new(jsvalue)
+        JSStringObject.new(jsvalue, scope)
       elsif (jsvalue.isUndefined())
-        JSUndefined.new(jsvalue)
+        JSUndefined.new(jsvalue, scope)
       elsif (jsvalue.isObject())
-        JSObject.new(jsvalue)
+        JSObject.new(jsvalue, scope)
       else
 
       end
@@ -64,8 +65,9 @@ class Sol
     #
     #------------------------------------------------------------------------------------
 
-    def initialize(jsvalue)
+    def initialize(jsvalue, scope = nil)
       @jsvalue = jsvalue
+      @scope = scope
     end
     
     #------------------------------------------------------------------------------------
@@ -110,12 +112,20 @@ class Sol
     end
     
     #------------------------------------------------------------------------------------
-    #
+    # Invokes the function in the scope of object
+    # @param object [JSObject] the object that holds the function
+    # @param function [java JSFunction] the function to be invoked, already in its java
+    # form
+    # @param *args [Args] a list of arguments to pass to the function
+    # @return jsobject [JSObject] a JSObject or one of its subclasses depending on the
+    # result of the function invokation
     #------------------------------------------------------------------------------------
 
     def jsend(object, function, *args)
       args = nil if (args.size == 1 && args[0].nil?)
-      JSObject.build(function.invoke(object, *(args.to_java)))
+      # After invoking a function the returned object is build in the scope of the
+      # original function.  I'm not sure if this is correct.  Needs testing.
+      JSObject.build(function.invoke(object, *(args.to_java)), function)
     end
 
     #------------------------------------------------------------------------------------
@@ -142,15 +152,34 @@ class Sol
       
       if name =~ /(.*)=$/
         ret = assign($1, B.process_args(args)[0])
-      elsif ((member = @jsvalue.getProperty(name)).function? && args.size > 0)
-        ret = jsend(@jsvalue, member, *args)
+      elsif ((member = @jsvalue.getProperty(name)).function? &&
+             ((args.size == 0) || (args.size > 1)) || (args[0] != nil))
+        ret = jsend(@jsvalue, member, *(B.process_args(args)))
       else
-        ret = JSObject.build(member)
+        # Build a JSObject in the scope of @jsvalue
+        ret = JSObject.build(member, @jsvalue)
       end
       ret
       
     end
     
+=begin
+    def method_missing(symbol, *args)
+      
+      name = symbol.id2name
+      
+      if name =~ /(.*)=$/
+        ret = assign($1, B.process_args(args)[0])
+      elsif ((member = @jsvalue.getProperty(name)).function? && args.size > 0)
+        ret = jsend(@jsvalue, member, *(B.process_args(args)))
+      else
+        # Build a JSObject in the scope of @jsvalue
+        ret = JSObject.build(member, @jsvalue)
+      end
+      ret
+      
+    end
+=end    
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------

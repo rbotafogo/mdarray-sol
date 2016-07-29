@@ -38,7 +38,7 @@ class MDArraySolTest < Test::Unit::TestCase
     setup do 
 
     end
-    
+
 #=begin    
     #--------------------------------------------------------------------------------------
     #
@@ -291,7 +291,6 @@ class MDArraySolTest < Test::Unit::TestCase
           data: car
         }
 
-        console.log(car.print("_", "500"));
       EOF
       
       rcar = B.pull("car")
@@ -306,25 +305,33 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal("string", B.typeof(rcar.type).v)
       assert_equal("number", B.typeof(rcar.model).v)
       assert_equal("boolean", B.typeof(rcar.sold).v)
-      assert_equal("function", B.typeof(rcar.print).v)
+      assert_equal("function", B.typeof(rcar.print(nil)).v)
 
       # check the type of the object directly
       assert_equal("object", rcar.typeof.v)
       assert_equal("string", rcar.type.typeof.v)
       assert_equal("number", rcar.model.typeof.v)
       assert_equal("boolean", rcar.sold.typeof.v)
-      assert_equal("function", rcar.print.typeof.v)
+      assert_equal("function", rcar.print(nil).typeof.v)
       
       # call function on a native javascript object
       assert_equal(4, rcar.info.length)
       
       # call the print function by passing parameters to it
       assert_equal("Fiat_500", rcar.print("_", "500").v)
+
+      # Get the print function.  Change this so that rcar.print and rcar.print()
+      # will both execute the fucntion and rcar.print(nil) returns the
+      # function.  The latter case is less commom than the former.
+      p_f = rcar.print(nil)
       
-      # note that to call a method with no arguments we need to provide nil as
-      # argument.  If we don't give nil as argument we will get the function
-      # in return.
-      assert_equal("no args given", rcar.no_args(nil).v)
+      # Execute the p_f function.  It should still be in the proper scope, i.e,
+      # this still executes in the scope of object 'car', so 'type' should be
+      # Fiat
+      assert_equal("Fiat_500", p_f["_", "500"].v)
+
+      # note that to call a method with no arguments
+      assert_equal("no args given", rcar.no_args.v)
 
       # access a deep structure
       assert_equal("Fiat", B.out.data.type.v)
@@ -460,8 +467,6 @@ class MDArraySolTest < Test::Unit::TestCase
 
     end
     
-
-
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
@@ -491,7 +496,11 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal("white", jscar.color.v)
       assert_equal(true, jscar.sold.v)
       assert_equal(1, jscar.info[0].v)
+      p "bug here!!! When no argument function cannot be called and should return the function"
+      assert_equal(8, jscar.print(3, 5).v)      
       assert_equal(8, jscar.print[3, 5].v)
+      f = jscar.print(nil)
+      p f[3, 5].v
       
     end
 #=end    

@@ -25,17 +25,6 @@ class Sol
 
   class JSFunction < JSObject
         
-    attr_reader :jsvar
-
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def initialize(jsvalue)
-      @jsvar = nil
-      super(jsvalue)
-    end
-    
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
@@ -58,7 +47,7 @@ class Sol
 
     def send(*args)
       # args need to be processed before invokation converting then to JSObjects
-      JSObject.build(@jsvalue.invoke(B.document, *(B.process_args(args))))
+      jsend(@scope, @jsvalue, *(B.process_args(args)))
     end
 
     #------------------------------------------------------------------------------------
@@ -66,6 +55,7 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def[](*args)
+      p @scope
       send(*args)
     end
           
