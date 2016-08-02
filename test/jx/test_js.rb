@@ -305,14 +305,14 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal("string", B.typeof(rcar.type).v)
       assert_equal("number", B.typeof(rcar.model).v)
       assert_equal("boolean", B.typeof(rcar.sold).v)
-      assert_equal("function", B.typeof(rcar.print(nil)).v)
+      assert_equal("function", B.typeof(rcar.print).v)
 
       # check the type of the object directly
       assert_equal("object", rcar.typeof.v)
       assert_equal("string", rcar.type.typeof.v)
       assert_equal("number", rcar.model.typeof.v)
       assert_equal("boolean", rcar.sold.typeof.v)
-      assert_equal("function", rcar.print(nil).typeof.v)
+      assert_equal("function", rcar.print.typeof.v)
       
       # call function on a native javascript object
       assert_equal(4, rcar.info.length)
@@ -323,7 +323,7 @@ class MDArraySolTest < Test::Unit::TestCase
       # Get the print function.  Change this so that rcar.print and rcar.print()
       # will both execute the fucntion and rcar.print(nil) returns the
       # function.  The latter case is less commom than the former.
-      p_f = rcar.print(nil)
+      p_f = rcar.print
       
       # Execute the p_f function.  It should still be in the proper scope, i.e,
       # this still executes in the scope of object 'car', so 'type' should be
@@ -331,7 +331,7 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal("Fiat_500", p_f["_", "500"].v)
 
       # note that to call a method with no arguments
-      assert_equal("no args given", rcar.no_args.v)
+      assert_equal("no args given", rcar.no_args(nil).v)
 
       # access a deep structure
       assert_equal("Fiat", B.out.data.type.v)
@@ -496,11 +496,13 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal("white", jscar.color.v)
       assert_equal(true, jscar.sold.v)
       assert_equal(1, jscar.info[0].v)
-      p "bug here!!! When no argument function cannot be called and should return the function"
       assert_equal(8, jscar.print(3, 5).v)      
       assert_equal(8, jscar.print[3, 5].v)
-      f = jscar.print(nil)
-      p f[3, 5].v
+
+      # Call the method in two steps: first get the method then call the method
+      # passing the arguments
+      f = jscar.print
+      assert_equal(8, f[3, 5].v)
       
     end
 #=end    

@@ -66,6 +66,8 @@ class RubyRich < JRubyFX::Application
       end
       set_on_close_request do
         stage.close
+        # dispose of the browser and end the application
+        $js.browser.dispose
       end
       show
     end

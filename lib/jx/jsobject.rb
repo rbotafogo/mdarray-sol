@@ -152,24 +152,6 @@ class Sol
       
       if name =~ /(.*)=$/
         ret = assign($1, B.process_args(args)[0])
-      elsif ((member = @jsvalue.getProperty(name)).function? &&
-             ((args.size == 0) || (args.size > 1)) || (args[0] != nil))
-        ret = jsend(@jsvalue, member, *(B.process_args(args)))
-      else
-        # Build a JSObject in the scope of @jsvalue
-        ret = JSObject.build(member, @jsvalue)
-      end
-      ret
-      
-    end
-    
-=begin
-    def method_missing(symbol, *args)
-      
-      name = symbol.id2name
-      
-      if name =~ /(.*)=$/
-        ret = assign($1, B.process_args(args)[0])
       elsif ((member = @jsvalue.getProperty(name)).function? && args.size > 0)
         ret = jsend(@jsvalue, member, *(B.process_args(args)))
       else
@@ -179,7 +161,7 @@ class Sol
       ret
       
     end
-=end    
+
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
