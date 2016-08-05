@@ -51,8 +51,14 @@ class MDArraySolTest < Test::Unit::TestCase
       
       data = $d3.select("body").selectAll("p")
               .data(dataset).enter[].append("p").text("New paragraph!")
-      p data
+
+=begin      
+      B.packds = B.jspack(dataset)
+      p B.packds
       
+      data = $d3.select("body").selectAll("p")
+              .data(B.packds).enter[].append("p").text("New paragraph!")
+=end      
 =begin      
       $d3.select("body").selectAll("p")
         .data(dataset)

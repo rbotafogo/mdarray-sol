@@ -21,12 +21,6 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-=begin
-$js.load(File.open("#{Sol::js_dir}/dc/node_modules/d3/d3.js"))
-$js.load(File.open("#{Sol::js_dir}/dc/node_modules/crossfilter2/crossfilter.js"))
-$js.load(File.open("#{Sol::js_dir}/dc/dc.js"))
-=end
-
 B = $js
 B.freeze
 
@@ -35,6 +29,40 @@ $dc = B.pull("dc")
 
 $d3.freeze
 $dc.freeze
+
+B.eval(<<-EOT)
+
+function RubyRich() {
+  
+  this.identity = function(value) {
+    return value;
+  },
+
+  this.instanceOf = function(object, constructor) {
+    while (object != null) {
+            if (object == constructor.prototype)
+              return true;
+              if (typeof object == 'xml') {
+                   return constructor.prototype == XML.prototype;
+                 }
+                object = object.__proto__;
+          }
+      return false;
+  }
+
+  this.new_object = function(...args) {
+    var constructor = args.shift();
+    return new constructor(...args);
+  }
+  
+};
+
+var rr = new RubyRich();
+
+EOT
+
+
+
 
 # Create an arrayChangeHandler for Array proxy building
 B.eval(<<-EOT)
@@ -54,6 +82,13 @@ B.eval(<<-EOT)
 
 EOT
 
+
+=begin
+
+function identity(value) {
+  return value;
+}
+
 B.eval(<<-EOT)
 
 function instanceOf(object, constructor) {
@@ -69,3 +104,7 @@ function instanceOf(object, constructor) {
 }
 
 EOT
+
+=end
+
+

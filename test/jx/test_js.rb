@@ -61,6 +61,13 @@ class MDArraySolTest < Test::Unit::TestCase
       B.num = 1.234
       assert_equal(1.234, B.num.double)
 
+      assert_equal(1, B.push(1).byte)
+      assert_equal(1.345, B.push(1.345).double)
+      assert_equal(10.345000267028809, B.push(10.345).float)
+      assert_equal(1, B.push(1).int)
+      assert_equal(1234567890987654400, B.push(1234567890987654321).long)
+      assert_equal(1.35, B.push(1.35).value)
+
     end
 
     #--------------------------------------------------------------------------------------
@@ -102,6 +109,10 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal(false, B.logf.v)
 
       assert_equal(true, B.logt.boolean?)
+      
+      assert_equal(true, B.push(true).value)
+      assert_equal(false, B.push(false).value)
+      assert_equal(true, B.push(false).boolean?)
       
     end
 
@@ -146,6 +157,8 @@ class MDArraySolTest < Test::Unit::TestCase
       str2 = B.eval("'this is a string'")
       assert_equal("this is a string", str2.v)
 
+      assert_equal("this is a string", B.push("this is a string").v)
+      
     end
     
     #--------------------------------------------------------------------------------------
@@ -342,7 +355,29 @@ class MDArraySolTest < Test::Unit::TestCase
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
-#=begin
+
+    should "allow the use of javascript constructors" do
+
+      Const = B.function(<<-EOT)
+        (x, y) {
+          this.number = new Number(x);
+          this.value = y;
+          this.str = arguments[2];
+        }
+      EOT
+
+      const = Const.new(2, 3, "Hello Constructor")
+      
+      assert_equal(2, const.number.v)
+      assert_equal(3, const.value.v)
+      assert_equal("Hello Constructor", const.str.v)
+      
+    end
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
     should "properly return instanceof" do
       
       # The instanceof operator tests presence of constructor.prototype in object's
@@ -407,9 +442,6 @@ class MDArraySolTest < Test::Unit::TestCase
       # ({})  instanceof Object;    // returns true, same case as above
     end
     
-#=end      
-
-      
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------

@@ -30,7 +30,7 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def typeof
-      B.eval("'function'")
+      B.push("function")
     end
 
     #------------------------------------------------------------------------------------
@@ -62,6 +62,17 @@ class Sol
     # Create a new object using this function as a constructor
     #------------------------------------------------------------------------------------
 
+    def new(*args)
+      B.rr.new_object(@jsvalue, *args)
+    end
+    
+  end
+  
+end
+
+
+
+=begin
     def new(*args)
 
       # assign this function to a temporary variable in javascript
@@ -128,7 +139,5 @@ class Sol
       @jsvar
       
     end
-    
-  end
-  
-end
+
+=end

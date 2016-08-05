@@ -75,7 +75,16 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def value
-      raise "Method value undefined for this class"
+
+      if ((member = @jsvalue.getProperty("value")).function? && args.size > 0)
+        ret = jsend(@jsvalue, member, *(B.process_args(args)))
+      elsif(member.undefined?)
+        raise "Method value undefined for this Object"
+      else
+        ret = JSObject.build(member, @jsvalue)
+      end
+      ret
+      
     end
     
     #------------------------------------------------------------------------------------
@@ -100,7 +109,7 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def instanceof(constructor)
-      B.instanceOf(@jsvalue, constructor.jsvalue)
+      B.rr.instanceOf(@jsvalue, constructor.jsvalue)
     end
     
     #----------------------------------------------------------------------------------------
@@ -128,6 +137,26 @@ class Sol
       JSObject.build(function.invoke(object, *(args.to_java)), function)
     end
 
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def send(*args)
+      p "calling send with #{args}"
+      func = @jsvalue.getProperty("send")
+      p func
+      jsend(@jsvalue, func, *(B.process_args(args))) if
+        !func.is_a? Java::ComTeamdevJxbrowserChromium::JSUndefined
+
+=begin      
+      if (func.is_a? Java::ComTeamdevJxbrowserChromium::JSUndefined)
+        p "undefined"
+      else
+        jsend(@jsvalue, func, *args)
+      end
+=end
+    end
+    
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------

@@ -47,19 +47,28 @@ class MDArraySolTest < Test::Unit::TestCase
     should "callback rpacked classes Array and Hash" do
 
       # create an array of data in Ruby
-      array = [1, 2, 3]
+      array = [1, 2, 3, 4]
 
-      # Pack the array and assign it to an R variable.  Remember that ruby__array, becomes
-      # ruby.array inside the R script
+      # Pack the array and assign it to an R variable.
       B.ruby_array = B.jspack(array)
-=begin      
+      p B.ruby_array.send("length").v
+      B.ruby_array.send("<<", 5)
+      p B.ruby_array.send("to_s").v
+
+      p array
+
+      num = B.Number.new("1")
+      num.send("length")
+      
       B.eval(<<-EOT)
         console.log(ruby_array.send("length"))
       EOT
-=end
-      
-      B.ruby_array.send("length")
-      
+
+      jsarray = B.push(array)
+      p jsarray
+      jsarray.send("<<", 6)
+      p jsarray.send("to_s")
+
 =begin
       # note that this calls Ruby method 'length' on the array and not R length function.
       R.eval("val <- ruby.array$run('length')")
