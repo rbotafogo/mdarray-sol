@@ -172,8 +172,16 @@ class MDArraySolTest < Test::Unit::TestCase
       EOT
 
       assert_equal("this is a string", B.str.v)
-      
       assert_equal(true, B.str.string?)
+
+      # str is a Ruby variable that points to data in the Browser
+      str = B.push("this is a string")
+      assert_equal("this is a string", str.v)
+
+      # No need to use B.push for the string, since str2 is in the Browser, the string
+      # is automatically converted, just checking that this actually works.
+      B.str2 = B.push("this is also a string")
+      assert_equal("this is also a string", B.str2.v)
       
     end
     
@@ -250,7 +258,7 @@ class MDArraySolTest < Test::Unit::TestCase
       # call function f6 passign a JSObject
       assert_equal("123", f6[B.a].v)
 
-      # passing an Ruby array directly '[1, 2, 3]' directly to a javascript
+      # passing a Ruby array directly '[1, 2, 3]' directly to a javascript
       # function.  The Ruby array is copied to the javascript array
       assert_equal("123", f6[[1, 2, 3]].v)
       
@@ -541,13 +549,3 @@ class MDArraySolTest < Test::Unit::TestCase
   end
   
 end
-
-=begin            
-      assert_equal(true, B.instanceof(car, B.Object))
-      assert_equal(true, B.instanceof(car.info, "array"))
-      assert_equal(true, B.instanceof(car.print, "function"))
-      assert_equal(true, B.instanceof(car.print, "object"))
-      assert_equal(false, B.instanceof(car, "array"))
-      assert_equal(false, B.instanceof(car.info, "function"))
-      assert_equal(false, B.instanceof(car.print, "array"))
-=end

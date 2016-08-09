@@ -21,7 +21,6 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-# require 'opal'
 require 'json'
 require_relative 'jsobject'
 
@@ -205,6 +204,8 @@ class Sol
 
       args.map do |x|
         case x
+        when Sol::Callback
+          x
         when Sol::JSObject
           x.jsvalue
         when Hash, Array
@@ -223,7 +224,8 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def jspack(obj, scope: :external)
-      Callback.pack(obj, scope: scope)
+      assign_window("__pack__", Callback.pack(obj, scope: scope))
+      eval("__pack__")
     end
 
     #------------------------------------------------------------------------------------

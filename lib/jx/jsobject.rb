@@ -132,8 +132,6 @@ class Sol
 
     def jsend(object, function, *args)
       args = nil if (args.size == 1 && args[0].nil?)
-      # After invoking a function the returned object is build in the scope of the
-      # original function.  I'm not sure if this is correct.  Needs testing.
       JSObject.build(function.invoke(object, *(args.to_java)), function)
     end
 
@@ -142,19 +140,14 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def send(*args)
-      p "calling send with #{args}"
+      
       func = @jsvalue.getProperty("send")
-      p func
+      # p func
+      # ATTENTION: This should be packed inside a Callback and not a JSObject, I think
+      # CHECK!!!!
       jsend(@jsvalue, func, *(B.process_args(args))) if
         !func.is_a? Java::ComTeamdevJxbrowserChromium::JSUndefined
-
-=begin      
-      if (func.is_a? Java::ComTeamdevJxbrowserChromium::JSUndefined)
-        p "undefined"
-      else
-        jsend(@jsvalue, func, *args)
-      end
-=end
+      
     end
     
     #------------------------------------------------------------------------------------
@@ -178,7 +171,7 @@ class Sol
     def method_missing(symbol, *args)
       
       name = symbol.id2name
-      
+
       if name =~ /(.*)=$/
         ret = assign($1, B.process_args(args)[0])
       elsif ((member = @jsvalue.getProperty(name)).function? && args.size > 0)

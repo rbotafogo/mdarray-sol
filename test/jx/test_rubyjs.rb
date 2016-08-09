@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ##########################################################################################
-# Copyright © 2013 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
+# Copyright © 2016 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
 # and distribute this software and its documentation, without fee and without a signed 
 # licensing agreement, is hereby granted, provided that the above copyright notice, this 
 # paragraph and the following two paragraphs appear in all copies, modifications, and 
@@ -51,24 +51,32 @@ class MDArraySolTest < Test::Unit::TestCase
 
       # Pack the array and assign it to an R variable.
       B.ruby_array = B.jspack(array)
-      p B.ruby_array.send("length").v
-      B.ruby_array.send("<<", 5)
-      p B.ruby_array.send("to_s").v
-
-      p array
-
-      num = B.Number.new("1")
-      num.send("length")
+      assert_equal(4, B.ruby_array.send("length").v)
       
       B.eval(<<-EOT)
         console.log(ruby_array.send("length"))
       EOT
 
-      jsarray = B.push(array)
-      p jsarray
+      B.ruby_array.send("<<", 5)
+      p B.ruby_array.send("to_s").v
+
+=begin      
+      B.ruby_array.send("<<", 5)
+      p B.ruby_array.send("to_s").v
+      p array
+
+      num = B.Number.new("1")
+      num.send("length")
+      
+=end
+=begin      
+      # jsarray = B.push(array)
+      jsarray = B.jspack(array)
       jsarray.send("<<", 6)
       p jsarray.send("to_s")
-
+      jsarray << 7
+      #p jsarray.to_s
+=end
 =begin
       # note that this calls Ruby method 'length' on the array and not R length function.
       R.eval("val <- ruby.array$run('length')")

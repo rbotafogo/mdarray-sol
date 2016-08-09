@@ -25,7 +25,7 @@ class Sol
   
   class Callback
     include Java::ComRbMdarray_sol.RubyCallbackInterface
-    
+
     attr_reader :ruby_obj
     
     #----------------------------------------------------------------------------------------
@@ -41,11 +41,9 @@ class Sol
     #----------------------------------------------------------------------------------------
 
     def send(*args)
-      method = args.shift
-      # puts "method #{method} called with args: #{args}"
       # The returned value from the called method should be packed.
       # Callback.pack(@ruby_obj.send(method, *args))
-      @ruby_obj.send(method, *args)
+      @ruby_obj.send(*args)
     end
     
     #----------------------------------------------------------------------------------------
