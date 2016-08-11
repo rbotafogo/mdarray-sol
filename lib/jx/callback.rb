@@ -41,9 +41,16 @@ class Sol
     #----------------------------------------------------------------------------------------
 
     def send(*args)
-      # The returned value from the called method should be packed.
-      # Callback.pack(@ruby_obj.send(method, *args))
-      @ruby_obj.send(*args)
+
+      # if last argument is a block, i.e., a string between {} then convert this
+      # string to a block
+      last = args[-1][/\{(.*?)\}/] if (args.length > 0 && args[-1].is_a?(String))
+      if last
+        args.pop
+        blok = (eval  "lambda " + last)
+      end
+      
+      Callback.pack(@ruby_obj.send(*args, &blok))
     end
     
     #----------------------------------------------------------------------------------------

@@ -44,7 +44,7 @@ class MDArraySolTest < Test::Unit::TestCase
     #--------------------------------------------------------------------------------------
 
 
-    should "callback rpacked classes Array and Hash" do
+    should "callback a jspacked Ruby object" do
 
       # create an array of data in Ruby
       array = [1, 2, 3, 4]
@@ -52,46 +52,53 @@ class MDArraySolTest < Test::Unit::TestCase
       # Pack the array and assign it to an R variable.
       B.ruby_array = B.jspack(array)
       assert_equal(4, B.ruby_array.send("length").v)
-      
+
+      # Check that the array is available in the Browser
       B.eval(<<-EOT)
         console.log(ruby_array.send("length"))
       EOT
 
+      # add a new element to the array
       B.ruby_array.send("<<", 5)
-      p B.ruby_array.send("to_s").v
+      assert_equal(2, B.ruby_array.send("[]", 1).v)
+      assert_equal(5, B.ruby_array.send(:[], 4).v)
+      # check that both the Ruby array and the Browser array use the same
+      # backing store, i.e., array should now have the element 5:
+      assert_equal(5, array[4])
 
-=begin      
-      B.ruby_array.send("<<", 5)
-      p B.ruby_array.send("to_s").v
-      p array
+      # Check that we can still access the ruby_array from within javascript
+      B.eval(<<-EOT)
+        console.log(ruby_array.send("length"))
+        console.log(ruby_array.send("[]", 4))
+      EOT
 
       num = B.Number.new("1")
-      num.send("length")
+      assert_equal(nil, num.send(:length))
       
-=end
-=begin      
-      # jsarray = B.push(array)
-      jsarray = B.jspack(array)
-      jsarray.send("<<", 6)
-      p jsarray.send("to_s")
-      jsarray << 7
-      #p jsarray.to_s
-=end
-=begin
-      # note that this calls Ruby method 'length' on the array and not R length function.
-      R.eval("val <- ruby.array$run('length')")
-      assert_equal(3, R.val.gz)
+      # Set a Ruby variable to point to an object in the Browser
+      jsarray = B.jspack([10, 20, 30, 40])
+      jsarray.send("<<", 10)
 
-      # Let's use a more interesting array method '<<'.  This method adds elements to the
-      # end of the array.  
-
-      R.eval(<<-EOT)
-        print(typeof(ruby.array))
-        ruby.array$run('<<', 4)
-        ruby.array$run('<<', 5)
+      # make jsarray available to javascript
+      B.data = jsarray
+      B.eval(<<-EOT)
+         console.log("Expected value is 10 and returned is: " + data.send("[]", 4))
       EOT
-      assert_equal(4, array[3])
-      assert_equal(5, array[4])
+
+      assert_equal(40, jsarray.send(:[], 3).v)
+
+      # Let's do method chainning
+      jsarray.send(:<<, 100).send(:<<, 200).send(:to_s).v
+
+      # send a block to a Ruby method from javascript
+      B.eval(<<-EOT)
+         data.send("map", "{ |x| p x }")
+      EOT
+
+      jsarray.send("map", "{ |x| p x }")
+      jsarray.send("map") { |x| p x }
+      
+=begin
 
       # Although the concept of chainning is foreign to R, it does apply to packed
       # classes

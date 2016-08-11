@@ -33,7 +33,7 @@ class Sol
 
   class Js
     java_import com.teamdev.jxbrowser.chromium.events.ConsoleListener
-    java_import com.teamdev.jxbrowser.chromium.events.DisposeListener
+    # java_import com.teamdev.jxbrowser.chromium.events.DisposeListener
     java_import com.teamdev.jxbrowser.chromium.JSONString
     
     #========================================================================================
@@ -42,7 +42,7 @@ class Sol
     
     class RBListener
       include ConsoleListener
-      include DisposeListener
+      # include DisposeListener
       
       def onMessage(event)
         puts "JS> #{event.getMessage()}"
@@ -216,8 +216,6 @@ class Sol
       end
       
     end
-
-
     
     #------------------------------------------------------------------------------------
     #

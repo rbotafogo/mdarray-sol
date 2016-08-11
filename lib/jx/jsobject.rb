@@ -130,22 +130,32 @@ class Sol
     # result of the function invokation
     #------------------------------------------------------------------------------------
 
-    def jsend(object, function, *args)
+    def jsend(object, function, *args, &blok)
+
+      obj = Java::java.lang.Object.class.cast(blok) if block_given?
+      p obj if block_given?
+      
       args = nil if (args.size == 1 && args[0].nil?)
-      JSObject.build(function.invoke(object, *(args.to_java)), function)
+      
+      # if the argument list has any symbol, convert the symbol to a string
+      args.map! { |arg| (arg.is_a? Symbol)? arg.to_s : arg } if !args.nil?
+
+      if block_given?
+        JSObject.build(function.invoke(object, *(args.to_java), obj), function)
+      else
+        JSObject.build(function.invoke(object, *(args.to_java)), function)
+      end
+      
     end
 
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
 
-    def send(*args)
+    def send(*args, &blok)
       
       func = @jsvalue.getProperty("send")
-      # p func
-      # ATTENTION: This should be packed inside a Callback and not a JSObject, I think
-      # CHECK!!!!
-      jsend(@jsvalue, func, *(B.process_args(args))) if
+      jsend(@jsvalue, func, *(B.process_args(args)), &blok) if
         !func.is_a? Java::ComTeamdevJxbrowserChromium::JSUndefined
       
     end
