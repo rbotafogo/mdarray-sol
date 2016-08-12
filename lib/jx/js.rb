@@ -208,8 +208,8 @@ class Sol
           x
         when Sol::JSObject
           x.jsvalue
-        when Hash, Array
-          JSONString.new(x.to_json)
+        #when Hash, Array
+        #  JSONString.new(x.to_json)
         else
           x
         end

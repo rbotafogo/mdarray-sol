@@ -23,40 +23,40 @@ package com.rb.mdarray_sol;
 
 public interface RubyCallbackInterface {
 
-    public Object send(String function_name);
-    public Object send(String function_name, Object obj1);
-    public Object send(String function_name, Object obj1, Object obj2);
-    public Object send(String function_name, Object obj1, Object obj2, Object obj3);
-    public Object send(String function_name, Object obj1, Object obj2, Object obj3,
+    public Object run(String function_name);
+    public Object run(String function_name, Object obj1);
+    public Object run(String function_name, Object obj1, Object obj2);
+    public Object run(String function_name, Object obj1, Object obj2, Object obj3);
+    public Object run(String function_name, Object obj1, Object obj2, Object obj3,
 		       Object obj4);
-    public Object send(String function_name, Object obj1, Object obj2, Object obj3,
+    public Object run(String function_name, Object obj1, Object obj2, Object obj3,
 		       Object obj4, Object obj5);
-    public Object send(String function_name, Object obj1, Object obj2, Object obj3,
+    public Object run(String function_name, Object obj1, Object obj2, Object obj3,
 		       Object obj4, Object obj5, Object obj6);
-    public Object send(String function_name, Object obj1, Object obj2, Object obj3,
+    public Object run(String function_name, Object obj1, Object obj2, Object obj3,
 		       Object obj4, Object obj5, Object obj6, Object obj7);
-    public Object send(String function_name, Object obj1, Object obj2, Object obj3,
+    public Object run(String function_name, Object obj1, Object obj2, Object obj3,
 		       Object obj4, Object obj5, Object obj6, Object obj7, Object obj8);
-    public Object send(String function_name, Object obj1, Object obj2, Object obj3,
+    public Object run(String function_name, Object obj1, Object obj2, Object obj3,
 		       Object obj4, Object obj5, Object obj6, Object obj7, Object obj8,
 		       Object obj9);
-    public Object send(String function_name, Object obj1, Object obj2, Object obj3,
+    public Object run(String function_name, Object obj1, Object obj2, Object obj3,
 		       Object obj4, Object obj5, Object obj6, Object obj7, Object obj8,
 		       Object obj9, Object obj10);
-    public Object send(String function_name, Object obj1, Object obj2, Object obj3,
+    public Object run(String function_name, Object obj1, Object obj2, Object obj3,
 		       Object obj4, Object obj5, Object obj6, Object obj7, Object obj8,
 		       Object obj9, Object obj10, Object obj11);
-    public Object send(String function_name, Object obj1, Object obj2, Object obj3,
+    public Object run(String function_name, Object obj1, Object obj2, Object obj3,
 		       Object obj4, Object obj5, Object obj6, Object obj7, Object obj8,
 		       Object obj9, Object obj10, Object obj11, Object obj12);
-    public Object send(String function_name, Object obj1, Object obj2, Object obj3,
+    public Object run(String function_name, Object obj1, Object obj2, Object obj3,
 		       Object obj4, Object obj5, Object obj6, Object obj7, Object obj8,
 		       Object obj9, Object obj10, Object obj11, Object obj12, Object obj13);
-    public Object send(String function_name, Object obj1, Object obj2, Object obj3,
+    public Object run(String function_name, Object obj1, Object obj2, Object obj3,
 		       Object obj4, Object obj5, Object obj6, Object obj7, Object obj8,
 		       Object obj9, Object obj10, Object obj11, Object obj12, Object obj13,
 		       Object obj14);
-    public Object send(String function_name, Object obj1, Object obj2, Object obj3,
+    public Object run(String function_name, Object obj1, Object obj2, Object obj3,
 		       Object obj4, Object obj5, Object obj6, Object obj7, Object obj8,
 		       Object obj9, Object obj10, Object obj11, Object obj12, Object obj13,
 		       Object obj14, Object obj15);

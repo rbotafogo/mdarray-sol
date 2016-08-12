@@ -40,7 +40,7 @@ class Sol
     #
     #----------------------------------------------------------------------------------------
 
-    def send(*args)
+    def run(*args)
 
       # if last argument is a block, i.e., a string between {} then convert this
       # string to a block

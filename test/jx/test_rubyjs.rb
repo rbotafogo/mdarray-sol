@@ -44,109 +44,123 @@ class MDArraySolTest < Test::Unit::TestCase
     #--------------------------------------------------------------------------------------
 
 
-    should "callback a jspacked Ruby object" do
+    should "callback a jspacked Ruby Array" do
 
       # create an array of data in Ruby
       array = [1, 2, 3, 4]
 
       # Pack the array and assign it to an R variable.
       B.ruby_array = B.jspack(array)
-      assert_equal(4, B.ruby_array.send("length").v)
+      assert_equal(4, B.ruby_array.run("length").v)
 
       # Check that the array is available in the Browser
       B.eval(<<-EOT)
-        console.log(ruby_array.send("length"))
+        console.log(ruby_array.run("length"))
       EOT
 
       # add a new element to the array
-      B.ruby_array.send("<<", 5)
-      assert_equal(2, B.ruby_array.send("[]", 1).v)
-      assert_equal(5, B.ruby_array.send(:[], 4).v)
+      B.ruby_array.run("<<", 5)
+      assert_equal(2, B.ruby_array.run("[]", 1).v)
+      assert_equal(5, B.ruby_array.run(:[], 4).v)
       # check that both the Ruby array and the Browser array use the same
       # backing store, i.e., array should now have the element 5:
       assert_equal(5, array[4])
 
       # Check that we can still access the ruby_array from within javascript
       B.eval(<<-EOT)
-        console.log(ruby_array.send("length"))
-        console.log(ruby_array.send("[]", 4))
+        console.log(ruby_array.run("length"))
+        console.log(ruby_array.run("[]", 4))
       EOT
 
       num = B.Number.new("1")
-      assert_equal(nil, num.send(:length))
+      assert_equal(true, num.run(:length).undefined?)
       
       # Set a Ruby variable to point to an object in the Browser
       jsarray = B.jspack([10, 20, 30, 40])
-      jsarray.send("<<", 10)
+      jsarray.run("<<", 10)
 
       # make jsarray available to javascript
       B.data = jsarray
       B.eval(<<-EOT)
-         console.log("Expected value is 10 and returned is: " + data.send("[]", 4))
+         console.log("Expected value is 10 and returned is: " + data.run("[]", 4))
       EOT
 
-      assert_equal(40, jsarray.send(:[], 3).v)
+      assert_equal(40, jsarray.run(:[], 3).v)
 
       # Let's do method chainning
-      jsarray.send(:<<, 100).send(:<<, 200).send(:to_s).v
+      jsarray.run(:<<, 100).run(:<<, 200).run(:to_s).v
 
-      # send a block to a Ruby method from javascript
+      # run a block to a Ruby method from javascript
       B.eval(<<-EOT)
-         data.send("map", "{ |x| p x }")
+         data.run("map", "{ |x| print x}")
       EOT
 
-      jsarray.send("map", "{ |x| p x }")
-      jsarray.send("map") { |x| p x }
+      jsarray.run("map", "{ |x| print x }")
+      jsarray.run("map!", "{ |x| x + 1}")
       
-=begin
-
-      # Although the concept of chainning is foreign to R, it does apply to packed
-      # classes
-      R.eval(<<-EOT)
-        ruby.array$run('<<', 6)$run('<<', 7)$run('<<', 8)$run('<<', 9)
+      B.eval(<<-EOT)
+         console.log(data.run("to_s"))
       EOT
-      assert_equal(9, array[8])
+
+    end
+    
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+    
+    should "callback a jspacked Ruby Hash" do
       
-      # Let's try another method... remove a given element from the array
-      R.eval(<<-EOT)
-        ruby.array$run('delete', 4)
-      EOT
-      assert_equal(5, array[3])
-
-      # We can also acess any array element inside the R script, but note that we have
-      # to use Ruby indexing, i.e., the first element of the array is index 0
-      R.eval(<<-EOT)
-        print(ruby.array$run('[]', 0))
-        print(ruby.array$run('[]', 2))
-        print(ruby.array$run('[]', 4))
-        print(ruby.array$run('[]', 6))
-      EOT
-
       # Try the same with a hash
       hh = {"a" => 1, "b" =>2}
 
-      # Pack the hash and store it in R variable r.hash
-      R.r__hash = R.rpack(hh, scope: :external)
-
-      # Retrieve the value of a key
-      R.eval(<<-EOT)
-        h1 <- r.hash$run('[]', "a")
-        h2 <- r.hash$run('[]', "b")
-      EOT
-      assert_equal(1, R.h1.gz)
-      assert_equal(2, R.h2.gz)
-
-      # Add values to the hash
-      R.eval(<<-EOT)
-        h1 <- r.hash$run('[]=', "c", 3)
-        h2 <- r.hash$run('[]=', "d", 4)
-      EOT
-      assert_equal(3, hh["c"])
-      assert_equal(4, hh["d"])
-=end
+      B.hh = B.jspack(hh, scope: :external)
       
+      # Retrieve the value of a key
+      B.eval(<<-EOT)
+        var h1 = hh.run('[]', "a")
+        var h2 = hh.run('[]', "b")
+      EOT
+
+      assert_equal(1, B.h1.v)
+      assert_equal(2, B.h2.v)
+
+      B.hh.run("[]=", "c", 3)
+      
+      B.eval(<<-EOT)
+         console.log(hh.run("to_s"))
+      EOT
+      
+      B.hh.run("[]=", "d", 4)
+      
+      assert_equal(3, B.hh.run("[]", "c").v)
+      assert_equal(4, B.hh.run("[]", "d").v)
+
+    end
+          
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+    
+    should "callback a jspacked object with internal scope" do
+
     end
     
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+    
+    should "callback a jspacked MDArray" do
+
+      B.mdarray = MDArray.double([2, 2], [1, 2, 3, 4])
+      B.mdarray.run("[]", [1, 1])
+
+=begin      
+      B.eval(<<-EOT)
+         console.log(mdarray.run("[]", 1, 1))
+      EOT
+=end      
+    end
+
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
@@ -161,46 +175,6 @@ class MDArraySolTest < Test::Unit::TestCase
     end
 
 
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
-
-    should "callback Ruby classes" do
-
-      # class Log < Java::RbMdarray_sol.Callback
-      class Log
-        include Java::RbMdarray_sol.RubyCallbackInterface
-        
-        def run(*args)
-          message = args[0]
-        end
-        
-      end
-
-      class RBObject
-        include Java::RbMdarray_sol.RubyCallbackInterface
-
-        attr_reader :rbobject
-        
-        def initialize(rbobject)
-          @rbobject = rbobject
-          @jarray = [].to_java
-        end
-
-        def run(args)
-          args = args.to_a
-          raise args.to_s
-          @rbobject.send(message, *args)
-        end
-
-        def jsarray(args)
-          return @jarray
-        end
-          
-      end
-
-      rb = RBObject.new(1)
-      p rb.jsarray(1)
 
       mdarray = RBObject.new(MDArray.double([2, 2], [1, 2, 3, 4]))
       # p mdarray.run(["get", [1, 1]])
@@ -268,36 +242,3 @@ class MDArraySolTest < Test::Unit::TestCase
   end
   
 end
-
-
-=begin
-      B.eval(Opal.compile(<<-EOT)
-        class Tt
-          def tt(x, y)
-             x + y
-          end
-        end
-      EOT
-            )
-
-      p B.Opal.Tt.__new(nil)
-
-      ret = B.eval(<<-EOT)
-        Opal.Tt.$new().$tt(3, 4)
-      EOT
-
-      p ret.v
-
-
-      B.eval(<<-EOT)
-      var name;
-      for (name in Opal.Tt) {
-        if (Opal.Tt.hasOwnProperty(name)) {
-          console.log(name)
-       }
-       else {
-          console.log(name)
-       }
-      }
-      EOT
-=end

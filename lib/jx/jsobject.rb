@@ -130,36 +130,17 @@ class Sol
     # result of the function invokation
     #------------------------------------------------------------------------------------
 
-    def jsend(object, function, *args, &blok)
+    def jsend(object, function, *args)
 
-      obj = Java::java.lang.Object.class.cast(blok) if block_given?
-      p obj if block_given?
-      
       args = nil if (args.size == 1 && args[0].nil?)
       
       # if the argument list has any symbol, convert the symbol to a string
       args.map! { |arg| (arg.is_a? Symbol)? arg.to_s : arg } if !args.nil?
 
-      if block_given?
-        JSObject.build(function.invoke(object, *(args.to_java), obj), function)
-      else
-        JSObject.build(function.invoke(object, *(args.to_java)), function)
-      end
-      
+      JSObject.build(function.invoke(object, *(args.to_java)), function)
+
     end
 
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def send(*args, &blok)
-      
-      func = @jsvalue.getProperty("send")
-      jsend(@jsvalue, func, *(B.process_args(args)), &blok) if
-        !func.is_a? Java::ComTeamdevJxbrowserChromium::JSUndefined
-      
-    end
-    
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
@@ -179,7 +160,7 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def method_missing(symbol, *args)
-      
+
       name = symbol.id2name
 
       if name =~ /(.*)=$/
