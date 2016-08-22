@@ -258,9 +258,8 @@ class MDArraySolTest < Test::Unit::TestCase
       # call function f6 passign a JSObject
       assert_equal("123", f6[B.a].v)
 
-      # passing a Ruby array directly '[1, 2, 3]' directly to a javascript
-      # function.  The Ruby array is copied to the javascript array
-      assert_equal("123", f6[[1, 2, 3]].v)
+      # use the B.dup function to duplicate a Ruby array to javascript
+      assert_equal("123", f6[B.dup([1, 2, 3])].v)
       
     end
 
@@ -413,7 +412,7 @@ class MDArraySolTest < Test::Unit::TestCase
       # C.prototype is also an instance of a JSObject
       assert_equal(true, C.prototype.instanceof(B.Object).v)
 
-      C.prototype = {}
+      C.prototype = B.dup({})
       o2 = C.new
 
       assert_equal(true, o2.instanceof(C).v)

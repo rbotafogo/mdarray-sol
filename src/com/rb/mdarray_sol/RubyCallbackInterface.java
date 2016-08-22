@@ -21,8 +21,12 @@
 
 package com.rb.mdarray_sol;
 
+import com.teamdev.jxbrowser.chromium.JSObject;
+import com.teamdev.jxbrowser.chromium.JSArray;
+
 public interface RubyCallbackInterface {
 
+    // run method to be called from a Ruby script
     public Object run(String function_name);
     public Object run(String function_name, Object obj1);
     public Object run(String function_name, Object obj1, Object obj2);
@@ -60,9 +64,9 @@ public interface RubyCallbackInterface {
 		       Object obj4, Object obj5, Object obj6, Object obj7, Object obj8,
 		       Object obj9, Object obj10, Object obj11, Object obj12, Object obj13,
 		       Object obj14, Object obj15);
-
     
     public Object get_class(String class_name);
+    
     public Object build(String classname, Object... arguments);
     
 }

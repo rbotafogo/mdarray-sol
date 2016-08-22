@@ -3,7 +3,7 @@
 ##########################################################################################
 # @author Rodrigo Botafogo
 #
-# Copyright © 2015 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
+# Copyright © 2016 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
 # and distribute this software and its documentation, without fee and without a signed 
 # licensing agreement, is hereby granted, provided that the above copyright notice, this 
 # paragraph and the following two paragraphs appear in all copies, modifications, and 
@@ -21,13 +21,19 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-require 'jrubyfx'
-require 'mdarray'
+class MDArray
+  
+  alias old_index :[]
+  alias old_assign :[]=
+  
+  def [](*args)
+    args.map! { |arg| arg.to_i }
+    old_index(*args)
+  end
 
-require_relative '../config'
+  def []=(*index, value)
+    index.map! { |arg| arg.to_i }
+    old_assign(*index, value)
+  end
 
-# require_relative 'webview/sol'
-# require_relative 'charts/chart'
-
-require_relative 'jx/sol'
-require_relative 'mdarray/jsmdarray'
+end

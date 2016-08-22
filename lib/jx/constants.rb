@@ -62,49 +62,39 @@ var rr = new RubyRich();
 EOT
 
 
+B.eval(<<-EOF)
+  var arrayChangeHandler = {
+        get: function(target, property) {
+          console.log('getting ' + property + ' for ' + target);
+          //# property is index in this case
+          // return target[property];
+        },
+        set: function(target, property, value, receiver) {
+          console.log('setting ' + property + ' for ' + target + ' with value ' + value);
+          // target[property] = value;
+          // you have to return true to accept the changes
+          return true;
+        }
+      };
 
 
-# Create an arrayChangeHandler for Array proxy building
-B.eval(<<-EOT)
-        var arrayChangeHandler = {
-          get: function(target, property) {
-                 console.log('getting ' + property + ' for ' + target);
-               // property is index in this case
-                 return target[property];
-               },
-          set: function(target, property, value, receiver) {
-                 console.log('setting ' + property + ' for ' + target + ' with value ' + value);
-                 target[property] = value;
-                 // you have to return true to accept the changes
-                 return true;
-               }
-         };
+function RubyProxy(proxy) {
 
-EOT
+  this.proxy = proxy;
 
+  this.arrayChangeHandler = {
+    get: function(target, property){
+      console.log("my proxy is " + proxy.run("[]", parseInt(property)));
+    },
 
-=begin
+    set: function(target, property, value, receiver) {
+      console.log("my proxy is ");
+    }
+  }
 
-function identity(value) {
-  return value;
+  this.array = new Proxy([], this.arrayChangeHandler);
+  return this.array;
+  
 }
 
-B.eval(<<-EOT)
-
-function instanceOf(object, constructor) {
-   while (object != null) {
-      if (object == constructor.prototype)
-         return true;
-      if (typeof object == 'xml') {
-        return constructor.prototype == XML.prototype;
-      }
-      object = object.__proto__;
-   }
-   return false;
-}
-
-EOT
-
-=end
-
-
+EOF

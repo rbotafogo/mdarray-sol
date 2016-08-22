@@ -142,8 +142,12 @@ class Sol
     # @param data [Object] a Ruby object
     #------------------------------------------------------------------------------------
 
-    def dup(name, data)
+    def dup(symbol = nil, data)
+      
+      name = (symbol)? symbol.to_s : "_tmpvar_"
       assign_window(name.to_s, JSONString.new(data.to_json))
+      eval("#{name}")
+      
     end
     
     #------------------------------------------------------------------------------------
@@ -251,3 +255,4 @@ class Sol
   end
   
 end
+

@@ -42,8 +42,7 @@ class MDArraySolTest < Test::Unit::TestCase
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
-
-
+=begin
     should "callback a jspacked Ruby Array" do
 
       # create an array of data in Ruby
@@ -136,109 +135,65 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal(4, B.hh.run("[]", "d").v)
 
     end
-          
+
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
     
-    should "callback a jspacked object with internal scope" do
+    should "receive jspacked object from an internal Ruby objects" do
 
-    end
-    
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
-    
-    should "callback a jspacked MDArray" do
+      # create a Ruby array of hashes with data
+      data = [
+        {date: "2011-11-14T16:17:54Z", quantity: 2, total: 190, tip: 100, type: "tab"},
+        {date: "2011-11-14T16:20:19Z", quantity: 2, total: 190, tip: 100, type: "tab"},
+        {date: "2011-11-14T16:28:54Z", quantity: 1, total: 300, tip: 200, type: "visa"},
+        {date: "2011-11-14T16:30:43Z", quantity: 2, total: 90, tip: 0, type: "tab"},
+        {date: "2011-11-14T16:48:46Z", quantity: 2, total: 90, tip: 0, type: "tab"},
+        {date: "2011-11-14T16:53:41Z", quantity: 2, total: 90, tip: 0, type: "tab"},
+        {date: "2011-11-14T16:54:06Z", quantity: 1, total: 100, tip: 0, type: "cash"},
+        {date: "2011-11-14T16:58:03Z", quantity: 2, total: 90, tip: 0, type: "tab"},
+        {date: "2011-11-14T17:07:21Z", quantity: 2, total: 90, tip: 0, type: "tab"},
+        {date: "2011-11-14T17:22:59Z", quantity: 2, total: 90, tip: 0, type: "tab"},
+        {date: "2011-11-14T17:25:45Z", quantity: 2, total: 200, tip: 0, type: "cash"},
+        {date: "2011-11-14T17:29:52Z", quantity: 1, total: 200, tip: 100, type: "visa"}
+      ]
 
-      B.mdarray = MDArray.double([2, 2], [1, 2, 3, 4])
-      B.mdarray.run("[]", [1, 1])
+      # push the data to the Browser without copying
+      B.data = B.jspack(data)
 
-=begin      
+      # check that we can access both the array and the hash content from javascript
       B.eval(<<-EOT)
-         console.log(mdarray.run("[]", 1, 1))
+        console.log(data.run("length"))
+        // Hash keys should be access by a string in javascript
+        console.log(data.run("[]", 4).run("[]", "date"))
       EOT
-=end      
+
     end
 
+=end
+    
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
     
-=begin
-    should "allow Ruby arrays to be used in js without copying" do
+    should "proxy arrays" do
 
-      pa = B.proxy([1, 2, 3, 4])
-      p pa
-      B.eval("#{pa}[1] = 'Hello'")
+      a = [1, 2, 3, 4]
+      B.pa = B.jspack(a)
       
-    end
-
-
-
-      mdarray = RBObject.new(MDArray.double([2, 2], [1, 2, 3, 4]))
-      # p mdarray.run(["get", [1, 1]])
-      
-      B.assign("mdarray", mdarray)
-      B.args = ["get", [1, 1]]
-      # B.eval("var val = mdarray.run(args)")
       B.eval(<<-EOT)
-        var args = mdarray.jsarray(1)
-        args.append(1)
-        var val = mdarray.run(args)
+        var proxy = new RubyProxy(pa);
+        proxy[0]
+        proxy[1]
+        proxy[2]
+        proxy[3]
       EOT
-      p B.val
-=end      
-=begin      
-      log = Log.new
-      B.assign("log", log)
-      B.eval("var mes = log.run('this is a message to log')")
-      p B.mes
-      
-      cb = Java::RbMdarray_sol.Callback.new
-      
-      B.assign("cb", cb)
-      B.eval("var str = cb.run('hello world')")
-      p B.str
 
-      B.jarray = [1, 2]
+      # B.proxy crashes since this has no arguments
+      # B.proxy[0]
       
-      B.eval("var obj = cb.run(jarray)")
-      p B.obj
-
     end
     
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
-
-    should "access Ruby objects from JavaScript" do
-
-      B.eval(<<-EOF)
-        var car = { }
-      EOF
-
-      array = JsArray.new([1, 2, 3, 4])
-      B.assign("car", array)
-      car = B.pull("car")
-      
-      f1 = B.eval("car")
-      p "data set"
-      f2 = B.eval("car.external.notset")
-      p f2
-
-      p B.eval("car.external.send('[]', 0)")
-      p "message send"
-      
-      # array = B.eval("car.external")
-      # p array
-
-    end
-=end        
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
-
   end
   
 end

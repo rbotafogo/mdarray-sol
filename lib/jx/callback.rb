@@ -21,6 +21,8 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
+require 'insensitive_hash'
+
 class Sol
   
   class Callback
@@ -33,6 +35,9 @@ class Sol
     #----------------------------------------------------------------------------------------
 
     def initialize(ruby_obj)
+      # if ruby_obj is a hash, then make it accessible both by key of by string since
+      # javascript does not allow key access
+      ruby_obj = ruby_obj.insensitive if ruby_obj.is_a? Hash
       @ruby_obj = ruby_obj
     end
     
@@ -49,8 +54,13 @@ class Sol
         args.pop
         blok = (eval  "lambda " + last)
       end
+
+      # convert arguments to 'method' and Ruby args
+      method = args.shift
+      params = process_args(args)
+
+      Callback.pack(@ruby_obj.send(method, *params, &blok))
       
-      Callback.pack(@ruby_obj.send(*args, &blok))
     end
     
     #----------------------------------------------------------------------------------------
@@ -101,8 +111,47 @@ class Sol
       end
       
     end
+
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def process_args(args)
+
+      args.map do |arg|
+        if (arg.is_a? Java::ComTeamdevJxbrowserChromium::JSObject)
+          if (arg.isArray())
+            array = []
+            for i in 0...arg.length()
+              array << arg.get(i)
+            end
+            process_args(array)
+          elsif (arg.isBooleanObject())
+            arg.getBooleanValue()
+          elsif (arg.isNumberObject())
+            arg.getNumberValue()
+          elsif (arg.isStringObject())
+            arg.getStringValue()
+          end
+        elsif (arg.is_a? Java::ComTeamdevJxbrowserChromium::JSValue)
+          if (arg.isBoolean())
+            arg.getBooleanValue()
+          elsif (arg.isNumber())
+            arg.getNumberValue()
+          elsif (arg.isString())
+            arg.getStringValue()
+          else
+            raise "Illegal argument #{arg}"
+          end
+        else
+          arg
+        end
+        
+      end
+      
+    end
     
   end
-
+  
 end
 

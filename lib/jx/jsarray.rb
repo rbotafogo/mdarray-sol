@@ -27,9 +27,9 @@ class Sol
   # 
   #==========================================================================================
   
-  class ProxyArray < JSObject
+  class ProxyArray
 
-    attr_reader :ruby_array  # this is the ruby array that will be proxied
+    attr_reader :ruby_array  # this is the ruby array that will ser as proxy for a js array
 
     #------------------------------------------------------------------------------------
     # Gets a ruby array and proxy it in javascript so that it becomes the storage
@@ -37,36 +37,10 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def initialize(array)
-      
       @ruby_array = array
-      proxy_array(@jsvar)
-      
-    end
-    
-    #------------------------------------------------------------------------------------
-    # Gets a ruby array and proxy it in javascript so that it becomes the storage
-    # medium for the array
-    #------------------------------------------------------------------------------------
+      @proxy = B.Proxy([], B.arrayChangeHandler)
 
-    def proxy_array(name)
-      
-      B.eval(<<-EOF)
-        var arrayChangeHandler = {
-          get: function(target, property) {
-                 console.log('getting ' + property + ' for ' + target);
-               // property is index in this case
-                 return target[property];
-               },
-          set: function(target, property, value, receiver) {
-                 console.log('setting ' + property + ' for ' + target + ' with value ' + value);
-                 target[property] = value;
-                 // you have to return true to accept the changes
-                 return true;
-               }
-         };
-
-      EOF
-
+=begin      
       B.eval(<<-EOF)
          var #{name} = new Proxy([], arrayChangeHandler);
 
@@ -74,7 +48,7 @@ class Sol
          console.log(#{name}[0]);
 
       EOF
-
+=end      
     end
     
     #------------------------------------------------------------------------------------

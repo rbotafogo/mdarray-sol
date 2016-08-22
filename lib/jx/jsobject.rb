@@ -36,21 +36,21 @@ class Sol
     def self.build(jsvalue, scope = B.document)
 
       if (jsvalue.isArray())
-        JSArray.new(jsvalue, scope)
+        JSArray.new(jsvalue.asArray(), scope)
       elsif (jsvalue.isBoolean())
-        JSBoolean.new(jsvalue, scope)
+        JSBoolean.new(jsvalue.asBoolean(), scope)
       elsif (jsvalue.isBooleanObject())
-        JSBooleanObject.new(jsvalue, scope)
+        JSBooleanObject.new(jsvalue.asBooleanObject(), scope)
       elsif (jsvalue.isFunction())
-        JSFunction.new(jsvalue, scope)
+        JSFunction.new(jsvalue.asFunction(), scope)
       elsif (jsvalue.isNumber())
-        JSNumber.new(jsvalue, scope)
+        JSNumber.new(jsvalue.asNumber(), scope)
       elsif (jsvalue.isNumberObject())
-        JSNumberObject.new(jsvalue, scope)
+        JSNumberObject.new(jsvalue.asNumberObject(), scope)
       elsif (jsvalue.isString())
-        JSString.new(jsvalue, scope)
+        JSString.new(jsvalue.asString(), scope)
       elsif (jsvalue.isStringObject())
-        JSStringObject.new(jsvalue, scope)
+        JSStringObject.new(jsvalue.asStringObject(), scope)
       elsif (jsvalue.isUndefined())
         JSUndefined.new(jsvalue, scope)
       elsif (jsvalue.isObject())
@@ -60,14 +60,18 @@ class Sol
       end
 
     end
-
+    
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
 
     def initialize(jsvalue, scope = nil)
+      
       @jsvalue = jsvalue
       @scope = scope
+      @packed = false
+      # @jsvalue.setProperty("__ruby_obj__", "false".to_java) if @jsvalue.isObject()
+      
     end
     
     #------------------------------------------------------------------------------------
@@ -101,7 +105,7 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def typeof
-      B.eval("'object'")
+      B.push("object")
     end
 
     #------------------------------------------------------------------------------------
@@ -133,11 +137,18 @@ class Sol
     def jsend(object, function, *args)
 
       args = nil if (args.size == 1 && args[0].nil?)
-      
-      # if the argument list has any symbol, convert the symbol to a string
-      args.map! { |arg| (arg.is_a? Symbol)? arg.to_s : arg } if !args.nil?
 
-      JSObject.build(function.invoke(object, *(args.to_java)), function)
+      if (args)
+        # if the argument list has any symbol, convert the symbol to a string
+        args.map! { |arg| (arg.is_a? Symbol)? arg.to_s : arg } if !args.nil?
+        jargs = []
+        args.each { |arg| jargs << arg.to_java }
+      end
+
+      # p object
+      # p object.getProperty("__ruby_obj__")
+      
+      JSObject.build(function.invoke(object, *(jargs)), function)
 
     end
 
