@@ -187,6 +187,8 @@ class MDArraySolTest < Test::Unit::TestCase
         proxy[1]
         proxy[2]
         proxy[3]
+        console.log(proxy.map(function(d) { return d; } ))
+        proxy[-2]
       EOT
 
       # B.proxy crashes since this has no arguments

@@ -89,8 +89,24 @@ class Sol
     #
     #------------------------------------------------------------------------------------
 
-    def load(file)
-      @browser.executeJavaScriptAndReturnValue(file.read)
+    def load(filename)
+
+      dir = File.expand_path File.dirname(__FILE__)
+      
+      scrpt = "" 
+      begin
+        file = File.new("#{dir}/#{filename}", "r")
+        while (line = file.gets)
+          scrpt << line
+        end
+        file.close
+      rescue => err
+        puts "Exception: #{err}"
+        err
+      end
+
+      @browser.executeJavaScriptAndReturnValue(scrpt)
+      
     end
 
     #------------------------------------------------------------------------------------

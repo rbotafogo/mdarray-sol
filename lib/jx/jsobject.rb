@@ -145,9 +145,6 @@ class Sol
         args.each { |arg| jargs << arg.to_java }
       end
 
-      # p object
-      # p object.getProperty("__ruby_obj__")
-      
       JSObject.build(function.invoke(object, *(jargs)), function)
 
     end
@@ -248,3 +245,4 @@ require_relative 'jsstring'
 require_relative 'jsstringobject'
 require_relative 'jsundefined'
 require_relative 'callback'
+require_relative 'proxy_array'

@@ -94,7 +94,9 @@ class Sol
     }
 
     require_relative 'constants'
-        
+    B.load("ruby_rich.js")
+    B.load("ruby_proxy.js")
+
   end
   
 end
@@ -106,7 +108,6 @@ end
 require_relative 'js'
 
 # require_relative 'dashboard'
-# require_relative 'callback'
 
 # start the Gui
 Sol.start(1300, 500)
