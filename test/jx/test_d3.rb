@@ -48,18 +48,18 @@ class MDArraySolTest < Test::Unit::TestCase
       $d3.select("body").append("div").text("hi there")
 
       dataset = [ 5, 10, 15, 20, 25 ]
+      B.dataset = B.jspack(dataset)
+      proxy = B.RubyProxy.new(B.dataset)
+      B.proxy = proxy
       
       data = $d3.select("body").selectAll("p")
-              .data(dataset).enter[].append("p").text("New paragraph!")
+             .data(proxy).enter[].append("p").text("I'm proxying!")
 
 =begin      
-      B.packds = B.jspack(dataset)
-      p B.packds
-      
-      data = $d3.select("body").selectAll("p")
-              .data(B.packds).enter[].append("p").text("New paragraph!")
-=end      
-=begin      
+      B.eval(<<-EOT)
+        proxy.map(function(d) { console.log(d); } )
+      EOT
+
       $d3.select("body").selectAll("p")
         .data(dataset)
         .enter()

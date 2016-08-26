@@ -49,7 +49,8 @@ class Sol
 
       # if last argument is a block, i.e., a string between {} then convert this
       # string to a block
-      last = args[-1][/\{(.*?)\}/] if (args.length > 0 && args[-1].is_a?(String))
+      last = args[-1][/^\{(.*?)\}/] if (args.length > 0 && args[-1].is_a?(String))
+      # p last
       if last
         args.pop
         blok = (eval  "lambda " + last)
@@ -61,6 +62,18 @@ class Sol
 
       Callback.pack(@ruby_obj.send(method, *params, &blok))
       
+    end
+    
+    #----------------------------------------------------------------------------------------
+    #
+    #----------------------------------------------------------------------------------------
+
+    def no_args(method_name)
+      p "in no_args"
+      method = @ruby_obj.method(method_name.to_sym)
+      arity = method.arity
+      p arity
+      return false
     end
     
     #----------------------------------------------------------------------------------------
@@ -93,7 +106,7 @@ class Sol
 
       # Do not pack basic types Boolean, Numberic or String
       case obj
-      when TrueClass, FalseClass, Numeric, String
+      when TrueClass, FalseClass, Numeric, String, NilClass
         return obj
       end
       

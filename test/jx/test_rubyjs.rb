@@ -180,15 +180,23 @@ class MDArraySolTest < Test::Unit::TestCase
 
       a = [1, 2, 3, 4]
       B.pa = B.jspack(a)
+      B.proxy = B.RubyProxy.new(B.pa)
       
       B.eval(<<-EOT)
-        var proxy = new RubyProxy(pa);
-        proxy[0]
-        proxy[1]
-        proxy[2]
-        proxy[3]
-        console.log(proxy.map(function(d) { return d; } ))
-        proxy[-2]
+        // var proxy = new RubyProxy(pa);
+        //console.log(proxy[0]);
+        //console.log(proxy[1]);
+        //console.log(proxy[2]);
+        //console.log(proxy[3]);
+        // calling method map (this is the Ruby map method) which has the same
+        // semantic as javascript map.  But should be careful not to confuse 
+        // things
+        proxy.map(function(d) { console.log(d); } )
+        // Note that we can use negative indices on this array
+        console.log(proxy[-2]);
+        // Need to use javascript syntax and put () after a function
+        console.log(proxy.length());
+        console.log(proxy.last(2).run("[]", 0));
       EOT
 
       # B.proxy crashes since this has no arguments
