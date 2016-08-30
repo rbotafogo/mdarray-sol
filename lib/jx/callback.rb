@@ -68,12 +68,9 @@ class Sol
     #
     #----------------------------------------------------------------------------------------
 
-    def no_args(method_name)
-      p "in no_args"
-      method = @ruby_obj.method(method_name.to_sym)
-      arity = method.arity
-      p arity
-      return false
+    def is_instance_of(class_name)
+      klass = Object.const_get(class_name)
+      @ruby_obj.instance_of? klass
     end
     
     #----------------------------------------------------------------------------------------
@@ -81,7 +78,7 @@ class Sol
     #----------------------------------------------------------------------------------------
 
     def get_class(class_name)
-      send("const_get", class_name)
+      Callback.pack(send("const_get", class_name))
     end
 
     #----------------------------------------------------------------------------------------

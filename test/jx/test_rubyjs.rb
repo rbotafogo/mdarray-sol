@@ -171,7 +171,36 @@ class MDArraySolTest < Test::Unit::TestCase
     end
 
 =end
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
     
+    should "proxy a Ruby hash" do
+
+      a = {a: 1, b: 2, c: 3}
+      B.data = B.proxy(a)
+
+      B.eval(<<-EOT)
+        console.log(data.fetch("a"));
+        console.log(data.fetch("b"));
+        // This does not work yet!! In javascript data["b"] is identical to 
+        // data.b and there is no such method in Ruby hash.  Should use method
+        // 'fetch' to retrieve the value for the key
+        console.log(data["b"]);
+      EOT
+
+      md = MDArray.double([2, 2], [1, 2, 3, 4])
+      B.data = B.proxy(md)
+      
+      B.eval(<<-EOT)
+        console.log(data.get([0, 0]));
+        console.log(data.get([0, 1]));
+      EOT
+        
+    end
+    
+=begin    
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
@@ -183,7 +212,6 @@ class MDArraySolTest < Test::Unit::TestCase
       B.proxy = B.RubyProxy.new(B.pa)
       
       B.eval(<<-EOT)
-        // var proxy = new RubyProxy(pa);
         //console.log(proxy[0]);
         //console.log(proxy[1]);
         //console.log(proxy[2]);
@@ -197,13 +225,14 @@ class MDArraySolTest < Test::Unit::TestCase
         // Need to use javascript syntax and put () after a function
         console.log(proxy.length());
         console.log(proxy.last(2).run("[]", 0));
+        // console.log(proxy.last(2)[0]);
       EOT
 
       # B.proxy crashes since this has no arguments
       # B.proxy[0]
       
     end
-    
+=end    
   end
   
 end

@@ -26,6 +26,8 @@ import com.teamdev.jxbrowser.chromium.JSArray;
 
 public interface RubyCallbackInterface {
 
+    public boolean is_instance_of(String class_name);
+    
     // run method to be called from a Ruby script
     public Object run(String function_name);
     public Object run(String function_name, Object obj1);

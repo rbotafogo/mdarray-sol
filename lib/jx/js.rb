@@ -151,20 +151,6 @@ class Sol
     def pull(name)
       eval("#{name};")
     end
-
-    #------------------------------------------------------------------------------------
-    # Duplicates the given Ruby data into a javascript object in the Browser
-    # @param name [Symbol, String] the name of the javascript variable into which to dup
-    # @param data [Object] a Ruby object
-    #------------------------------------------------------------------------------------
-
-    def dup(symbol = nil, data)
-      
-      name = (symbol)? symbol.to_s : "_tmpvar_"
-      assign_window(name.to_s, JSONString.new(data.to_json))
-      eval("#{name}")
-      
-    end
     
     #------------------------------------------------------------------------------------
     # Creates a new function in javascript and returns it as a jsfunction
@@ -181,6 +167,37 @@ class Sol
       
     end
         
+    #------------------------------------------------------------------------------------
+    # Duplicates the given Ruby data into a javascript object in the Browser
+    # @param name [Symbol, String] the name of the javascript variable into which to dup
+    # @param data [Object] a Ruby object
+    #------------------------------------------------------------------------------------
+
+    def dup(symbol = nil, data)
+      
+      name = (symbol)? symbol.to_s : "_tmpvar_"
+      assign_window(name.to_s, JSONString.new(data.to_json))
+      eval("#{name}")
+      
+    end
+
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def jspack(obj, scope: :external)
+      assign_window("__pack__", Callback.pack(obj, scope: scope))
+      eval("__pack__")
+    end
+
+    #------------------------------------------------------------------------------------
+    # Proxies the ruby object (obj) into a javascript object
+    #------------------------------------------------------------------------------------
+
+    def proxy(obj)
+      B.RubyProxy.new(jspack(obj))
+    end
+
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
@@ -237,23 +254,6 @@ class Sol
       
     end
     
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def jspack(obj, scope: :external)
-      assign_window("__pack__", Callback.pack(obj, scope: scope))
-      eval("__pack__")
-    end
-
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def proxy(array)
-      ProxyArray.new(array).jsvar
-    end
-
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
