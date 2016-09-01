@@ -29,3 +29,9 @@ $dc = B.pull("dc")
 
 $d3.freeze
 $dc.freeze
+
+B.load("ruby_rich.js")
+B.load("ruby_proxy.js")
+B.load("hash_handler.js")
+B.load("array_handler.js")
+

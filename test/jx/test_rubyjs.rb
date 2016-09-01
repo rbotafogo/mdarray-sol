@@ -178,18 +178,33 @@ class MDArraySolTest < Test::Unit::TestCase
     
     should "proxy a Ruby hash" do
 
-      a = {a: 1, b: 2, c: 3}
+      a = {a: 1, b: 2, c: 3, d: {e: 4, f: 5}}
       B.data = B.proxy(a)
 
       B.eval(<<-EOT)
         console.log(data.fetch("a"));
         console.log(data.fetch("b"));
-        // This does not work yet!! In javascript data["b"] is identical to 
-        // data.b and there is no such method in Ruby hash.  Should use method
-        // 'fetch' to retrieve the value for the key
-        console.log(data["b"]);
+        // In javascript data["b"] is identical to data.b. This is a limitation of the 
+        // use of Ruby Hashes in javascript, as one should be carefull not to have a hash
+        // key identical to a hash method, as the key will hide the method
+        console.log("getting data[b]: " + data["b"]);
+        console.log("getting data.b: " + data.b);
+        data.j = "Hello from js";
+        console.log("data.j is now available: " + data.j);
+        console.log(data.d.e);
+        console.log(data.keys().to_s());
       EOT
 
+      p a
+
+=begin
+      p a["j"]
+      a["k"] = "new val"
+      
+      B.eval(<<-EOT)
+        console.log(data.k);
+      EOT
+      
       md = MDArray.double([2, 2], [1, 2, 3, 4])
       B.data = B.proxy(md)
       
@@ -197,7 +212,8 @@ class MDArraySolTest < Test::Unit::TestCase
         console.log(data.get([0, 0]));
         console.log(data.get([0, 1]));
       EOT
-        
+=end
+      
     end
     
 =begin    

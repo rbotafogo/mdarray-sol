@@ -93,9 +93,7 @@ class Sol
       @resource.wait(@mutex)
     }
 
-    require_relative 'constants'
-    B.load("ruby_rich.js")
-    B.load("ruby_proxy.js")
+    require_relative 'js_init'
 
   end
   

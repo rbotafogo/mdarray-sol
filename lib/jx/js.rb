@@ -33,7 +33,6 @@ class Sol
 
   class Js
     java_import com.teamdev.jxbrowser.chromium.events.ConsoleListener
-    # java_import com.teamdev.jxbrowser.chromium.events.DisposeListener
     java_import com.teamdev.jxbrowser.chromium.JSONString
     
     #========================================================================================

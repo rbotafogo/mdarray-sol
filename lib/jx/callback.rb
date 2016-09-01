@@ -21,7 +21,19 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-require 'insensitive_hash'
+# require 'insensitive_hash'
+
+module InsensitiveHash
+
+  def [](value)
+    super(value.to_sym) || super(value)
+  end
+  
+  def fetch(value)
+    super(value.to_sym) || super(value)
+  end
+  
+end
 
 class Sol
   
@@ -37,8 +49,10 @@ class Sol
     def initialize(ruby_obj)
       # if ruby_obj is a hash, then make it accessible both by key of by string since
       # javascript does not allow key access
-      ruby_obj = ruby_obj.insensitive if ruby_obj.is_a? Hash
+      # ruby_obj = ruby_obj.insensitive if ruby_obj.is_a? Hash
+      ruby_obj.extend(InsensitiveHash) if ruby_obj.is_a? Hash
       @ruby_obj = ruby_obj
+      
     end
     
     #----------------------------------------------------------------------------------------
@@ -100,7 +114,7 @@ class Sol
     #----------------------------------------------------------------------------------------
 
     def self.pack(obj, scope: :external)
-
+      
       # Do not pack basic types Boolean, Numberic or String
       case obj
       when TrueClass, FalseClass, Numeric, String, NilClass
