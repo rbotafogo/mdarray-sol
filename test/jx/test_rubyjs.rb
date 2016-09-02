@@ -176,26 +176,30 @@ class MDArraySolTest < Test::Unit::TestCase
     #
     #--------------------------------------------------------------------------------------
     
+    should "proxy Ruby arrays" do
+
+      a = [1, 2, 3, 4]
+      B.data = B.proxy(a)
+      # load a javascript file to test arrays.  assert clauses in the javascript file
+      # will not be shown as tests, unfortunately.
+      B.load("test_ruby_array.js")
+
+    end
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
     should "proxy a Ruby hash" do
 
       a = {a: 1, b: 2, c: 3, d: {e: 4, f: 5}}
-      B.data = B.proxy(a)
+      B.data = B.proxy(a) 
+      # load a javascript file to test arrays.  assert clauses in the javascript file
+      # will not be shown as tests, unfortunately.
+      B.load("test_ruby_hash.js")
 
-      B.eval(<<-EOT)
-        console.log(data.fetch("a"));
-        console.log(data.fetch("b"));
-        // In javascript data["b"] is identical to data.b. This is a limitation of the 
-        // use of Ruby Hashes in javascript, as one should be carefull not to have a hash
-        // key identical to a hash method, as the key will hide the method
-        console.log("getting data[b]: " + data["b"]);
-        console.log("getting data.b: " + data.b);
-        data.j = "Hello from js";
-        console.log("data.j is now available: " + data.j);
-        console.log(data.d.e);
-        console.log(data.keys().to_s());
-      EOT
-
-      p a
+      # key :j was added in the javascript file
+      assert_equal("[:a, :b, :c, :d, :j]", a.keys().to_s)
 
 =begin
       p a["j"]
@@ -215,40 +219,7 @@ class MDArraySolTest < Test::Unit::TestCase
 =end
       
     end
-    
-=begin    
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
-    
-    should "proxy arrays" do
-
-      a = [1, 2, 3, 4]
-      B.pa = B.jspack(a)
-      B.proxy = B.RubyProxy.new(B.pa)
-      
-      B.eval(<<-EOT)
-        //console.log(proxy[0]);
-        //console.log(proxy[1]);
-        //console.log(proxy[2]);
-        //console.log(proxy[3]);
-        // calling method map (this is the Ruby map method) which has the same
-        // semantic as javascript map.  But should be careful not to confuse 
-        // things
-        proxy.map(function(d) { console.log(d); } )
-        // Note that we can use negative indices on this array
-        console.log(proxy[-2]);
-        // Need to use javascript syntax and put () after a function
-        console.log(proxy.length());
-        console.log(proxy.last(2).run("[]", 0));
-        // console.log(proxy.last(2)[0]);
-      EOT
-
-      # B.proxy crashes since this has no arguments
-      # B.proxy[0]
-      
-    end
-=end    
+   
   end
   
 end

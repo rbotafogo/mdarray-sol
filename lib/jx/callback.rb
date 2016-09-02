@@ -21,19 +21,7 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-# require 'insensitive_hash'
-
-module InsensitiveHash
-
-  def [](value)
-    super(value.to_sym) || super(value)
-  end
-  
-  def fetch(value)
-    super(value.to_sym) || super(value)
-  end
-  
-end
+require_relative 'js_hash'
 
 class Sol
   

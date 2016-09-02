@@ -85,12 +85,13 @@ class Sol
     end
 
     #------------------------------------------------------------------------------------
-    #
+    # Loads a javascript file relative to the callers directory
     #------------------------------------------------------------------------------------
 
     def load(filename)
-
-      dir = File.expand_path File.dirname(__FILE__)
+      
+      file = caller.first.split(/:\d/,2).first
+      dir = File.dirname(File.expand_path(file))
       
       scrpt = "" 
       begin
