@@ -27,11 +27,6 @@ module InsensitiveHash
     super(value.to_sym)
   end
 
-  # !!!! WRONG !!!
-  def any?(key, value)
-    super(key.to_sym, value)
-  end
-
   def assoc(key)
     super(key.to_sym)
   end

@@ -42,6 +42,15 @@ class Sol
       @ruby_obj = ruby_obj
       
     end
+
+    #----------------------------------------------------------------------------------------
+    # NOT REALLY SURE WHY THIS METHOD IS CALLED... COULD GENERATE AN ERROR SOMEWHERE.  NEEDS
+    # TO BE FIXED OR AT LEAST UNDERSTOOD!!!
+    #----------------------------------------------------------------------------------------
+
+    def default(*args)
+      false
+    end
     
     #----------------------------------------------------------------------------------------
     #
@@ -62,7 +71,11 @@ class Sol
       method = args.shift
       params = process_args(args)
 
-      Callback.pack(@ruby_obj.send(method, *params, &blok))
+      res = @ruby_obj.send(method, *params, &blok)
+      # p res
+      Callback.pack(res)
+      
+      # Callback.pack(@ruby_obj.send(method, *params, &blok))
       
     end
     
@@ -117,7 +130,10 @@ class Sol
       when :external
         Callback.new(obj)
       when :all
-        Callback.new(obj.map! { |pk| Callback.new(pk) })
+        # if we can go inside the obj with 'map!' then do it, otherwise, just pack the
+        # external object. CHECK method 'each', 'map' and 'map!'
+        (obj.respond_to? :map!)? Callback.new(obj.map! { |pk| Callback.pack(pk) }) :
+          Callback.new(obj)
       else
         raise "Scope must be :internal, :external or :all.  Unknown #{scope} scope"
       end

@@ -26,15 +26,24 @@
 
 // This is the given hash
 // a = {a: 1, b: 2, c: 3, d: {e: 4, f: 5}}
+// b = {x: 100, y: 200, c: 300}
 
+
+var assert = chai.assert;
+
+// Access to a hash
 assert.equal(1, data.fetch("a"));
 assert.equal(2, data.fetch("b"));
+
+// Access to b hash
+assert.equal(100, d2.fetch("x"));
+assert.equal(200, d2.fetch("y"));
 	     
 // In javascript data["b"] is identical to data.b. This is a limitation of the 
 // use of Ruby Hashes in javascript, as one should be carefull not to have a hash
 // key identical to a hash method, as the key will hide the method
-assert.equal(2, data["b"]);
-assert.equal(2, data.b);
+//assert.equal(2, data["b"]);
+//assert.equal(2, data.b);
 
 // add a value to the hash
 data.j = "Hello from js";
@@ -44,6 +53,18 @@ assert.equal(4, data.d.e);
 
 // data.keys() is an array.
 assert.equal("[:a, :b, :c, :d, :j]", data.keys().to_s());
+
+// console.log(data["any?"]())
+
+// console.log(data["any?"](function(param) { return param[1] == 100 ;} ))
+
+console.log(data.keys().to_s());
+
+data.delete_if (function(key, value) { return key == "a"; })
+
+
+//console.log(data.b)
+//console.log(data.c)
 
 // console.log(data["any?"]("function(key, value) {true}"))
 // console.log(data.assoc("a").to_s());

@@ -95,7 +95,7 @@ class Sol
       
       scrpt = "" 
       begin
-        file = File.new("#{dir}/#{filename}", "r")
+        file = File.new("#{dir}/#{filename}", "r") 
         while (line = file.gets)
           scrpt << line
         end
@@ -194,8 +194,8 @@ class Sol
     # Proxies the ruby object (obj) into a javascript object
     #------------------------------------------------------------------------------------
 
-    def proxy(obj)
-      B.RubyProxy.new(jspack(obj))
+    def proxy(obj, scope: :external)
+      B.RubyProxy.new(jspack(obj, scope: scope))
     end
 
     #------------------------------------------------------------------------------------
@@ -245,8 +245,10 @@ class Sol
           x
         when Sol::JSObject
           x.jsvalue
-        #when Hash, Array
-        #  JSONString.new(x.to_json)
+        when Symbol
+          x.to_s
+        when Hash, Array
+          proxy(x, scope: :all)
         else
           x
         end
