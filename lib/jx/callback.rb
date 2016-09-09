@@ -58,17 +58,21 @@ class Sol
 
     def run(*args)
 
-      # if last argument is a block, i.e., a string between {} then convert this
-      # string to a block
-      last = args[-1][/^\{(.*?)\}/] if (args.length > 0 && args[-1].is_a?(String))
-      # p last
-      if last
+      # first argument is the 'method' name 
+      method = args.shift
+
+      # try to convert last argument to block
+      if ((last = args[-1]).is_a? String)
         args.pop
-        blok = (eval  "lambda " + last)
+        begin
+          blok = (eval "lambda " + last)
+        rescue
+          blok = nil
+          args << last
+        end
       end
 
-      # convert arguments to 'method' and Ruby args
-      method = args.shift
+      # convert all remaining arguments to Ruby 
       params = process_args(args)
 
       res = @ruby_obj.send(method, *params, &blok)

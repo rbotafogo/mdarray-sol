@@ -192,30 +192,31 @@ class MDArraySolTest < Test::Unit::TestCase
 
     should "proxy a Ruby hash" do
 
-      a = {a: 1, b: 2, c: 3, d: {e: 4, f: 5}}
-      # a = {a: 1, b: 2, c: 3}
+      a = {a: 1, b: 2, c: 3, d: {e: 4, f: 5, g: {h: 6, i:7}}}
       b = {x: 100, y: 200, c: 300}
       
       # Proxy javascript 'data' variable as a hash
       B.data = B.proxy(a)
       B.d2 = B.proxy(b)
       
-      # load a javascript file to test arrays.  assert clauses in the javascript file
-      # will not be shown as tests, unfortunately.
+      # load a javascript file to test hash usage from javascript.  assert clauses in the
+      # javascript file will not be shown as tests, unfortunately.
       B.load("test_ruby_hash.js")
-      p a
 
       # key :j was added in the javascript file
-      # assert_equal("[:a, :b, :c, :d, :j]", a.keys().to_s)
+      assert_equal("[:b, :c, :d, :j]", a.keys.to_s)
+      assert_equal("Hello from js", a["j"])
 
-=begin
-      p a["j"]
+      # add new (key, value) to hash
       a["k"] = "new val"
-      
+
+      # this new (key, value) pair is available to 'data' in javascript
       B.eval(<<-EOT)
-        console.log(data.k);
+        assert.equal("new val", data.k);
+        // data.each_pair (function(param) { console.log(param[1]); } )
       EOT
       
+=begin      
       md = MDArray.double([2, 2], [1, 2, 3, 4])
       B.data = B.proxy(md)
       

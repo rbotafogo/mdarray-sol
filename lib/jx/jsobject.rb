@@ -69,7 +69,7 @@ class Sol
       
       @jsvalue = jsvalue
       @scope = scope
-      @packed = false
+      # @packed = false
       # @jsvalue.setProperty("__ruby_obj__", "false".to_java) if @jsvalue.isObject()
       
     end
