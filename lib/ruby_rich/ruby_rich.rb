@@ -76,12 +76,10 @@ class RubyRich < JRubyFX::Application
     # Load configuration file.  This loads all the Javascript scripts onto the embbeded
     # web browser
     #--------------------------------------------------------------------------------------
-    
 
     f = Java::JavaIo.File.new("#{File.dirname(__FILE__)}/config.html")
     fil = f.toURI().toURL().toString()
     
-
     @browser.addLoadListener(
       Class.new(LoadAdapter) {
         def onFinishLoadingFrame(event)
@@ -118,3 +116,5 @@ class RubyRich < JRubyFX::Application
   end
   
 end
+
+require_relative "../jx/sol.rb"

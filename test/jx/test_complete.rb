@@ -27,5 +27,6 @@ require '../../config' if @platform == nil
 require 'mdarray-sol'
 
 require_relative 'test_js'
-require_relative 'test_rubyjs'
+require_relative 'test_packaging'
+require_relative 'test_proxies'
 require_relative 'test_d3'

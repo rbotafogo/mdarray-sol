@@ -43,6 +43,4 @@ module InsensitiveHash
     super(key.to_sym, value)
   end
 
-  
-  
 end

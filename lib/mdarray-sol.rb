@@ -29,5 +29,5 @@ require_relative '../config'
 # require_relative 'webview/sol'
 # require_relative 'charts/chart'
 
-require_relative 'jx/sol'
+require_relative 'ruby_rich/ruby_rich'
 require_relative 'mdarray/jsmdarray'
