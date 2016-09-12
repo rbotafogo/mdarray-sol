@@ -42,7 +42,7 @@ class MDArraySolTest < Test::Unit::TestCase
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
-
+=begin
     should "proxy a Ruby hash" do
 
       # Hash with symbols as keys
@@ -82,12 +82,34 @@ class MDArraySolTest < Test::Unit::TestCase
 
       a = [1, 2, 3, 4]
       B.data = B.proxy(a)
+      
       # load a javascript file to test arrays.  assert clauses in the javascript file
       # will not be shown as tests, unfortunately.
       B.load("test_ruby_array.js")
 
     end
+=end    
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
     
+    should "proxy Ruby lambdas" do
+      
+      # func = Sol::Callback.new(Proc.new { |x| x })
+      block = Sol::Callback.new { |x| x }
+      p block.run("call", 10)
+      B.block = block
+      
+      p B.block.run("call", 50).v
+      
+      B.eval(<<-EOT)
+        console.log(block.run("call", 100));
+        function bk(x) { return block.run("call", x); }
+        console.log(bk(500));
+      EOT
+        
+    end
+
   end
   
 end

@@ -234,23 +234,24 @@ class Sol
     end
 
     #------------------------------------------------------------------------------------
-    #
+    # Converts a Ruby object (argument) into a javascript object to run in a javascript
+    # script
     #------------------------------------------------------------------------------------
 
     def process_args(args)
 
-      args.map do |x|
-        case x
+      args.map do |arg|
+        case arg
         when Sol::Callback
-          x
+          arg
         when Sol::JSObject
-          x.jsvalue
+          arg.jsvalue
         when Symbol
-          x.to_s
+          arg.to_s
         when Hash, Array
-          proxy(x, scope: :all)
+          proxy(arg, scope: :all).jsvalue
         else
-          x
+          arg
         end
       end
       

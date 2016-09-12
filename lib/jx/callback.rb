@@ -34,12 +34,13 @@ class Sol
     #
     #----------------------------------------------------------------------------------------
 
-    def initialize(ruby_obj)
-      # if ruby_obj is a hash, then make it accessible both by key of by string since
+    def initialize(ruby_obj = nil, &blk)
+
+      # if ruby_obj is a hash, then make it accessible both by key or by string since
       # javascript does not allow key access
-      # ruby_obj = ruby_obj.insensitive if ruby_obj.is_a? Hash
       ruby_obj.extend(InsensitiveHash) if ruby_obj.is_a? Hash
-      @ruby_obj = ruby_obj
+      
+      @ruby_obj = ruby_obj || blk
       
     end
 

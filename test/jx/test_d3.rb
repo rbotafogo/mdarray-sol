@@ -44,28 +44,46 @@ class MDArraySolTest < Test::Unit::TestCase
 
     should "work with d3 and other javascript libraries" do
       
-      $d3.select("body").append("p").text("New paragraph!");
-      $d3.select("body").append("div").text("hi there")
+=begin
+      B.eval(<<-EOT)
+        dataset = [ 5, 10, 15, 20, 25 ]
+
+        d3.select("body").selectAll("p")
+          .data(dataset)
+          .enter()
+          .append("p")
+          .text("New paragraph!");
+      EOT
+=end
 
       dataset = [ 5, 10, 15, 20, 25 ]
-      B.dataset = B.jspack(dataset)
-      proxy = B.RubyProxy.new(B.dataset)
-      B.proxy = proxy
       
-      data = $d3.select("body").selectAll("p")
-             .data(proxy).enter[].append("p").text("I'm proxying!")
-
-=begin      
-      B.eval(<<-EOT)
-        proxy.map(function(d) { console.log(d); } )
-      EOT
-
+=begin
       $d3.select("body").selectAll("p")
-        .data(dataset)
-        .enter()
-        .append("p")
-        .text("New paragraph!");
-=end      
+        .data(dataset).enter(nil).append("p")
+        .text("New paragraph!")
+
+      
+      $d3.select("body").selectAll("p")
+        .data(dataset).enter(nil).append("p")
+        .text(B.function("(d) { return d; }"))
+=end
+
+      block = Sol::Callback.new do |*args|
+        (args[0] > 15)? "red" : "black"
+      end
+      
+      # block = Sol::Callback.new { |x| x }
+      B.block = block
+      
+      B.eval(<<-EOT)
+        function bk(x) { return block.run("call", x); }
+      EOT
+      
+      $d3.select("body").selectAll("p")
+        .data(dataset).enter(nil).append("p")
+        .text("hello").style("color", B.bk)
+      
     end
     
   end

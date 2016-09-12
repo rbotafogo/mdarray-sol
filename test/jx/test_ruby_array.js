@@ -39,10 +39,17 @@ data.map(function(d) { console.log(d); } )
 // Note that we can use negative indices on this array
 assert.equal(3, data[-2]);
 
+// javascript 'length' property overrides Ruby 'length' method and calling method
+// length() will result in error saying that length is not a function.
+assert.equal(4, data.length);
+
 // Need to use javascript syntax and put () after a function
-assert.equal(4, data.length());
 assert.equal(3, (data.last(2)[0]));
 
 assert.equal("[1, 2, 3, 4]", data.to_s());
+
+var d2 = [4, 5, 6, 7];
+data.concat(d2);
+console.log(data.to_s());
 
 console.log("Ending Ruby Array proxy tests")

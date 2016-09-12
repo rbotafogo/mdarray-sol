@@ -21,27 +21,7 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
+module JSArray
 
-module InsensitiveHash
-
-  def [](value)
-    super(value.to_sym)
-  end
-
-  def assoc(key)
-    super(key.to_sym)
-  end
   
-  def fetch(value)
-    super(value.to_sym)
-  end
-
-  def fetch_str(value)
-    super(value.to_s)
-  end
-
-  def []=(key, value)
-    super(key.to_sym, value)
-  end
-
 end

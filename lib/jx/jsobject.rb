@@ -169,6 +169,17 @@ class Sol
 
     def method_missing(symbol, *args)
 
+=begin      
+      if (blk)
+        B.block = Sol::Callback.new(blk)
+        B.eval(<<-EOT)
+          function bk(x) { return blk.run("call", x); }
+        EOT
+        p B.bk
+        args << B.bk
+      end
+=end
+      
       name = symbol.id2name
 
       if name =~ /(.*)=$/
