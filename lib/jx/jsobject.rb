@@ -137,7 +137,7 @@ class Sol
     def jsend(object, function, *args)
 
       args = nil if (args.size == 1 && args[0].nil?)
-
+      
       if (args)
         # if the argument list has any symbol, convert the symbol to a string
         args.map! { |arg| (arg.is_a? Symbol)? arg.to_s : arg } if !args.nil?

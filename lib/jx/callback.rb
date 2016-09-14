@@ -165,6 +165,8 @@ class Sol
             arg.getNumberValue()
           elsif (arg.isStringObject())
             arg.getStringValue()
+          else
+            JSObject.build(arg)
           end
         elsif (arg.is_a? Java::ComTeamdevJxbrowserChromium::JSValue)
           if (arg.isBoolean())
