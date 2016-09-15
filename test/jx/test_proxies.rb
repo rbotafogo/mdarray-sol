@@ -100,7 +100,7 @@ class MDArraySolTest < Test::Unit::TestCase
       p block.run("call", 10)
       B.block = block
       
-      p B.block.run("call", 50).v
+      p B.block.run("call", 50)
       
       B.eval(<<-EOT)
         console.log(block.run("call", 100));

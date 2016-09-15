@@ -210,7 +210,7 @@ class Sol
       if name =~ /(.*)=$/
         ret = assign_window($1, process_args(args)[0])
       else
-        if ((ret = pull(name)).function?)
+        if (((ret = pull(name)).is_a? Sol::JSObject) && ret.function?)
           if (args.size > 0)
             if (args.size == 1 && args[0].nil?)
               ret = ret.send

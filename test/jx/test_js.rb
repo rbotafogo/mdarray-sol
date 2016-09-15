@@ -39,7 +39,7 @@ class MDArraySolTest < Test::Unit::TestCase
 
     end
 
-#=begin    
+
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
@@ -47,26 +47,17 @@ class MDArraySolTest < Test::Unit::TestCase
     should "interface with numbers" do
 
       # Evaluate and return numbers
-      assert_equal(1, B.eval("1").byte)
-      assert_equal(1.345, B.eval("1.345").double)
-      assert_equal(10.345000267028809, B.eval("10.345").float)
-      assert_equal(1, B.eval("1").int)
-      assert_equal(1234567890987654400, B.eval("1234567890987654321").long)
-      assert_equal(1.35, B.eval("1.35").value)
-      
-      assert_equal(true, B.eval("1.35").number?)
-      assert_equal(false, B.eval("1.35").array?)
+      assert_equal(1, B.eval("1"))
+      assert_equal(1.345, B.eval("1.345"))
+      assert_equal(10.345, B.eval("10.345"))
+      assert_equal(1234567890987654321, B.eval("1234567890987654321"))
+
+      assert_equal(true, (B.eval("1.35").is_a? Numeric))
+      assert_equal(false, (B.eval("1.35").is_a? Array))
 
       # Store a number into a javascript object
       B.num = 1.234
-      assert_equal(1.234, B.num.double)
-
-      assert_equal(1, B.push(1).byte)
-      assert_equal(1.345, B.push(1.345).double)
-      assert_equal(10.345000267028809, B.push(10.345).float)
-      assert_equal(1, B.push(1).int)
-      assert_equal(1234567890987654400, B.push(1234567890987654321).long)
-      assert_equal(1.35, B.push(1.35).value)
+      assert_equal(1.234, B.num)
 
     end
 
@@ -81,14 +72,21 @@ class MDArraySolTest < Test::Unit::TestCase
         var n2 = new Number(4.567)
       EOT
 
-      assert_equal(2.35, B.n1.v)
-      assert_equal(4.567, B.n2.v)
-      
-      assert_equal(true, B.n2.number?)
+      assert_equal(2.35, B.n1)
+      assert_equal(4.567, B.n2)
 
-      # use the 'new' constructor function on function 'Number'
+      assert_equal(true, (B.n2.is_a? Numeric))
+
+      # use the 'new' constructor function on function 'Number', but at the end of all
+      # this we are just setting num to a numeric.  
       num = B.Number.new(2.35)
-      assert_equal(2.35, num.v)
+      assert_equal(2.35, num)
+
+      # num is a Number variable in the browser.
+      B.num = B.Number.new(5.77345)
+      assert_equal(5.77345, B.num)
+
+      assert_equal(1.3345, B.push(1.3345))
       
     end
 
@@ -98,22 +96,21 @@ class MDArraySolTest < Test::Unit::TestCase
 
     should "interface with boolean" do
       
-      assert_equal(true, B.eval("true").value)
-      assert_equal(false, B.eval("false").value)
-      assert_equal(true, B.eval("false").boolean?)
+      assert_equal(true, B.eval("true"))
+      assert_equal(false, B.eval("false"))
+      assert_equal(true, (B.eval("false").is_a? FalseClass))
 
       B.logt = true
       B.logf = false
       
-      assert_equal(true, B.logt.v)
-      assert_equal(false, B.logf.v)
+      assert_equal(true, B.logt)
+      assert_equal(false, B.logf)
+      assert_equal(true, (B.logt.is_a? TrueClass))
+      assert_equal(true, (B.logf.is_a? FalseClass))
 
-      assert_equal(true, B.logt.boolean?)
-      
-      assert_equal(true, B.push(true).value)
-      assert_equal(false, B.push(false).value)
-      assert_equal(true, B.push(false).boolean?)
-      
+      assert_equal(true, B.push(true))
+      assert_equal(false, B.push(false))
+
     end
 
     #--------------------------------------------------------------------------------------
@@ -130,14 +127,14 @@ class MDArraySolTest < Test::Unit::TestCase
       t = B.pull("t")
       f = B.pull("f")
 
-      assert_equal(true, t.value)
-      assert_equal(false, f.value)
+      assert_equal(true, t)
+      assert_equal(false, f)
 
-      assert_equal(true, t.boolean?)
+      assert_equal(true, (t.is_a? TrueClass))
       assert_equal(false, t.nil?)
 
-      assert_equal(true, B.t.v)
-      assert_equal(false, B.f.v)
+      assert_equal(true, B.t)
+      assert_equal(false, B.f)
 
     end
 
@@ -148,19 +145,19 @@ class MDArraySolTest < Test::Unit::TestCase
     should "interface with strings" do
 
       B.str = "this is a string"
-      assert_equal("this is a string", B.str.v)
+      assert_equal("this is a string", B.str)
       
-      assert_equal(true, B.str.string?)
+      assert_equal(true, (B.str.is_a? String))
 
       # in order to evaluate a string, we need to double quote it, since the first quote
       # if for the javascript script
       str2 = B.eval("'this is a string'")
-      assert_equal("this is a string", str2.v)
+      assert_equal("this is a string", str2)
 
-      assert_equal("this is a string", B.push("this is a string").v)
+      assert_equal("this is a string", B.push("this is a string"))
       
     end
-    
+
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
@@ -171,20 +168,20 @@ class MDArraySolTest < Test::Unit::TestCase
         var str = new String("this is a string")
       EOT
 
-      assert_equal("this is a string", B.str.v)
-      assert_equal(true, B.str.string?)
+      assert_equal("this is a string", B.str)
+      assert_equal(true, (B.str.is_a? String))
 
       # str is a Ruby variable that points to data in the Browser
       str = B.push("this is a string")
-      assert_equal("this is a string", str.v)
+      assert_equal("this is a string", str)
 
       # No need to use B.push for the string, since str2 is in the Browser, the string
       # is automatically converted, just checking that this actually works.
       B.str2 = B.push("this is also a string")
-      assert_equal("this is also a string", B.str2.v)
+      assert_equal("this is also a string", B.str2)
       
     end
-    
+
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
@@ -202,19 +199,19 @@ class MDArraySolTest < Test::Unit::TestCase
       
       # To call a javascript function we need to call 'send' on the method with
       # the necessary parameters
-      assert_equal(5, f.send(2, 3).value)
+      assert_equal(5, f.send(2, 3))
 
       # Access function through '.' Functions f and f2 are defined in the B namespace
       assert_equal(true, B.f2.function?)
-      assert_equal(17, B.f(8, 9).value)
+      assert_equal(17, B.f(8, 9))
       
       # In order to call a function with no arguments in javascript we need to either
       # use the send method or call with nil as argument
-      assert_equal(1, B.f2(nil).v)
+      assert_equal(1, B.f2(nil))
       
       # Instead of using send, we can also use '[]' to call a javascript function.
       # This looks more like a function call
-      assert_equal(1, B.f2[].v)
+      assert_equal(1, B.f2[])
 
       # Define a function f3 in javascript.  This is  equivalent to the above
       # B.eval...
@@ -223,24 +220,24 @@ class MDArraySolTest < Test::Unit::TestCase
       EOF
 
       # use standard notation for method call in the B namespace
-      assert_equal(9, B.f3(4, 5).v)
+      assert_equal(9, B.f3(4, 5))
       # or use '[]'
-      assert_equal(9, B.f[4, 5].v)
+      assert_equal(9, B.f[4, 5])
 
       # We can also create a javascript function with the notation bellow. In
       # this case the function f4 lives in the Ruby namespace.
       f4 = B.function("(x, y) { return x + y; }")
-      assert_equal(9, f4.send(4, 5).v)
-      assert_equal(9, f4[4, 5].v)
+      assert_equal(9, f4.send(4, 5))
+      assert_equal(9, f4[4, 5])
 
       # in the Ruby namespace, standard '()' function call does not work
-      assert_raise (NoMethodError) { f4(4,5).v }
+      assert_raise (NoMethodError) { f4(4,5) }
 
       # Just making sure that the creation of a new method does not affect
       # the previous one.
       f5 = B.function("(x, y) { return x - y; }")
-      assert_equal(1, f5[5, 4].v)
-      assert_equal(9, f4[5, 4].v)
+      assert_equal(1, f5[5, 4])
+      assert_equal(9, f4[5, 4])
 
       # Javascript function that receives a JSObject as argument
       f6 = B.function(<<-EOT)
@@ -256,10 +253,10 @@ class MDArraySolTest < Test::Unit::TestCase
       B.dup(:a, [1, 2, 3])
 
       # call function f6 passign a JSObject
-      assert_equal("123", f6[B.a].v)
+      assert_equal("123", f6[B.a])
 
       # use the B.dup function to duplicate a Ruby array to javascript
-      assert_equal("123", f6[B.dup([1, 2, 3])].v)
+      assert_equal("123", f6[B.dup([1, 2, 3])])
       
     end
 
@@ -275,18 +272,18 @@ class MDArraySolTest < Test::Unit::TestCase
       EOT
 
       js_array = B.pull("cars")
-      assert_equal("Saab", js_array.get(0).value)
-      assert_equal("Volvo", js_array.get(1).value)
-      assert_equal("BMW", js_array.get(2).value)
+      assert_equal("Saab", js_array.get(0))
+      assert_equal("Volvo", js_array.get(1))
+      assert_equal("BMW", js_array.get(2))
 
       a2 = B.cars
-      assert_equal("Saab", a2.get(0).v)
-      assert_equal("Volvo", a2.get(1).v)
-      assert_equal("BMW", a2.get(2).v)
+      assert_equal("Saab", a2.get(0))
+      assert_equal("Volvo", a2.get(1))
+      assert_equal("BMW", a2.get(2))
             
-      assert_equal("Saab", a2[0].v)
-      assert_equal("Volvo", a2[1].v)
-      assert_equal("BMW", a2[2].v)
+      assert_equal("Saab", a2[0])
+      assert_equal("Volvo", a2[1])
+      assert_equal("BMW", a2[2])
       
     end
 
@@ -315,30 +312,27 @@ class MDArraySolTest < Test::Unit::TestCase
       
       rcar = B.pull("car")
       
-      assert_equal("Fiat", rcar.type.v)
-      assert_equal(500, rcar.model.v)
-      assert_equal("white", rcar.color.v)
-      assert_equal(true, rcar.sold.v)
+      assert_equal("Fiat", rcar.type)
+      assert_equal(500, rcar.model)
+      assert_equal("white", rcar.color)
+      assert_equal(true, rcar.sold)
 
       # check the type of the object by calling B.typeof
-      assert_equal("object", B.typeof(rcar).v)
-      assert_equal("string", B.typeof(rcar.type).v)
-      assert_equal("number", B.typeof(rcar.model).v)
-      assert_equal("boolean", B.typeof(rcar.sold).v)
-      assert_equal("function", B.typeof(rcar.print).v)
+      assert_equal("object", B.typeof(rcar))
+      assert_equal(true, (rcar.type.is_a? String))
+      assert_equal(true, (rcar.model.is_a? Numeric))
+      assert_equal(true, (rcar.sold.is_a? TrueClass))
+      assert_equal("function", B.typeof(rcar.print))
 
       # check the type of the object directly
-      assert_equal("object", rcar.typeof.v)
-      assert_equal("string", rcar.type.typeof.v)
-      assert_equal("number", rcar.model.typeof.v)
-      assert_equal("boolean", rcar.sold.typeof.v)
-      assert_equal("function", rcar.print.typeof.v)
+      assert_equal("object", rcar.typeof)
+      assert_equal("function", rcar.print.typeof)
       
       # call function on a native javascript object
       assert_equal(4, rcar.info.length)
       
       # call the print function by passing parameters to it
-      assert_equal("Fiat_500", rcar.print("_", "500").v)
+      assert_equal("Fiat_500", rcar.print("_", "500"))
 
       # Get the print function.  Change this so that rcar.print and rcar.print()
       # will both execute the fucntion and rcar.print(nil) returns the
@@ -348,14 +342,14 @@ class MDArraySolTest < Test::Unit::TestCase
       # Execute the p_f function.  It should still be in the proper scope, i.e,
       # this still executes in the scope of object 'car', so 'type' should be
       # Fiat
-      assert_equal("Fiat_500", p_f["_", "500"].v)
+      assert_equal("Fiat_500", p_f["_", "500"])
 
       # note that to call a method with no arguments
-      assert_equal("no args given", rcar.no_args(nil).v)
+      assert_equal("no args given", rcar.no_args(nil))
 
       # access a deep structure
-      assert_equal("Fiat", B.out.data.type.v)
-      assert_equal("Fiat_500", B.out.data.print("_", "500").v)
+      assert_equal("Fiat", B.out.data.type)
+      assert_equal("Fiat_500", B.out.data.print("_", "500"))
             
     end
 
@@ -375,9 +369,9 @@ class MDArraySolTest < Test::Unit::TestCase
 
       const = Const.new(2, 3, "Hello Constructor")
       
-      assert_equal(2, const.number.v)
-      assert_equal(3, const.value.v)
-      assert_equal("Hello Constructor", const.str.v)
+      assert_equal(2, const.number)
+      assert_equal(3, const.value)
+      assert_equal("Hello Constructor", const.str)
       
     end
 
@@ -401,30 +395,30 @@ class MDArraySolTest < Test::Unit::TestCase
       # actually creating a new javascript object from the C function.
       o = C.new
       # true, because: Object.getPrototypeOf(o) === C.prototype      
-      assert_equal(true, o.instanceof(C).v)
+      assert_equal(true, o.instanceof(C))
 
       # false, since D.prototype is not in the prototype chain of 'o'
-      assert_equal(false, o.instanceof(D).v)
+      assert_equal(false, o.instanceof(D))
 
       # 'o' is an instance of a JSObject
-      assert_equal(true, o.instanceof(B.Object).v)
+      assert_equal(true, o.instanceof(B.Object))
 
       # C.prototype is also an instance of a JSObject
-      assert_equal(true, C.prototype.instanceof(B.Object).v)
+      assert_equal(true, C.prototype.instanceof(B.Object))
 
       C.prototype = B.dup({})
       o2 = C.new
 
-      assert_equal(true, o2.instanceof(C).v)
+      assert_equal(true, o2.instanceof(C))
       
       # false, because C.prototype is nowhere in o's prototype chain anymore      
-      assert_equal(false, o.instanceof(C).v)
+      assert_equal(false, o.instanceof(C))
 
       #  use inheritance
       D.prototype = C.new
       o3 = D.new
-      assert_equal(true, o3.instanceof(D).v)
-      assert_equal(true, o3.instanceof(C).v)
+      assert_equal(true, o3.instanceof(D))
+      assert_equal(true, o3.instanceof(C))
 
       # simpleStr = B.eval("This is a simple string")
       myString  = B.String.new
@@ -433,22 +427,17 @@ class MDArraySolTest < Test::Unit::TestCase
       # myObj     = {}.jsdup
       # p myObj
 
-      assert_equal(true, myString.instanceof(B.String).v)
-      assert_equal(true, newStr.instanceof(B.String).v)
-      assert_equal(true, myString.instanceof(B.Object).v)
-
       # returns false, checks the prototype chain, finds undefined      
       # p simpleStr.instanceof(B.String).v
       # returns true, despite an undefined prototype      
       # p myObj.instanceof(B.Object).v    
-      assert_equal(false, myString.instanceof(B.Date).v)
-      assert_equal(true, myDate.instanceof(B.Date).v)
-      assert_equal(true, myDate.instanceof(B.Object).v)
-      assert_equal(false, myDate.instanceof(B.String).v)
+      assert_equal(true, myDate.instanceof(B.Date))
+      assert_equal(true, myDate.instanceof(B.Object))
+      assert_equal(false, myDate.instanceof(B.String))
 
       # ({})  instanceof Object;    // returns true, same case as above
     end
-    
+
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
@@ -461,10 +450,10 @@ class MDArraySolTest < Test::Unit::TestCase
 
       rcar = B.pull("car")
       rcar.type = "VW"
-      assert_equal("VW", rcar.type.v)
+      assert_equal("VW", rcar.type)
 
     end
-    
+
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
@@ -477,9 +466,9 @@ class MDArraySolTest < Test::Unit::TestCase
       # Duplicate (copy) the Ruby Array as a javascript array
       B.dup(:cars, cars)
 
-      assert_equal("Saab", B.cars[0].v)
-      assert_equal("Volvo", B.cars[1].v)
-      assert_equal("BMW", B.cars[2].v)
+      assert_equal("Saab", B.cars[0])
+      assert_equal("Volvo", B.cars[1])
+      assert_equal("BMW", B.cars[2])
 
       # A more complex array
       data = [
@@ -500,12 +489,12 @@ class MDArraySolTest < Test::Unit::TestCase
       # Copy the data array to "data" element in javascript
       B.dup(:data, data)
       
-      assert_equal("2011-11-14T16:17:54Z", B.data[0].date.v)
-      assert_equal(1, B.data[2].quantity.v)
-      assert_equal(0, B.data[4].tip.v)
+      assert_equal("2011-11-14T16:17:54Z", B.data[0].date)
+      assert_equal(1, B.data[2].quantity)
+      assert_equal(0, B.data[4].tip)
 
     end
-    
+
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
@@ -530,21 +519,21 @@ class MDArraySolTest < Test::Unit::TestCase
           (x, y) { return x + y; } 
         EOT
       
-      assert_equal("Fiat", jscar.type.v)
-      assert_equal(500, jscar.model.v)
-      assert_equal("white", jscar.color.v)
-      assert_equal(true, jscar.sold.v)
-      assert_equal(1, jscar.info[0].v)
-      assert_equal(8, jscar.print(3, 5).v)      
-      assert_equal(8, jscar.print[3, 5].v)
+      assert_equal("Fiat", jscar.type)
+      assert_equal(500, jscar.model)
+      assert_equal("white", jscar.color)
+      assert_equal(true, jscar.sold)
+      assert_equal(1, jscar.info[0])
+      assert_equal(8, jscar.print(3, 5))      
+      assert_equal(8, jscar.print[3, 5])
 
       # Call the method in two steps: first get the method then call the method
       # passing the arguments
       f = jscar.print
-      assert_equal(8, f[3, 5].v)
+      assert_equal(8, f[3, 5])
       
     end
-#=end    
+
   end
   
 end

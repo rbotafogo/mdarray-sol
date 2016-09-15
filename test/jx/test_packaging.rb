@@ -50,7 +50,7 @@ class MDArraySolTest < Test::Unit::TestCase
 
       # Pack the array and assign it to an R variable.
       B.ruby_array = B.jspack(array)
-      assert_equal(4, B.ruby_array.run("length").v)
+      assert_equal(4, B.ruby_array.run("length"))
 
       # Check that the array is available in the Browser
       B.eval(<<-EOT)
@@ -59,8 +59,8 @@ class MDArraySolTest < Test::Unit::TestCase
 
       # add a new element to the array
       B.ruby_array.run("<<", 5)
-      assert_equal(2, B.ruby_array.run("[]", 1).v)
-      assert_equal(5, B.ruby_array.run(:[], 4).v)
+      assert_equal(2, B.ruby_array.run("[]", 1))
+      assert_equal(5, B.ruby_array.run(:[], 4))
       # check that both the Ruby array and the Browser array use the same
       # backing store, i.e., array should now have the element 5:
       assert_equal(5, array[4])
@@ -71,9 +71,6 @@ class MDArraySolTest < Test::Unit::TestCase
         console.log(ruby_array.run("[]", 4))
       EOT
 
-      num = B.Number.new("1")
-      assert_equal(true, num.run(:length).undefined?)
-      
       # Set a Ruby variable to point to an object in the Browser
       jsarray = B.jspack([10, 20, 30, 40])
       jsarray.run("<<", 10)
@@ -84,10 +81,10 @@ class MDArraySolTest < Test::Unit::TestCase
          console.log("Expected value is 10 and returned is: " + data.run("[]", 4))
       EOT
 
-      assert_equal(40, jsarray.run(:[], 3).v)
+      assert_equal(40, jsarray.run(:[], 3))
 
       # Let's do method chainning
-      jsarray.run(:<<, 100).run(:<<, 200).run(:to_s).v
+      jsarray.run(:<<, 100).run(:<<, 200).run(:to_s)
 
       # run a block to a Ruby method from javascript
       B.eval(<<-EOT)
@@ -110,18 +107,19 @@ class MDArraySolTest < Test::Unit::TestCase
     should "callback a jspacked Ruby Hash" do
       
       # Try the same with a hash
-      hh = {"a" => 1, "b" =>2}
+      hh = {a: 1, b: 2}
 
       B.hh = B.jspack(hh, scope: :external)
       
-      # Retrieve the value of a key
+      # Retrieve the value of a key.  Keys in Javascript cannot be symbol, they have to
+      # be strings.  Sol automatically converts strings to symbols and vice-versa.
       B.eval(<<-EOT)
         var h1 = hh.run('[]', "a")
         var h2 = hh.run('[]', "b")
       EOT
 
-      assert_equal(1, B.h1.v)
-      assert_equal(2, B.h2.v)
+      assert_equal(1, B.h1)
+      assert_equal(2, B.h2)
 
       B.hh.run("[]=", "c", 3)
       
@@ -131,8 +129,8 @@ class MDArraySolTest < Test::Unit::TestCase
       
       B.hh.run("[]=", "d", 4)
       
-      assert_equal(3, B.hh.run("[]", "c").v)
-      assert_equal(4, B.hh.run("[]", "d").v)
+      assert_equal(3, B.hh.run("[]", "c"))
+      assert_equal(4, B.hh.run("[]", "d"))
 
     end
 
