@@ -94,20 +94,25 @@ class MDArraySolTest < Test::Unit::TestCase
     #--------------------------------------------------------------------------------------
     
     should "proxy Ruby lambdas" do
-      
-      # func = Sol::Callback.new(Proc.new { |x| x })
+=begin      
       block = Sol::Callback.new { |x| x }
       p block.run("call", 10)
       B.block = block
       
       p B.block.run("call", 50)
-      
+=end      
       B.eval(<<-EOT)
-        console.log(block.run("call", 100));
-        function bk(x) { return block.run("call", x); }
-        console.log(bk(500));
-      EOT
+        //console.log(block.run("call", 100));
+        //function bk(x) { return block.run("call", x); }
+        //console.log(bk(500));
         
+        // function text(func) { return func.call(this, 5, 6); };
+        function text(x, y, func) { return func.call(this, x, y); };
+
+      EOT
+
+      p B.text(5, 6) { |x, y| x + y}
+      
     end
 
   end

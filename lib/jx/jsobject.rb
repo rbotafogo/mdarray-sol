@@ -69,8 +69,6 @@ class Sol
       
       @jsvalue = jsvalue
       @scope = scope
-      # @packed = false
-      # @jsvalue.setProperty("__ruby_obj__", "false".to_java) if @jsvalue.isObject()
       
     end
     
@@ -167,24 +165,24 @@ class Sol
     #
     #------------------------------------------------------------------------------------
 
-    def method_missing(symbol, *args)
-
-=begin      
+    def method_missing(symbol, *args, &blk)
+      
       if (blk)
         B.block = Sol::Callback.new(blk)
         B.eval(<<-EOT)
-          function bk(x) { return blk.run("call", x); }
+          function bk(...args) { return block.run("call", args); }
         EOT
-        p B.bk
-        args << B.bk
+        (args.size > 0 && args[-1].nil?)? args[-1] = B.bk : args << B.bk 
       end
-=end
-      
+
       name = symbol.id2name
 
       if name =~ /(.*)=$/
         ret = assign($1, B.process_args(args)[0])
+      elsif (@jsvalue.undefined?)
+        raise "Cannot extract property '#{name}' from undefined object"
       elsif ((member = @jsvalue.getProperty(name)).function? && args.size > 0)
+        # p "calling jsend #{symbol} #{args}"
         ret = jsend(@jsvalue, member, *(B.process_args(args)))
       else
         # Build a JSObject in the scope of @jsvalue

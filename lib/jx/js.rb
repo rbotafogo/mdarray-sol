@@ -84,6 +84,10 @@ class Sol
       @browser.executeJavaScriptAndReturnValue("document")
     end
 
+    def print_page
+      @browser.print
+    end
+    
     #------------------------------------------------------------------------------------
     # Loads a javascript file relative to the callers directory
     #------------------------------------------------------------------------------------
@@ -202,8 +206,16 @@ class Sol
     #
     #------------------------------------------------------------------------------------
 
-    def method_missing(symbol, *args)
-
+    def method_missing(symbol, *args, &blk)
+      
+      if (blk)
+        B.block = Sol::Callback.new(blk)
+        B.eval(<<-EOT)
+          function bk(...args) { return block.run("call", args); }
+        EOT
+        (args.size > 0 && args[-1].nil?)? args[-1] = B.bk : args << B.bk 
+      end
+      
       name = symbol.to_s
       name.gsub!(/__/,"$")
 
