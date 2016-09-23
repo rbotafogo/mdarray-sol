@@ -84,8 +84,23 @@ class Sol
       @browser.executeJavaScriptAndReturnValue("document")
     end
 
+    #------------------------------------------------------------------------------------
+    # Calls Chrome printing popup interface
+    #------------------------------------------------------------------------------------
+
     def print_page
       @browser.print
+    end
+
+    #------------------------------------------------------------------------------------
+    # Returns a list of StyleSheet's
+    #------------------------------------------------------------------------------------
+
+    def style_sheets
+      eval(<<-EOT)
+        var __style_sheets__ = document.styleSheets;
+      EOT
+      CSSStyleSheets.new
     end
     
     #------------------------------------------------------------------------------------

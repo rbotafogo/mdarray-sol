@@ -121,7 +121,8 @@ class MDArraySolTest < Test::Unit::TestCase
         .attr("stroke", "orange")
         .attr("stroke-width") { |d, i| d/2 }
 =end
-      
+
+=begin
       width = 500
       height = 100
       bar_padding = 1
@@ -155,10 +156,11 @@ class MDArraySolTest < Test::Unit::TestCase
         .attr("text-anchor", "middle")
 
       # B.print_page
+=end
       
     end
     
   end
-
+  
 end
 

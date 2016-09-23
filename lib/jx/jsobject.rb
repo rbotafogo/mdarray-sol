@@ -35,14 +35,10 @@ class Sol
 
     def self.build(jsvalue, scope = B.document)
 
-      if (jsvalue.isArray())
-        JSArray.new(jsvalue.asArray(), scope)
-      elsif (jsvalue.isBoolean())
+      if (jsvalue.isBoolean())
         jsvalue.getBooleanValue()
       elsif (jsvalue.isBooleanObject())
         jsvalue.getBooleanValue()
-      elsif (jsvalue.isFunction())
-        JSFunction.new(jsvalue.asFunction(), scope)
       elsif (jsvalue.isNumber())
         jsvalue.getNumberValue()
       elsif (jsvalue.isNumberObject())
@@ -51,10 +47,14 @@ class Sol
         jsvalue.getStringValue()
       elsif (jsvalue.isStringObject())
         jsvalue.getStringValue()
-      elsif (jsvalue.isUndefined())
-        JSUndefined.new(jsvalue, scope)
+      elsif (jsvalue.isArray())
+        JSArray.new(jsvalue.asArray(), scope)
+      elsif (jsvalue.isFunction())
+        JSFunction.new(jsvalue.asFunction(), scope)
       elsif (jsvalue.isObject())
         JSObject.new(jsvalue, scope)
+      elsif (jsvalue.isUndefined())
+        JSUndefined.new(jsvalue, scope)
       else
 
       end
@@ -244,14 +244,17 @@ class Sol
   
 end
 
-require_relative 'jsnumber'
-require_relative 'jsnumberobject'
 require_relative 'jsfunction'
 require_relative 'jsarray'
-require_relative 'jsboolean'
-require_relative 'jsbooleanobject'
-require_relative 'jsstring'
-require_relative 'jsstringobject'
+require_relative 'jsstyle_sheet'
 require_relative 'jsundefined'
 require_relative 'callback'
 require_relative 'proxy_array'
+
+#require_relative 'jsnumber'
+#require_relative 'jsnumberobject'
+#require_relative 'jsboolean'
+#require_relative 'jsbooleanobject'
+#require_relative 'jsstring'
+#require_relative 'jsstringobject'
+

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ##########################################################################################
-# Copyright © 2013 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
+# Copyright © 2016 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
 # and distribute this software and its documentation, without fee and without a signed 
 # licensing agreement, is hereby granted, provided that the above copyright notice, this 
 # paragraph and the following two paragraphs appear in all copies, modifications, and 
@@ -26,12 +26,39 @@ require 'shoulda'
 require '../../config' if @platform == nil
 require 'mdarray-sol'
 
-require_relative 'test_js'
-require_relative 'test_packaging'
 
-# test proxies
-require_relative 'test_proxy_hash'
-require_relative 'test_proxy_array'
-require_relative 'test_proxy_lambdas'
+class MDArraySolTest < Test::Unit::TestCase
 
-require_relative 'test_d3'
+  context "B environment" do
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    setup do 
+
+    end
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+    
+    should "proxy Ruby lambdas" do
+      
+      B.eval(<<-EOT)
+        //console.log(block.run("call", 100));
+        //function bk(x) { return block.run("call", x); }
+        //console.log(bk(500));
+        
+        // function text(func) { return func.call(this, 5, 6); };
+        function text(x, y, func) { return func.call(this, x, y); };
+
+      EOT
+
+      p B.text(5, 6) { |x, y| x + y}
+      
+    end
+    
+  end
+  
+end

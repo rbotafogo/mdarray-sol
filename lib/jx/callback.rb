@@ -153,13 +153,15 @@ class Sol
 
       args.map do |arg|
         if (arg.is_a? Java::ComTeamdevJxbrowserChromium::JSObject)
+=begin          
           if (arg.isArray())
             array = []
             for i in 0...arg.length()
               array << arg.get(i)
             end
             process_args(array)
-          elsif (arg.isBooleanObject())
+=end
+          if (arg.isBooleanObject())
             arg.getBooleanValue()
           elsif (arg.isNumberObject())
             arg.getNumberValue()

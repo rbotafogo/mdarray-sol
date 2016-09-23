@@ -42,41 +42,6 @@ class MDArraySolTest < Test::Unit::TestCase
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
-=begin
-    should "proxy a Ruby hash" do
-
-      # Hash with symbols as keys
-      a = {a: 1, b: 2, c: 3, d: {e: 4, f: 5, g: {h: 6, i:7}}}
-
-      # hash with symbols and Strings as keys
-      b = {x: 100, y: 200, c: 300, "d" => 400}
-      
-      # Ruby hash proxies javascript 'data'
-      B.data = B.proxy(a)
-      B.d2 = B.proxy(b)
-      
-      # load a javascript file to test hash usage from javascript.  assert clauses in the
-      # javascript file will not be computed on test statistics, unfortunately.
-      B.load("test_ruby_hash.js")
-
-      # key :j was added in the javascript file
-      assert_equal("[:b, :c, :d, :j]", a.keys.to_s)
-      assert_equal("Hello from js", a["j"])
-
-      # add new (key, value) to hash
-      a["k"] = "new val"
-
-      # this new (key, value) pair is available to 'data' in javascript
-      B.eval(<<-EOT)
-        assert.equal("new val", data.k);
-        // data.each_pair (function(param) { console.log(param[1]); } )
-      EOT
-
-    end
-
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
     
     should "proxy Ruby arrays" do
 
@@ -88,44 +53,7 @@ class MDArraySolTest < Test::Unit::TestCase
       B.load("test_ruby_array.js")
 
     end
-=end    
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
     
-    should "proxy Ruby lambdas" do
-=begin      
-      block = Sol::Callback.new { |x| x }
-      p block.run("call", 10)
-      B.block = block
-      
-      p B.block.run("call", 50)
-=end      
-      B.eval(<<-EOT)
-        //console.log(block.run("call", 100));
-        //function bk(x) { return block.run("call", x); }
-        //console.log(bk(500));
-        
-        // function text(func) { return func.call(this, 5, 6); };
-        function text(x, y, func) { return func.call(this, x, y); };
-
-      EOT
-
-      p B.text(5, 6) { |x, y| x + y}
-      
-    end
-
   end
-  
+
 end
-
-
-=begin      
-      md = MDArray.double([2, 2], [1, 2, 3, 4])
-      B.data = B.proxy(md)
-      
-      B.eval(<<-EOT)
-        console.log(data.get([0, 0]));
-        console.log(data.get([0, 1]));
-      EOT
-=end

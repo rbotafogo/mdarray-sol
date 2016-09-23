@@ -33,7 +33,7 @@ assert.equal(4, data[3]);
 
 // calling method map (this is the Ruby map method) which has the same
 // semantic as javascript map.  But should be careful not to confuse 
-// things
+// things.  Here we pass a Javascript function to a Ruby method.
 data.map(function(d) { console.log(d); } )
 
 // Note that we can use negative indices on this array
