@@ -29,7 +29,7 @@ class Sol
   
   class ProxyArray
 
-    attr_reader :ruby_array  # this is the ruby array that will ser as proxy for a js array
+    attr_reader :ruby_array  # this is the ruby array that will serve as proxy for a js array
 
     #------------------------------------------------------------------------------------
     # Gets a ruby array and proxy it in javascript so that it becomes the storage

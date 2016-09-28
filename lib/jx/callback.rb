@@ -22,13 +22,15 @@
 ##########################################################################################
 
 require_relative 'js_hash'
+require_relative 'js_array'
 
 class Sol
   
   class Callback
     include Java::ComRbMdarray_sol.RubyCallbackInterface
-
+    
     attr_reader :ruby_obj
+    attr_reader :this
     
     #----------------------------------------------------------------------------------------
     #
@@ -38,9 +40,14 @@ class Sol
 
       # if ruby_obj is a hash, then make it accessible both by key or by string since
       # javascript does not allow key access
-      ruby_obj.extend(InsensitiveHash) if ruby_obj.is_a? Hash
-      
-      @ruby_obj = ruby_obj || blk
+      case ruby_obj
+      when Hash
+        ruby_obj.extend(InsensitiveHash)
+      when Array
+        ruby_obj.extend(JSArrayInterface)
+      end
+
+      @ruby_obj = ruby_obj # || blk
       
     end
 
@@ -53,6 +60,14 @@ class Sol
       false
     end
     
+    #----------------------------------------------------------------------------------------
+    #
+    #----------------------------------------------------------------------------------------
+
+    def set_this(this)
+      @this = this
+    end
+
     #----------------------------------------------------------------------------------------
     #
     #----------------------------------------------------------------------------------------
@@ -76,11 +91,11 @@ class Sol
       # convert all remaining arguments to Ruby 
       params = process_args(args)
 
-      res = @ruby_obj.send(method, *params, &blok)
-      # p res
-      Callback.pack(res)
-      
-      # Callback.pack(@ruby_obj.send(method, *params, &blok))
+      if (@ruby_obj.is_a? Proc)
+        Callback.pack(instance_exec(*params, &(@ruby_obj)))
+      else
+        Callback.pack(@ruby_obj.send(method, *params, &blok))
+      end
       
     end
     
@@ -153,15 +168,23 @@ class Sol
 
       args.map do |arg|
         if (arg.is_a? Java::ComTeamdevJxbrowserChromium::JSObject)
-=begin          
+          # arg.java_class.declared_fields.each { |f| p f }
+          # arg.java_class.fields.each { |f| p f.value_type }
+          # p org.jruby.javasupport.JavaClass.getDeclaredFields(arg.java_class)
+          # p org.jruby.javasupport.JavaClass.getFields(arg.java_class)
+          # B.tobj = B.push(arg)
+          # p B.eval("tobj.isProxy")
+
+          # If arg is an JSArray, then from the point of view of Ruby we need to
+          # break this array in all its individual elements, otherwise Ruby will see
+          # only one single argument instead of an array of arguments
           if (arg.isArray())
             array = []
             for i in 0...arg.length()
               array << arg.get(i)
             end
             process_args(array)
-=end
-          if (arg.isBooleanObject())
+          elsif (arg.isBooleanObject())
             arg.getBooleanValue()
           elsif (arg.isNumberObject())
             arg.getNumberValue()

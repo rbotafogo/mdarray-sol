@@ -222,7 +222,9 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def method_missing(symbol, *args, &blk)
-      
+
+      # if block is given, then create a javascript function that will call the block
+      # passing the args
       if (blk)
         B.block = Sol::Callback.new(blk)
         B.eval(<<-EOT)
@@ -261,7 +263,7 @@ class Sol
     end
 
     #------------------------------------------------------------------------------------
-    # Converts a Ruby object (argument) into a javascript object to run in a javascript
+    # Converts Ruby arguments into a javascript objects to run in a javascript
     # script
     #------------------------------------------------------------------------------------
 
@@ -273,6 +275,9 @@ class Sol
           arg
         when Sol::JSObject
           arg.jsvalue
+        when :this
+          # p "seting this"
+          # B.eval("console.log(this)")
         when Symbol
           arg.to_s
         when Hash, Array

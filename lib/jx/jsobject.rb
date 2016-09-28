@@ -166,11 +166,11 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def method_missing(symbol, *args, &blk)
-      
+
       if (blk)
         B.block = Sol::Callback.new(blk)
         B.eval(<<-EOT)
-          function bk(...args) { return block.run("call", args); }
+          function bk(...args) { block.set_this(this); return block.run("call", args); }
         EOT
         (args.size > 0 && args[-1].nil?)? args[-1] = B.bk : args << B.bk 
       end
@@ -182,7 +182,6 @@ class Sol
       elsif (@jsvalue.undefined?)
         raise "Cannot extract property '#{name}' from undefined object"
       elsif ((member = @jsvalue.getProperty(name)).function? && args.size > 0)
-        # p "calling jsend #{symbol} #{args}"
         ret = jsend(@jsvalue, member, *(B.process_args(args)))
       else
         # Build a JSObject in the scope of @jsvalue
@@ -233,7 +232,7 @@ class Sol
     end
     
     def string_object?
-      false
+     false
     end
     
     def undefined?

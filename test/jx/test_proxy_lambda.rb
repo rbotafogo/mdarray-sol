@@ -42,7 +42,7 @@ class MDArraySolTest < Test::Unit::TestCase
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
-    
+=begin    
     should "proxy Ruby lambdas" do
       
       B.eval(<<-EOT)
@@ -58,7 +58,23 @@ class MDArraySolTest < Test::Unit::TestCase
       p B.text(5, 6) { |x, y| x + y}
       
     end
-    
+=end    
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "allow access to 'this'" do
+
+      blk = Proc.new { |x, y| @this + x + y }
+      B.sol_cb = Sol::Callback.new(blk)
+
+      B.eval(<<-EOT)
+        sol_cb.set_this(100);
+        console.log(sol_cb.run("any", 10, 20))
+      EOT
+      
+    end
+
   end
   
 end

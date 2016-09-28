@@ -21,7 +21,6 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-module JSArray
+module JSArrayInterface
 
-  
 end

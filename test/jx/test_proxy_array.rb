@@ -46,7 +46,10 @@ class MDArraySolTest < Test::Unit::TestCase
     should "proxy Ruby arrays" do
 
       a = [1, 2, 3, 4]
+      b = [10, 20, 30, 40, 50, 60]
+      
       B.data = B.proxy(a)
+      B.d2 = B.proxy(b)
       
       # load a javascript file to test arrays.  assert clauses in the javascript file
       # will not be shown as tests, unfortunately.

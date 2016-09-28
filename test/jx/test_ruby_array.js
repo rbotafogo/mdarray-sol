@@ -26,10 +26,18 @@ var assert = chai.assert;
 
 console.log("Starting Ruby Array proxy tests")
 
+console.log(data.to_s())
+console.log(d2.to_s());
+
 assert.equal(1, data[0]);
 assert.equal(2, data[1]);
 assert.equal(3, data[2]);
 assert.equal(4, data[3]);
+
+assert.equal(10, d2[0]);
+assert.equal(20, d2[1]);
+assert.equal(30, d2[2]);
+assert.equal(40, d2[3]);
 
 // calling method map (this is the Ruby map method) which has the same
 // semantic as javascript map.  But should be careful not to confuse 
@@ -46,10 +54,12 @@ assert.equal(4, data.length);
 // Need to use javascript syntax and put () after a function
 assert.equal(3, (data.last(2)[0]));
 
-assert.equal("[1, 2, 3, 4]", data.to_s());
+// assert.equal("[1, 2, 3, 4]", data.to_s());
+// var d2 = [4, 5, 6, 7];
 
-var d2 = [4, 5, 6, 7];
-data.concat(d2);
-console.log(data.to_s());
+// Cannot concatanate with another array yet.  No way to access the Ruby array that is
+// inside the JSObject. Promess that in future release of jxBrowser such feature will
+// be available.
+// data.concat(d2)
 
 console.log("Ending Ruby Array proxy tests")

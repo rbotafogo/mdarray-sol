@@ -1,5 +1,5 @@
-require 'opal'
-require 'opal-jquery'
+# require 'opal'
+# require 'opal-jquery'
 require 'rake/testtask'
 
 require_relative 'version'
