@@ -36,7 +36,7 @@ class Sol
     #
     #----------------------------------------------------------------------------------------
 
-    def initialize(ruby_obj = nil, &blk)
+    def initialize(ruby_obj)# = nil, &blk)
 
       # if ruby_obj is a hash, then make it accessible both by key or by string since
       # javascript does not allow key access
@@ -92,7 +92,8 @@ class Sol
       params = process_args(args)
 
       if (@ruby_obj.is_a? Proc)
-        Callback.pack(instance_exec(*params, &(@ruby_obj)))
+      # Callback.pack(instance_exec(*params, &(@ruby_obj)))
+        instance_exec(*params, &(@ruby_obj))
       else
         Callback.pack(@ruby_obj.send(method, *params, &blok))
       end

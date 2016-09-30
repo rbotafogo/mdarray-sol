@@ -72,6 +72,45 @@ public interface RubyCallbackInterface {
     
     public Object get_class(String class_name);
     
-    public Object build(String classname, Object... arguments);
+    // public  Object build(String classname, Object... arguments);
+
     
+    // run method to be called from a Ruby script
+    public Object build(String classname);
+    public Object build(String classname, Object obj1);
+    public Object build(String classname, Object obj1, Object obj2);
+    public Object build(String classname, Object obj1, Object obj2, Object obj3);
+    public Object build(String classname, Object obj1, Object obj2, Object obj3,
+			Object obj4);
+    public Object build(String classname, Object obj1, Object obj2, Object obj3,
+			Object obj4, Object obj5);
+    public Object build(String classname, Object obj1, Object obj2, Object obj3,
+			Object obj4, Object obj5, Object obj6);
+    public Object build(String classname, Object obj1, Object obj2, Object obj3,
+			Object obj4, Object obj5, Object obj6, Object obj7);
+    public Object build(String classname, Object obj1, Object obj2, Object obj3,
+			Object obj4, Object obj5, Object obj6, Object obj7, Object obj8);
+    public Object build(String classname, Object obj1, Object obj2, Object obj3,
+			Object obj4, Object obj5, Object obj6, Object obj7, Object obj8,
+			Object obj9);
+    public Object build(String classname, Object obj1, Object obj2, Object obj3,
+			Object obj4, Object obj5, Object obj6, Object obj7, Object obj8,
+			Object obj9, Object obj10);
+    public Object build(String classname, Object obj1, Object obj2, Object obj3,
+			Object obj4, Object obj5, Object obj6, Object obj7, Object obj8,
+			Object obj9, Object obj10, Object obj11);
+    public Object build(String classname, Object obj1, Object obj2, Object obj3,
+			Object obj4, Object obj5, Object obj6, Object obj7, Object obj8,
+			Object obj9, Object obj10, Object obj11, Object obj12);
+    public Object build(String classname, Object obj1, Object obj2, Object obj3,
+			Object obj4, Object obj5, Object obj6, Object obj7, Object obj8,
+			Object obj9, Object obj10, Object obj11, Object obj12, Object obj13);
+    public Object build(String classname, Object obj1, Object obj2, Object obj3,
+			Object obj4, Object obj5, Object obj6, Object obj7, Object obj8,
+			Object obj9, Object obj10, Object obj11, Object obj12, Object obj13,
+			Object obj14);
+    public Object build(String classname, Object obj1, Object obj2, Object obj3,
+			Object obj4, Object obj5, Object obj6, Object obj7, Object obj8,
+			Object obj9, Object obj10, Object obj11, Object obj12, Object obj13,
+			Object obj14, Object obj15);
 }

@@ -71,7 +71,7 @@ class Sol
       @scope = scope
       
     end
-    
+=begin    
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
@@ -97,7 +97,7 @@ class Sol
     def v
       value
     end
-    
+=end
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
@@ -167,12 +167,12 @@ class Sol
 
     def method_missing(symbol, *args, &blk)
 
+      # if block is given, then create a javascript function that will call the block
+      # passing the args
       if (blk)
         B.block = Sol::Callback.new(blk)
-        B.eval(<<-EOT)
-          function bk(...args) { block.set_this(this); return block.run("call", args); }
-        EOT
-        (args.size > 0 && args[-1].nil?)? args[-1] = B.bk : args << B.bk 
+        B.func = B.rr.make_callback(B.block)
+        (args.size > 0 && args[-1].nil?)? args[-1] = B.func : args << B.func 
       end
 
       name = symbol.id2name
@@ -250,10 +250,4 @@ require_relative 'jsundefined'
 require_relative 'callback'
 require_relative 'proxy_array'
 
-#require_relative 'jsnumber'
-#require_relative 'jsnumberobject'
-#require_relative 'jsboolean'
-#require_relative 'jsbooleanobject'
-#require_relative 'jsstring'
-#require_relative 'jsstringobject'
 

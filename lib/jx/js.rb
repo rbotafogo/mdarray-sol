@@ -177,7 +177,7 @@ class Sol
     # given, then a temporary name is used just to be able to create the function.
     # @return [JSFunction] a jsfunction.
     #------------------------------------------------------------------------------------
-
+#=begin
     def function(symbol = nil, definition)
 
       name = (symbol)? symbol.to_s : "_tmpvar_"
@@ -185,7 +185,7 @@ class Sol
       eval("#{name}")
       
     end
-        
+#=end        
     #------------------------------------------------------------------------------------
     # Duplicates the given Ruby data into a javascript object in the Browser
     # @param name [Symbol, String] the name of the javascript variable into which to dup
@@ -205,8 +205,9 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def jspack(obj, scope: :external)
-      assign_window("__pack__", Callback.pack(obj, scope: scope))
-      eval("__pack__")
+      pack = (0...8).map { (65 + rand(26)).chr }.join
+      assign_window(pack, Callback.pack(obj, scope: scope))
+      eval(pack)
     end
 
     #------------------------------------------------------------------------------------
@@ -227,9 +228,7 @@ class Sol
       # passing the args
       if (blk)
         B.block = Sol::Callback.new(blk)
-        B.eval(<<-EOT)
-          function bk(...args) { return block.run("call", args); }
-        EOT
+        B.func = B.rr.make_callback(B.block)
         (args.size > 0 && args[-1].nil?)? args[-1] = B.bk : args << B.bk 
       end
       
@@ -275,9 +274,6 @@ class Sol
           arg
         when Sol::JSObject
           arg.jsvalue
-        when :this
-          # p "seting this"
-          # B.eval("console.log(this)")
         when Symbol
           arg.to_s
         when Hash, Array
