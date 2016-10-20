@@ -23,6 +23,7 @@
 
 require 'json'
 require_relative 'jsobject'
+require_relative 'rbobject'
 
 class Sol
   
@@ -54,6 +55,8 @@ class Sol
     #========================================================================================
     
     attr_reader :browser
+    attr_accessor :identity
+    attr_accessor :instanceOf
         
     #------------------------------------------------------------------------------------
     #
@@ -68,6 +71,14 @@ class Sol
       
     end
         
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def typeof(object)
+      object.typeof
+    end
+
     #------------------------------------------------------------------------------------
     # Gets the Brwoser 'window' object
     #------------------------------------------------------------------------------------
@@ -85,47 +96,80 @@ class Sol
     end
 
     #------------------------------------------------------------------------------------
+    # Gets the browser JSContext
+    #------------------------------------------------------------------------------------
+
+    def jscontext
+      @browser.getJSContext()
+    end
+    
+    #------------------------------------------------------------------------------------
     # Calls Chrome printing popup interface
     #------------------------------------------------------------------------------------
 
     def print_page
       @browser.print
     end
-
+    
     #------------------------------------------------------------------------------------
-    # Returns a list of StyleSheet's
+    # Applies javascript method 'instanceOf' defined in ruby_rich.rb to the given object
+    # and type.  'instanceOf' is a JSFunction.
     #------------------------------------------------------------------------------------
 
-    def style_sheets
-      eval(<<-EOT)
-        var __style_sheets__ = document.styleSheets;
-      EOT
-      CSSStyleSheets.new
+    def instanceof(object, type)
+      @instanceOf[object, type]
     end
     
     #------------------------------------------------------------------------------------
-    # Loads a javascript file relative to the callers directory
+    # Applies the javascript 'identity' function to the given value.  Returns a
+    # packed object
     #------------------------------------------------------------------------------------
 
-    def load(filename)
-      
-      file = caller.first.split(/:\d/,2).first
-      dir = File.dirname(File.expand_path(file))
-      
-      scrpt = "" 
-      begin
-        file = File.new("#{dir}/#{filename}", "r") 
-        while (line = file.gets)
-          scrpt << line
-        end
-        file.close
-      rescue => err
-        puts "Exception: #{err}"
-        err
-      end
+    def push(value)
+      @identity[value]
+    end
+    
+    #------------------------------------------------------------------------------------
+    # Returns the given property from 'window'
+    #------------------------------------------------------------------------------------
 
-      @browser.executeJavaScriptAndReturnValue(scrpt)
+    def pull(name)
+      eval("#{name};")
+    end
+
+    #------------------------------------------------------------------------------------
+    # packs and object either as a JSObject, RBObject or return it as primitive
+    #------------------------------------------------------------------------------------
+
+    def pack(obj, to_ruby: false, scope: document)
+
+      case obj
+      when com.teamdev.jxbrowser.chromium.al
+        B.obj = Callback.pack(obj)
+        RBObject.new(jeval("new RubyProxy(obj)"), obj, true)
+      when TrueClass, FalseClass, Numeric, String, NilClass
+        obj
+      when Java::ComTeamdevJxbrowserChromium::JSValue
+        JSObject.build(obj, scope)
+      when Sol::Callback
+        B.obj = obj
+        RBObject.new(jeval("new RubyProxy(obj)"), obj, false)
+      when Object
+        B.obj = Callback.pack(obj)
+        (to_ruby)? RBObject.new(jeval("new RubyProxy(obj)"), obj, true) :
+          jeval("new RubyProxy(obj)")
+      else
+        p "Java::Object"
+      end
       
+    end
+
+    #------------------------------------------------------------------------------------
+    # Proxies the ruby object (obj) into a javascript object.  Return an RBObject.
+    #------------------------------------------------------------------------------------
+
+    def proxy(obj)
+      pack(obj, to_ruby: true)
     end
 
     #------------------------------------------------------------------------------------
@@ -136,39 +180,53 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def eval(scrpt)
-      JSObject.build(@browser.executeJavaScriptAndReturnValue(scrpt))
+      pack(@browser.executeJavaScriptAndReturnValue(scrpt), to_ruby: true)
     end
-            
+
+    #------------------------------------------------------------------------------------
+    # Invokes the function in the scope of object
+    # @param object [JSObject] the object that holds the function
+    # @param function [java JSFunction] the function to be invoked, already in its java
+    # form
+    # @param *args [Args] a list of arguments to pass to the function
+    # @return jsobject [JSObject] a JSObject or one of its subclasses depending on the
+    # result of the function invokation
+    #------------------------------------------------------------------------------------
+
+    def invoke(object, function, *args)
+
+      args = nil if (args.size == 1 && args[0].nil?)
+      
+      if (args)
+        # if the argument list has any symbol, convert the symbol to a string
+        args.map! { |arg| (arg.is_a? Symbol)? arg.to_s : arg } if !args.nil?
+        jargs = []
+        args.each { |arg| jargs << arg.to_java }
+      end
+
+      pack(function.invoke(object, *(jargs)), to_ruby: false, scope: function)
+
+    end
+
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
 
-    def typeof(object)
-      object.typeof
+    def eval_obj(jsobject, prop)
+      B.obj = push(jsobject)
+      jeval(<<-EOT)
+         obj.#{prop}
+      EOT
     end
     
     #------------------------------------------------------------------------------------
-    #
+    # Duplicates the given Ruby data into a javascript object in the Browser
+    # @param name [Symbol, String] the name of the javascript variable into which to dup
+    # @param data [Object] a Ruby object
     #------------------------------------------------------------------------------------
 
-    def instanceof(object, type)
-      B.rr.instanceOf(object, type)
-    end
-
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def push(value)
-      B.rr.identity(value)
-    end
-    
-    #------------------------------------------------------------------------------------
-    # Returns the given property from 'window'
-    #------------------------------------------------------------------------------------
-
-    def pull(name)
-      eval("#{name};")
+    def dup(data)
+      push(JSONString.new(data.to_json))
     end
     
     #------------------------------------------------------------------------------------
@@ -177,47 +235,21 @@ class Sol
     # given, then a temporary name is used just to be able to create the function.
     # @return [JSFunction] a jsfunction.
     #------------------------------------------------------------------------------------
-#=begin
-    def function(symbol = nil, definition)
 
-      name = (symbol)? symbol.to_s : "_tmpvar_"
-      eval("var #{name} = function #{definition}")
-      eval("#{name}")
-      
-    end
-#=end        
-    #------------------------------------------------------------------------------------
-    # Duplicates the given Ruby data into a javascript object in the Browser
-    # @param name [Symbol, String] the name of the javascript variable into which to dup
-    # @param data [Object] a Ruby object
-    #------------------------------------------------------------------------------------
-
-    def dup(symbol = nil, data)
-      
-      name = (symbol)? symbol.to_s : "_tmpvar_"
-      assign_window(name.to_s, JSONString.new(data.to_json))
-      eval("#{name}")
-      
+    def function(definition)
+      eval("var __tmpvar__ = function #{definition}")
+      eval("__tmpvar__")
     end
 
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
 
-    def jspack(obj, scope: :external)
-      pack = (0...8).map { (65 + rand(26)).chr }.join
-      assign_window(pack, Callback.pack(obj, scope: scope))
-      eval(pack)
+    def blk2func(blk)
+      B.block = Sol::Callback.new(blk)
+      B.rr.make_callback(B.block)
     end
-
-    #------------------------------------------------------------------------------------
-    # Proxies the ruby object (obj) into a javascript object
-    #------------------------------------------------------------------------------------
-
-    def proxy(obj, scope: :external)
-      B.RubyProxy.new(jspack(obj, scope: scope))
-    end
-
+    
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
@@ -226,13 +258,9 @@ class Sol
 
       # if block is given, then create a javascript function that will call the block
       # passing the args
-      if (blk)
-        B.block = Sol::Callback.new(blk)
-        B.func = B.rr.make_callback(B.block)
-        (args.size > 0 && args[-1].nil?)? args[-1] = B.bk : args << B.bk 
-      end
-      
-      name = symbol.to_s
+      args.push(blk2func(blk)) if (blk)
+        
+      name = symbol.id2name
       name.gsub!(/__/,"$")
 
       if name =~ /(.*)=$/
@@ -252,16 +280,6 @@ class Sol
     end
     
     #------------------------------------------------------------------------------------
-    # Deletes all divs from the Browser
-    #------------------------------------------------------------------------------------
-    
-    def delete_all
-      eval(<<-EOS)
-        d3.selectAll(\"div\").remove();
-      EOS
-    end
-
-    #------------------------------------------------------------------------------------
     # Converts Ruby arguments into a javascript objects to run in a javascript
     # script
     #------------------------------------------------------------------------------------
@@ -272,12 +290,12 @@ class Sol
         case arg
         when Sol::Callback
           arg
-        when Sol::JSObject
+        when Sol::JSObject, Sol::RBObject
           arg.jsvalue
         when Symbol
           arg.to_s
         when Hash, Array
-          proxy(arg, scope: :all).jsvalue
+          proxy(arg).jsvalue
         else
           arg
         end
@@ -286,10 +304,46 @@ class Sol
     end
     
     #------------------------------------------------------------------------------------
-    #
+    # Loads a javascript file relative to the callers directory
     #------------------------------------------------------------------------------------
 
-    # private
+    def load(filename)
+
+      file = caller.first.split(/:\d/,2).first
+      dir = File.dirname(File.expand_path(file))
+      
+      scrpt = "" 
+      begin
+        file = File.new("#{dir}/#{filename}", "r") 
+        while (line = file.gets)
+          scrpt << line
+        end
+        file.close
+      rescue => err
+        puts "Exception: #{err}"
+        err
+      end
+
+      @browser.executeJavaScriptAndReturnValue(scrpt)
+      
+    end
+ 
+    #------------------------------------------------------------------------------------
+    # Returns a list of StyleSheet's
+    #------------------------------------------------------------------------------------
+
+    def style_sheets
+      eval(<<-EOT)
+        var __style_sheets__ = document.styleSheets;
+      EOT
+      CSSStyleSheets.new
+    end
+    
+    #------------------------------------------------------------------------------------
+    # Private methods
+    #------------------------------------------------------------------------------------
+
+    private
     
     #------------------------------------------------------------------------------------
     # Assign the data to the given named window property
@@ -299,7 +353,55 @@ class Sol
       window.setProperty(property_name, data)
     end
         
+    #------------------------------------------------------------------------------------
+    # Evaluates the javascript script synchronously, but does not pack in JSObject
+    # @param scrpt [String] a javascript script to be executed synchronously
+    # @return [JSObject] a java.JSObject
+    #------------------------------------------------------------------------------------
+
+    def jeval(scrpt)
+      @browser.executeJavaScriptAndReturnValue(scrpt)
+    end
+
   end
   
 end
 
+=begin
+      obj = jscontext.createObject()
+      obj.setProperty("constructor", B.Array.jsvalue)
+      obj.setProperty("__proto__", B.Array.jsvalue)
+      B.c_o = obj
+      B.eval(<<-EOT)
+        console.log(c_o.constructor === Array);
+        console.log(c_o.__proto__ === Array);
+        c_o[0] = 10;
+        console.log(c_o[0]);
+      EOT
+=end
+
+=begin      
+      if (@identity && !obj.isUndefined() && !eval_obj(obj, "isProxy").isUndefined())
+        RBObject.new(obj)
+      else
+        JSObject.build(obj)
+      end
+=end
+
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+=begin
+    def jspack(obj, scope: :external)
+      pack = "__pack__"
+      assign_window(pack, Callback.pack(obj, scope: scope))
+      jeval(pack)
+    end
+
+    def pr(obj)
+      B.probj = obj
+      jsobject = jeval(<<-EOT)
+        new RubyProxy(probj)
+      EOT
+    end
+=end    

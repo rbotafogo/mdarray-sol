@@ -215,10 +215,10 @@ class MDArraySolTest < Test::Unit::TestCase
 
       # Define a function f3 in javascript.  This is  equivalent to the above
       # B.eval...
-      B.function(:f3, <<-EOF)
+      B.f3 = B.function(<<-EOF)
         add(x, y) { return x + y; } 
       EOF
-
+      
       # use standard notation for method call in the B namespace
       assert_equal(9, B.f3(4, 5))
       # or use '[]'
@@ -250,7 +250,8 @@ class MDArraySolTest < Test::Unit::TestCase
       EOT
 
       # add variable 'a' into the B namespace 
-      B.dup(:a, [1, 2, 3])
+      # B.dup(:a, [1, 2, 3])
+      B.a = B.dup([1, 2, 3])
 
       # call function f6 passign a JSObject
       assert_equal("123", f6[B.a])
@@ -464,7 +465,8 @@ class MDArraySolTest < Test::Unit::TestCase
       cars = ["Saab", "Volvo", "BMW"]
 
       # Duplicate (copy) the Ruby Array as a javascript array
-      B.dup(:cars, cars)
+      # B.dup(:cars, cars)
+      B.cars = B.dup(cars)
 
       assert_equal("Saab", B.cars[0])
       assert_equal("Volvo", B.cars[1])
@@ -487,7 +489,8 @@ class MDArraySolTest < Test::Unit::TestCase
       ]
 
       # Copy the data array to "data" element in javascript
-      B.dup(:data, data)
+      # B.dup(:data, data)
+      B.data = B.dup(data)
       
       assert_equal("2011-11-14T16:17:54Z", B.data[0].date)
       assert_equal(1, B.data[2].quantity)
@@ -509,7 +512,8 @@ class MDArraySolTest < Test::Unit::TestCase
         info: [1, 2, 3, 4]
       }
 
-      B.dup(:jscar, car)
+      # B.dup(:jscar, car)
+      B.jscar = B.dup(car)
       jscar = B.jscar
 
       # Add a function to the jscar object.  Functions cannot be create in the

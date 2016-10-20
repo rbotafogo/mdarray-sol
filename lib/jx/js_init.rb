@@ -22,6 +22,24 @@
 ##########################################################################################
 
 B = $js
+
+B.load("ruby_rich.js")
+B.load("ruby_proxy.js")
+B.load("hash_handler.js")
+B.load("array_handler.js")
+
+B.identity = Sol::JSObject.build(
+  B.browser.executeJavaScriptAndReturnValue(<<-EOT)
+    rr.identity  
+  EOT
+)
+
+B.instanceOf = Sol::JSObject.build(
+  B.browser.executeJavaScriptAndReturnValue(<<-EOT)
+    rr.instanceOf  
+  EOT
+)
+
 B.freeze
 
 $d3 = B.pull("d3")
@@ -29,9 +47,3 @@ $dc = B.pull("dc")
 
 $d3.freeze
 $dc.freeze
-
-B.load("ruby_rich.js")
-B.load("ruby_proxy.js")
-B.load("hash_handler.js")
-B.load("array_handler.js")
-

@@ -42,7 +42,32 @@ class MDArraySolTest < Test::Unit::TestCase
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
-    
+=begin      
+    should "proxy Ruby arrays" do
+
+      a = [[1, 2], [3, 4], [5, 6]]
+
+      # make 'data' an object that proxies array 'a'. 
+      data = B.proxy(a)
+      data.jsvalue.setProperty("hello", "there")
+      p data.jsvalue.getProperty("ruby")
+
+
+      B.data = data
+      
+      B.eval(<<-EOT)
+        first = data[0];
+        console.log(first[0]);
+      EOT
+
+      p data.is_a? Array
+
+    end
+=end      
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
     should "proxy Ruby arrays" do
 
       a = [1, 2, 3, 4]

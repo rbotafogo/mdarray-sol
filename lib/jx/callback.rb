@@ -36,7 +36,7 @@ class Sol
     #
     #----------------------------------------------------------------------------------------
 
-    def initialize(ruby_obj)# = nil, &blk)
+    def initialize(ruby_obj)
 
       # if ruby_obj is a hash, then make it accessible both by key or by string since
       # javascript does not allow key access
@@ -47,7 +47,7 @@ class Sol
         ruby_obj.extend(JSArrayInterface)
       end
 
-      @ruby_obj = ruby_obj # || blk
+      @ruby_obj = ruby_obj
       
     end
 
@@ -69,14 +69,14 @@ class Sol
     end
 
     #----------------------------------------------------------------------------------------
-    #
+    # 
     #----------------------------------------------------------------------------------------
 
     def run(*args)
 
       # first argument is the 'method' name 
       method = args.shift
-
+      
       # try to convert last argument to block
       if ((last = args[-1]).is_a? String)
         args.pop
@@ -89,17 +89,45 @@ class Sol
       end
 
       # convert all remaining arguments to Ruby 
-      params = process_args(args)
+      params = Callback.process_args(args)
 
       if (@ruby_obj.is_a? Proc)
-      # Callback.pack(instance_exec(*params, &(@ruby_obj)))
-        instance_exec(*params, &(@ruby_obj))
+        B.pack(instance_exec(*params, &(@ruby_obj)), to_ruby: false)
       else
-        Callback.pack(@ruby_obj.send(method, *params, &blok))
+        B.pack(@ruby_obj.send(method, *params, &blok), to_ruby: false)
+        
       end
       
     end
     
+    #----------------------------------------------------------------------------------------
+    # Scope can be:
+    #  * external: only the received object is packed
+    #  * internal: only the internal objects are packed.  In this case, the received object
+    #    must respond to the 'each'.
+    #  * all: packs both internal and external
+    #----------------------------------------------------------------------------------------
+
+    def self.pack(obj, scope: :external)
+      
+      case scope
+      when :internal
+        raise "Cannot jspack object's internals as it does not respond to the :each method." if
+          !obj.respond_to?(:each)
+        obj.map { |pk| Callback.new(pk) }
+      when :external
+        Callback.new(obj)
+      when :all
+        # if we can go inside the obj with 'map!' then do it, otherwise, just pack the
+        # external object. CHECK method 'each', 'map' and 'map!'
+        (obj.respond_to? :map!)? Callback.new(obj.map! { |pk| Callback.pack(pk) }) :
+          Callback.new(obj)
+      else
+        raise "Scope must be :internal, :external or :all.  Unknown #{scope} scope"
+      end
+      
+    end
+
     #----------------------------------------------------------------------------------------
     #
     #----------------------------------------------------------------------------------------
@@ -107,6 +135,14 @@ class Sol
     def is_instance_of(class_name)
       klass = Object.const_get(class_name)
       @ruby_obj.instance_of? klass
+    end
+    
+    #----------------------------------------------------------------------------------------
+    #
+    #----------------------------------------------------------------------------------------
+
+    def isCallback
+      true
     end
     
     #----------------------------------------------------------------------------------------
@@ -127,64 +163,23 @@ class Sol
       klass.send("new", *args)
     end
 
-    #----------------------------------------------------------------------------------------
-    # Scope can be:
-    #  * external: only the received object is packed
-    #  * internal: only the internal objects are packed.  In this case, the received object
-    #    must respond to the 'each'.
-    #  * all: packs both internal and external
-    #----------------------------------------------------------------------------------------
-
-    def self.pack(obj, scope: :external)
-      
-      # Do not pack basic types Boolean, Numberic or String
-      case obj
-      when TrueClass, FalseClass, Numeric, String, NilClass
-        return obj
-      end
-      
-      case scope
-      when :internal
-        raise "Cannot jspack object's internals as it does not respond to the :each method." if
-          !obj.respond_to?(:each)
-        obj.map { |pk| Callback.new(pk) }
-      when :external
-        Callback.new(obj)
-      when :all
-        # if we can go inside the obj with 'map!' then do it, otherwise, just pack the
-        # external object. CHECK method 'each', 'map' and 'map!'
-        (obj.respond_to? :map!)? Callback.new(obj.map! { |pk| Callback.pack(pk) }) :
-          Callback.new(obj)
-      else
-        raise "Scope must be :internal, :external or :all.  Unknown #{scope} scope"
-      end
-      
-    end
-
     #------------------------------------------------------------------------------------
-    #
+    # Converts given arguments into Ruby arguments
     #------------------------------------------------------------------------------------
 
-    def process_args(args)
+    def self.process_args(args)
 
       args.map do |arg|
         if (arg.is_a? Java::ComTeamdevJxbrowserChromium::JSObject)
-          # arg.java_class.declared_fields.each { |f| p f }
-          # arg.java_class.fields.each { |f| p f.value_type }
-          # p org.jruby.javasupport.JavaClass.getDeclaredFields(arg.java_class)
-          # p org.jruby.javasupport.JavaClass.getFields(arg.java_class)
-          # B.tobj = B.push(arg)
-          # p B.eval("tobj.isProxy")
-
           # If arg is an JSArray, then from the point of view of Ruby we need to
           # break this array in all its individual elements, otherwise Ruby will see
           # only one single argument instead of an array of arguments
           if (arg.isArray())
             array = []
             for i in 0...arg.length()
-              array << arg.get(i)
+              array << Callback.process_args(arg.get(i))
             end
-            process_args(array)
+            # process_args(array)
           elsif (arg.isBooleanObject())
             arg.getBooleanValue()
           elsif (arg.isNumberObject())
@@ -192,7 +187,8 @@ class Sol
           elsif (arg.isStringObject())
             arg.getStringValue()
           else
-            JSObject.build(arg)
+            (B.eval_obj(arg, "isProxy").getValue())?
+              IRBObject.new(B.eval_obj(arg, "ruby_obj")) : JSObject.build(arg)
           end
         elsif (arg.is_a? Java::ComTeamdevJxbrowserChromium::JSValue)
           if (arg.isBoolean())

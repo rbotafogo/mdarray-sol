@@ -43,6 +43,97 @@ class MDArraySolTest < Test::Unit::TestCase
     #
     #--------------------------------------------------------------------------------------
 
+    should "proxy ruby object inside ruby object" do
+
+      a1 = [1, 2, 3]
+      a2 = [4, 5]
+
+      p1 = Sol::RBProxyObject.new(a1)
+      p2 = Sol::RBProxyObject.new(a2)
+
+      p p1[0]
+      p p2[1]
+
+      p p1.is_a? Array
+      p p1.concat(p2)
+      p p1.fetch(3)
+      p p1.fetch(100, "ooops")
+      p1.each { |d| p d }
+      
+    end
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+=begin
+    should "access proxied Ruby Array" do
+      
+      # create an array of data in Ruby
+      array = [1, 2, 3, 4]
+      proxy = B.proxy(array)
+
+      B.ruby_array = proxy
+      
+      B.eval(<<-EOT)
+         console.log(ruby_array.length);
+         console.log(ruby_array[0]);
+         console.log(ruby_array[3]);
+         console.log(ruby_array["[]"](2));
+
+         // note that we can call '[]' with negative index
+         console.log(ruby_array["[]"](-1));
+
+         // adding element to the array will add it to the ruby array
+         ruby_array["<<"](5);
+
+         // it is also possible to call method 'each' that expects a block passing
+         // a function in place of the block
+         ruby_array["each"](function(x) {console.log(x);});
+      EOT
+
+      assert_equal(5, array[4])
+
+    end
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "access complex Ruby arrays" do
+      
+      # create an array of data in Ruby
+      array = [[1, 2], [3, 4], [5, 6]]
+      proxy = B.proxy(array)
+
+      B.ruby_array = proxy
+      
+      B.eval(<<-EOT)
+         // console.log(ruby_array.length);
+         console.log(ruby_array[0][0]);
+         console.log(ruby_array[2][1]);
+      EOT
+
+    end
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+    
+    should "be able to call ruby methods with ruby arguments" do
+      a1 = [1, 2, 3, 4]
+      a2 = [5, 6, 7]
+      
+      B.a1 = B.proxy(a1)
+      B.a2 = B.proxy(a2)
+
+      B.eval(<<-EOT)
+        console.log(a1.each(function(x) { console.log(x); }));
+        // console.log(a1.concat(a2));
+      EOT
+
+    end
+=end    
+=begin
     should "callback a jspacked Ruby Array" do
 
       # create an array of data in Ruby
@@ -72,27 +163,27 @@ class MDArraySolTest < Test::Unit::TestCase
       EOT
 
       # Set a Ruby variable to point to an object in the Browser
-      jsarray = B.jspack([10, 20, 30, 40])
-      jsarray.run("<<", 10)
+      B.jsarray = B.jspack([10, 20, 30, 40])
+      B.jsarray.run("<<", 10)
 
       # make jsarray available to javascript
-      B.data = jsarray
+      B.data = B.jsarray
       B.eval(<<-EOT)
          console.log("Expected value is 10 and returned is: " + data.run("[]", 4))
       EOT
 
-      assert_equal(40, jsarray.run(:[], 3))
+      assert_equal(40, B.jsarray.run(:[], 3))
 
       # Let's do method chainning
-      jsarray.run(:<<, 100).run(:<<, 200).run(:to_s)
+      B.jsarray.run(:<<, 100).run(:<<, 200).run(:to_s)
 
       # run a block to a Ruby method from javascript
       B.eval(<<-EOT)
          data.run("map", "{ |x| print x}")
       EOT
 
-      jsarray.run("map", "{ |x| print x }")
-      jsarray.run("map!", "{ |x| x + 1}")
+      B.jsarray.run("map", "{ |x| print x }")
+      B.jsarray.run("map!", "{ |x| x + 1}")
       
       B.eval(<<-EOT)
          console.log(data.run("to_s"))
@@ -167,7 +258,7 @@ class MDArraySolTest < Test::Unit::TestCase
       EOT
 
     end
-
+=end    
   end
   
 end

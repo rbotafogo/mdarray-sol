@@ -3,7 +3,7 @@
 ##########################################################################################
 # @author Rodrigo Botafogo
 #
-# Copyright © 2013 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
+# Copyright © 2016 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
 # and distribute this software and its documentation, without fee and without a signed 
 # licensing agreement, is hereby granted, provided that the above copyright notice, this 
 # paragraph and the following two paragraphs appear in all copies, modifications, and 
@@ -56,7 +56,7 @@ class Sol
       elsif (jsvalue.isUndefined())
         JSUndefined.new(jsvalue, scope)
       else
-
+        
       end
 
     end
@@ -71,33 +71,7 @@ class Sol
       @scope = scope
       
     end
-=begin    
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
 
-    def value
-
-      if ((member = @jsvalue.getProperty("value")).function? && args.size > 0)
-        ret = jsend(@jsvalue, member, *(B.process_args(args)))
-      elsif(member.undefined?)
-        raise "Method value undefined for this Object"
-      else
-        ret = JSObject.build(member, @jsvalue)
-      end
-      ret
-      
-    end
-    
-    #------------------------------------------------------------------------------------
-    # v is just an alias of the value method that is implemented by some subclasses of
-    # jsobject
-    #------------------------------------------------------------------------------------
-
-    def v
-      value
-    end
-=end
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
@@ -112,39 +86,6 @@ class Sol
 
     def instanceof(constructor)
       B.rr.instanceOf(@jsvalue, constructor.jsvalue)
-    end
-    
-    #----------------------------------------------------------------------------------------
-    # * @return true if this JSObject already points to a jsobject in JS environment
-    #----------------------------------------------------------------------------------------
-    
-    def jsvalue?
-      @jsvalue != nil
-    end
-    
-    #------------------------------------------------------------------------------------
-    # Invokes the function in the scope of object
-    # @param object [JSObject] the object that holds the function
-    # @param function [java JSFunction] the function to be invoked, already in its java
-    # form
-    # @param *args [Args] a list of arguments to pass to the function
-    # @return jsobject [JSObject] a JSObject or one of its subclasses depending on the
-    # result of the function invokation
-    #------------------------------------------------------------------------------------
-
-    def jsend(object, function, *args)
-
-      args = nil if (args.size == 1 && args[0].nil?)
-      
-      if (args)
-        # if the argument list has any symbol, convert the symbol to a string
-        args.map! { |arg| (arg.is_a? Symbol)? arg.to_s : arg } if !args.nil?
-        jargs = []
-        args.each { |arg| jargs << arg.to_java }
-      end
-
-      JSObject.build(function.invoke(object, *(jargs)), function)
-
     end
 
     #------------------------------------------------------------------------------------
@@ -169,20 +110,16 @@ class Sol
 
       # if block is given, then create a javascript function that will call the block
       # passing the args
-      if (blk)
-        B.block = Sol::Callback.new(blk)
-        B.func = B.rr.make_callback(B.block)
-        (args.size > 0 && args[-1].nil?)? args[-1] = B.func : args << B.func 
-      end
+      args.push(B.blk2func(blk)) if (blk)
 
       name = symbol.id2name
-
+      
       if name =~ /(.*)=$/
         ret = assign($1, B.process_args(args)[0])
       elsif (@jsvalue.undefined?)
         raise "Cannot extract property '#{name}' from undefined object"
       elsif ((member = @jsvalue.getProperty(name)).function? && args.size > 0)
-        ret = jsend(@jsvalue, member, *(B.process_args(args)))
+        ret = B.invoke(@jsvalue, member, *(B.process_args(args)))
       else
         # Build a JSObject in the scope of @jsvalue
         ret = JSObject.build(member, @jsvalue)

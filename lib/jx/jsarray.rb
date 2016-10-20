@@ -66,7 +66,6 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def each(&blk)
-      p "calling each"
       i = 0
       while i < @jsvalue.length
         yield get[i]
