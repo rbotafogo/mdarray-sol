@@ -28,9 +28,7 @@ require 'mdarray-sol'
 
 class Scale
 
-  attr_accessor :type
-  attr_accessor :domain
-  attr_accessor :range
+  attr_reader :scale
 
   #--------------------------------------------------------------------------------------
   #
@@ -59,23 +57,58 @@ end
 
 class Axes
 
-  attr_reader :axes
+  attr_reader :chart
+  attr_reader :x_axis
+  attr_reader :y_axis
   
   #--------------------------------------------------------------------------------------
-  #
+  # Creates the x and y axes for a chart.
+  # chart: the chart for which the axes should be added
+  # x_scale: the x scale for the x axis
+  # y_scale: the y scale for the y axis
   #--------------------------------------------------------------------------------------
 
-  def initialize(x_min, x_max, y_min, y_max)
-    @x_scale = Scale.new([x_min, x_max])
-    @y_scale = Scale.new
+  def initialize(chart, x_scale, y_scale)
+
+    @chart = chart
+    @x_axis = $d3.svg.axis(nil)
+    @y_axis = $d3.svg.axis(nil)
+
+    @x_axis.scale(x_scale)
+      .orient("bottom")
+    
+    @y_axis.scale(y_scale)
+      .orient("left")
+    
   end
 
   #--------------------------------------------------------------------------------------
-  #
+  # Plot the x and y axis
   #--------------------------------------------------------------------------------------
 
-  def build
+  def plot
+    
+    # add x_axis
+    @chart.svg.append("g")
+      .attr("class", "axis")
+      .attr("transform", "translate(0, #{@chart.height - @chart.padding})")
+      .attr("fill", "none")
+      .attr("stroke", "black")
+      .attr("shape-rendering", "crispEdges")
+      .call(@x_axis)
 
+    # This call is calling method 'map' on a java JSArray.  This should somehow be
+    # converted to a javascript array!!!!
+      # .call{|g| g.attr("fill", "none")}
+
+    # add y_axis
+    @chart.svg.append("g")
+      .attr("class", "axis")
+      .attr("transform", "translate(#{@chart.padding}, 0)")
+      .attr("fill", "none")
+      .attr("stroke", "black")
+      .attr("shape-rendering", "crispEdges")
+      .call(@y_axis);    
   end
   
 end
@@ -90,6 +123,7 @@ class ScatterPlot
   attr_reader :width
   attr_reader :height
   attr_reader :svg
+  attr_reader :padding
 
   #--------------------------------------------------------------------------------------
   #
@@ -121,6 +155,9 @@ class ScatterPlot
 
     add_data(x_scale, y_scale)
     add_labels(x_scale, y_scale)
+
+    axes = Axes.new(self, x_scale.scale, y_scale.scale)
+    axes.plot
     
   end
 
