@@ -95,7 +95,6 @@ class Sol
         B.pack(instance_exec(*params, &(@ruby_obj)), to_ruby: false)
       else
         B.pack(@ruby_obj.send(method, *params, &blok), to_ruby: false)
-        
       end
       
     end
@@ -169,6 +168,79 @@ class Sol
 
     def self.process_args(args)
 
+      collect = []
+
+      args.each do |arg|
+        if (arg.is_a? Java::ComTeamdevJxbrowserChromium::JSValue)
+          if (arg.isArray())
+            collect << Callback.process_arg(arg)
+=begin
+            # NEEDS TO CHECK IF NECESSARY... USE TO BE A PROBLEM, BUT NOW IS THE PROBLEM            
+            for i in 0...arg.length()
+              collect << Callback.process_arg(arg.get(i))
+            end
+=end
+          else
+            collect << Callback.process_arg(arg)
+          end
+        else
+          collect << arg
+        end
+      end
+      
+      collect
+      
+    end
+
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    private
+    
+    #------------------------------------------------------------------------------------
+    # Converts given argument into Ruby arguments
+    #------------------------------------------------------------------------------------
+
+    def self.process_arg(arg)
+      
+      (B.eval_obj(arg, "isProxy").isUndefined())?
+        JSObject.build(arg) : IRBObject.new(B.eval_obj(arg, "ruby_obj"))
+      
+    end
+    
+  end
+  
+end
+
+=begin    
+    def self.process_args(args)
+      
+      args.map! do |arg|
+        if (arg.is_a? Java::ComTeamdevJxbrowserChromium::JSValue)
+          if (arg.isArray())
+            array = []
+            for i in 0...arg.length()
+              array << Callback.process_arg(arg.get(i))
+            end
+            array
+          else
+            Callback.process_arg(arg)
+          end
+        else
+          arg
+        end
+        
+      end
+
+      args
+      
+    end
+=end
+
+=begin
+    def self.process_args(args)
+      
       args.map do |arg|
         if (arg.is_a? Java::ComTeamdevJxbrowserChromium::JSObject)
           # If arg is an JSArray, then from the point of view of Ruby we need to
@@ -202,13 +274,10 @@ class Sol
           end
         else
           arg
-        end
+        end      
         
       end
-      
+
     end
-    
-  end
-  
-end
+=end  
 

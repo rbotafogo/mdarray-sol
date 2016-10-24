@@ -3,7 +3,7 @@
 ##########################################################################################
 # @author Rodrigo Botafogo
 #
-# Copyright © 2013 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
+# Copyright © 2016 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
 # and distribute this software and its documentation, without fee and without a signed 
 # licensing agreement, is hereby granted, provided that the above copyright notice, this 
 # paragraph and the following two paragraphs appear in all copies, modifications, and 
@@ -185,7 +185,7 @@ class Sol
 
     #------------------------------------------------------------------------------------
     # Invokes the function in the scope of object
-    # @param object [JSObject] the object that holds the function
+    # @param object [Java::JSObject] the object that holds the function
     # @param function [java JSFunction] the function to be invoked, already in its java
     # form
     # @param *args [Args] a list of arguments to pass to the function

@@ -83,32 +83,39 @@ class Axes
   end
 
   #--------------------------------------------------------------------------------------
+  # Set the style of the axes
+  #--------------------------------------------------------------------------------------
+
+  def style
+    Proc.new do |g|
+      g.attr("fill", "none")
+      g.attr("stroke", "gray")
+      g.attr("shape-rendering", "crisEdges")
+      g.attr("font-family", "sans-serif")
+      g.attr("font-size", "11px")
+    end
+  end
+  
+  #--------------------------------------------------------------------------------------
   # Plot the x and y axis
   #--------------------------------------------------------------------------------------
 
   def plot
-    
+
     # add x_axis
     @chart.svg.append("g")
       .attr("class", "axis")
       .attr("transform", "translate(0, #{@chart.height - @chart.padding})")
-      .attr("fill", "none")
-      .attr("stroke", "black")
-      .attr("shape-rendering", "crispEdges")
+      .call(&style)
       .call(@x_axis)
-
-    # This call is calling method 'map' on a java JSArray.  This should somehow be
-    # converted to a javascript array!!!!
-      # .call{|g| g.attr("fill", "none")}
 
     # add y_axis
     @chart.svg.append("g")
       .attr("class", "axis")
       .attr("transform", "translate(#{@chart.padding}, 0)")
-      .attr("fill", "none")
-      .attr("stroke", "black")
-      .attr("shape-rendering", "crispEdges")
-      .call(@y_axis);    
+      .call(&style)
+      .call(@y_axis)
+
   end
   
 end
@@ -145,13 +152,25 @@ class ScatterPlot
   #
   #--------------------------------------------------------------------------------------
 
+  def style
+    Proc.new do |g|
+      g.attr("font-family", "sans-serif")
+      g.attr("font-size", "10px")
+      g.attr("fill", "gray")
+    end
+  end
+    
+  #--------------------------------------------------------------------------------------
+  #
+  #--------------------------------------------------------------------------------------
+
   def plot
     
     x_min, x_max = @dataset.minmax_by { |d| d[0] }
     y_min, y_max = @dataset.minmax_by { |d| d[1] }
     
     x_scale = Scale.new([0, x_max[0]], [@padding, @width - @padding * 2])
-    y_scale = Scale.new([0, y_max[0]], [@height, 0])
+    y_scale = Scale.new([0, y_max[1]], [@height - @padding, @padding])
 
     add_data(x_scale, y_scale)
     add_labels(x_scale, y_scale)
@@ -172,7 +191,8 @@ class ScatterPlot
       .append("circle")
       .attr("cx") { |d, i| x_scale[d[0]] }
       .attr("cy") { |d, i| y_scale[d[1]] }
-      .attr("r", 5)
+      .attr("color", "gray")
+      .attr("r", 3)
   end
 
   #--------------------------------------------------------------------------------------
@@ -184,12 +204,10 @@ class ScatterPlot
       .data(@dataset)
       .enter(nil)
       .append("text")
+      .call(&style)
       .text { |d, i| "(#{d[0].to_i}, #{d[1].to_i})" }
       .attr("x") { |d, i| x_scale[d[0]] }
       .attr("y") { |d, i| y_scale[d[1]] }
-      .attr("font-family", "sans-serif")
-      .attr("font-size", "11px")
-      .attr("fill", "red");
   end
 
 end
@@ -199,6 +217,6 @@ dataset = [
   [410, 12], [475, 44], [25, 67], [85, 21], [220, 88]
 ]
 
-splot = ScatterPlot.new(dataset, width: 500, height: 300, padding: 20)
+splot = ScatterPlot.new(dataset, width: 500, height: 300, padding: 50)
 splot.plot
 
