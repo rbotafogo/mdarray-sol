@@ -43,7 +43,7 @@ body.selectAll("p")
 
 sleep(0.5)
 $d3.select("body").selectAll("*").html("")
-=begin
+#=begin
 #
 body.selectAll('div')
   .data(dataset).enter(nil).append('div')
@@ -57,7 +57,8 @@ body.selectAll('div')
 
 sleep(0.5)
 $d3.select("body").selectAll("*").html("")
-=end
+#=end
+=begin
 # 
 width = 500
 height = 100
@@ -92,6 +93,6 @@ svg2.selectAll("text")
   .attr("text-anchor", "middle")
 
 # B.print_page
-#=end
+=end
       
 

@@ -24,6 +24,7 @@
 require 'json'
 require_relative 'jsobject'
 require_relative 'rbobject'
+require_relative 'irbobject'
 
 class Sol
   

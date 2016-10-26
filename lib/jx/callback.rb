@@ -31,7 +31,7 @@ class Sol
     
     attr_reader :ruby_obj
     attr_reader :this
-    
+
     #----------------------------------------------------------------------------------------
     #
     #----------------------------------------------------------------------------------------
@@ -91,12 +91,49 @@ class Sol
       # convert all remaining arguments to Ruby 
       params = Callback.process_args(args)
 
-      if (@ruby_obj.is_a? Proc)
+      case @ruby_obj
+      when Proc
         B.pack(instance_exec(*params, &(@ruby_obj)), to_ruby: false)
+      when IRBObject
+        begin
+          B.pack(@ruby_obj.send(method, *params, &blok), to_ruby: false)
+        rescue TypeError
+          params[0].native(method, @ruby_obj, &blok)
+        end
       else
         B.pack(@ruby_obj.send(method, *params, &blok), to_ruby: false)
       end
       
+=begin
+      if (@ruby_obj.is_a? Proc)
+        B.pack(instance_exec(*params, &(@ruby_obj)), to_ruby: false)
+      else
+        begin
+          # This works only with primitive Ruby parameters.  If an Ruby object is a
+          # parameter it will become an IRBObject, but there is no way to operate
+          # the @ruby_obj with this IRBObject.  Needs the next version of jxBrowser
+          # allowing for extracting the actual Ruby object from the IRBObject
+
+          # When we have an nested array such as @ruby_array = [[1, 2], [3, 4]] then
+          # if the operation is indexing with '[]' and index 0, the return value is
+          # [1, 2].  This result is packed with to_ruby: false, giving an IRObject
+          # since it is returning to a javascript script.  If the javascript now indexes
+          # this IRObject with [0], the @ruby_obj = IRBObject that has a packed [1, 2] as its
+          # ruby_obj.  Calling '[]' on this object, will hit IRBObject method_missing
+          # which calls the run method on the packed array returning the value 1.
+          B.pack(@ruby_obj.send(method, *params, &blok), to_ruby: false)
+          
+        # if trying to execute 'method' on @ruby_obj is giving a TypeError, let´s see if
+        # the receiving object implements the 'native' method that will execute the
+        # method on a native ruby object.  BUG!!! Does not work as params[0] is an IRBObject
+        # and there will be no way to operate the IRBObject with the @ruby_obj.  So this
+        # is useless.  When the new version of jxBrowser comes out, if we can extract the
+        # primitive ruby_obj from the IRBObject then we can operate on them
+        rescue TypeError
+          params[0].native(method, @ruby_obj, &blok)
+        end
+      end
+=end      
     end
     
     #----------------------------------------------------------------------------------------
@@ -203,10 +240,8 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def self.process_arg(arg)
-      
       (B.eval_obj(arg, "isProxy").isUndefined())?
         JSObject.build(arg) : IRBObject.new(B.eval_obj(arg, "ruby_obj"))
-      
     end
     
   end
