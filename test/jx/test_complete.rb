@@ -27,10 +27,9 @@ require '../../config' if @platform == nil
 require 'mdarray-sol'
 
 require_relative 'test_js'
-require_relative 'test_packaging'
 
 # test proxies
-require_relative 'test_proxy_hash'
 require_relative 'test_proxy_array'
+# require_relative 'test_proxy_hash'
 # require_relative 'test_proxy_lambda'
 

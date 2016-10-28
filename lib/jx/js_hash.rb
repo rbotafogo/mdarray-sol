@@ -28,18 +28,14 @@ module InsensitiveHash
     super(value.to_sym)
   end
 
-  def assoc(key)
-    super(key.to_sym)
+  def fetch(value, to_sym = true)
+    (to_sym)? super(value.to_sym) : super(value)
   end
   
-  def fetch(value)
-    super(value.to_sym)
+  def assoc(key, to_sym = true)
+    (to_sym)? super(key.to_sym) : super(key)
   end
-
-  def fetch_str(value)
-    super(value.to_s)
-  end
-
+  
   def []=(key, value)
     super(key.to_sym, value)
   end

@@ -23,11 +23,12 @@ var assert = chai.assert;
 
 // This is the Ruby Array
 // a = [1, 2, 3, 4] proxying 'data'
+// b = [10, 20, 30, 40, 50, 60] poxying 'd2'
 
 console.log("Starting Ruby Array proxy tests")
 
-console.log(data.to_s())
-console.log(d2.to_s());
+assert.equal("[1, 2, 3, 4]", data.to_s());
+assert.equal("[10, 20, 30, 40, 50, 60]", d2.to_s());
 
 assert.equal(1, data[0]);
 assert.equal(2, data[1]);
@@ -42,6 +43,7 @@ assert.equal(40, d2[3]);
 // calling method map (this is the Ruby map method) which has the same
 // semantic as javascript map.  But should be careful not to confuse 
 // things.  Here we pass a Javascript function to a Ruby method.
+console.log("should print values from 1 to 4: ");
 data.map(function(d) { console.log(d); } )
 
 // Note that we can use negative indices on this array
