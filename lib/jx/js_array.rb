@@ -23,4 +23,9 @@
 
 module JSArrayInterface
 
+  def is_instance_of(class_name)
+    klass = Object.const_get(class_name)
+    instance_of? klass
+  end
+  
 end

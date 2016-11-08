@@ -145,13 +145,13 @@ class Sol
     def pack(obj, to_ruby: false, scope: document)
 
       case obj
-      when com.teamdev.jxbrowser.chromium.al
-        B.obj = Callback.pack(obj)
-        RBObject.new(jeval("new RubyProxy(obj)"), obj, true)
       when TrueClass, FalseClass, Numeric, String, NilClass
         obj
       when Java::ComTeamdevJxbrowserChromium::JSValue
         JSObject.build(obj, scope)
+      when com.teamdev.jxbrowser.chromium.al
+        B.obj = Callback.pack(obj)
+        RBObject.new(jeval("new RubyProxy(obj)"), obj, true)
       when Sol::Callback
         B.obj = obj
         RBObject.new(jeval("new RubyProxy(obj)"), obj, false)

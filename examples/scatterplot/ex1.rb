@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
 ##########################################################################################
-# @author Rodrigo Botafogo
-#
 # Copyright © 2016 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
 # and distribute this software and its documentation, without fee and without a signed 
 # licensing agreement, is hereby granted, provided that the above copyright notice, this 
@@ -21,28 +19,24 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
+require_relative 'scatterplot'
 
-module InsensitiveHash
+=begin
+dataset = [
+  [5, 20], [480, 90], [250, 50], [100, 33], [330, 95],
+  [410, 12], [475, 44], [25, 67], [85, 21], [220, 88]
+]
+=end
 
-  def is_instance_of(class_name)
-    klass = Object.const_get(class_name)
-    instance_of? klass
-  end
-
-  def [](value)
-    super(value.to_sym)
-  end
-
-  def fetch(value, to_sym = true)
-    (to_sym)? super(value.to_sym) : super(value)
-  end
-  
-  def assoc(key, to_sym = true)
-    (to_sym)? super(key.to_sym) : super(key)
-  end
-  
-  def []=(key, value)
-    super(key.to_sym, value)
-  end
-
+# create a random set of point
+dataset = [];
+num_data_points = 30;
+x_range = rand * 1000;
+y_range = rand * 1000;
+(1..num_data_points).each do |i|
+  dataset << [(rand * x_range).floor, (rand * y_range).floor]
 end
+
+splot = ScatterPlot.new(dataset, width: 800, height: 500, padding: 50)
+splot.plot
+

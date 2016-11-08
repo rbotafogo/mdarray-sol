@@ -80,6 +80,7 @@ class Sol
 
     def initialize(jsvalue)
       @jsvalue = jsvalue
+      @run_func = @jsvalue.getProperty("run")
     end
 
     #----------------------------------------------------------------------------------------
@@ -87,8 +88,7 @@ class Sol
     #----------------------------------------------------------------------------------------
 
     def is_instance_of(class_name)
-      klass = Object.const_get(class_name)
-      @ruby_obj.instance_of? klass
+      B.invoke(@jsvalue, @run_func, "is_instance_of", class_name)
     end
 
     #------------------------------------------------------------------------------------
@@ -97,9 +97,7 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def method_missing(symbol, *args, &blk)
-      # retrieve the 'run' method
-      func = @jsvalue.getProperty("run")
-      B.invoke(@jsvalue, func, symbol, *args)
+      B.invoke(@jsvalue, @run_func, symbol, *args)
     end
     
     #------------------------------------------------------------------------------------

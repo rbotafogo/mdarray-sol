@@ -162,6 +162,28 @@ class MDArraySolTest < Test::Unit::TestCase
       
     end
     
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "proxy nested arrays and hashes" do
+
+      a1 = [{name: "John", age: 25}, {name: "Mary", age: 30},
+            {name: "Paul", age: 18}, {name: "Anton", age: 45}]
+
+      B.data = B.proxy(a1)
+
+      B.eval(<<-EOT)
+        var assert = chai.assert;
+
+        assert.equal("John", data[0].name);
+        assert.equal(25, data[0].age);
+        assert.equal("Anton", data[3].name);
+        assert.equal(18, data[2].age);
+      EOT
+
+    end
+    
   end
 
 end

@@ -48,17 +48,17 @@ class MDArraySolTest < Test::Unit::TestCase
       # Hash with symbols as keys
       a = {a: 1, b: 2, c: 3, d: {e: 4, f: 5, g: {h: 6, i:7}},
            j: [1, 2, [3, [4, 5]]]}
-
+      
       # hash with symbols and Strings as keys
       b = {x: 100, y: 200, c: 300, "d" => 400}
       
       # Ruby hash proxies javascript 'data'
       B.data = B.proxy(a)
       B.d2 = B.proxy(b)
-
+      
       B.eval(<<-EOT)
         var assert = chai.assert;
-
+                
         // retrieve the property by use of '[]'
         assert.equal(1, data["a"]);
         // retrieve the property by use of '.'
@@ -77,6 +77,11 @@ class MDArraySolTest < Test::Unit::TestCase
         // argument set to 'false'
         assert.equal(400, d2.fetch("d", false));
         
+        // access deep data 
+        assert.equal(4, data.d.e);
+        assert.equal(7, data.d.g.i);
+        assert.equal(1, data.j[0]);
+        assert.equal(4, data.j[2][1][0]);
       EOT
       
 =begin      

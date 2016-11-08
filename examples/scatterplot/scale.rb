@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
 ##########################################################################################
-# @author Rodrigo Botafogo
-#
 # Copyright © 2016 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
 # and distribute this software and its documentation, without fee and without a signed 
 # licensing agreement, is hereby granted, provided that the above copyright notice, this 
@@ -21,28 +19,31 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
+#=========================================================================================
+#
+#=========================================================================================
 
-module InsensitiveHash
+class Scale
 
-  def is_instance_of(class_name)
-    klass = Object.const_get(class_name)
-    instance_of? klass
+  attr_reader :scale
+
+  #--------------------------------------------------------------------------------------
+  #
+  #--------------------------------------------------------------------------------------
+
+  def initialize(domain, range)
+    @scale = $d3.scale.linear(nil)
+    @scale
+      .domain(domain)
+      .range(range)
   end
 
-  def [](value)
-    super(value.to_sym)
-  end
+  #--------------------------------------------------------------------------------------
+  #
+  #--------------------------------------------------------------------------------------
 
-  def fetch(value, to_sym = true)
-    (to_sym)? super(value.to_sym) : super(value)
+  def[](val)
+    @scale[val]
   end
-  
-  def assoc(key, to_sym = true)
-    (to_sym)? super(key.to_sym) : super(key)
-  end
-  
-  def []=(key, value)
-    super(key.to_sym, value)
-  end
-
+    
 end

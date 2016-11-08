@@ -19,106 +19,11 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-require '../config' if @platform == nil
+require '../../config' if @platform == nil
 require 'mdarray-sol'
 
-#=========================================================================================
-#
-#=========================================================================================
-
-class Scale
-
-  attr_reader :scale
-
-  #--------------------------------------------------------------------------------------
-  #
-  #--------------------------------------------------------------------------------------
-
-  def initialize(domain, range)
-    @scale = $d3.scale.linear(nil)
-    @scale
-      .domain(domain)
-      .range(range)
-  end
-
-  #--------------------------------------------------------------------------------------
-  #
-  #--------------------------------------------------------------------------------------
-
-  def[](val)
-    @scale[val]
-  end
-    
-end
-
-#=========================================================================================
-#
-#=========================================================================================
-
-class Axes
-
-  attr_reader :chart
-  attr_reader :x_axis
-  attr_reader :y_axis
-  
-  #--------------------------------------------------------------------------------------
-  # Creates the x and y axes for a chart.
-  # chart: the chart for which the axes should be added
-  # x_scale: the x scale for the x axis
-  # y_scale: the y scale for the y axis
-  #--------------------------------------------------------------------------------------
-
-  def initialize(chart, x_scale, y_scale)
-
-    @chart = chart
-    @x_axis = $d3.svg.axis(nil)
-    @y_axis = $d3.svg.axis(nil)
-
-    @x_axis.scale(x_scale)
-      .orient("bottom")
-    
-    @y_axis.scale(y_scale)
-      .orient("left")
-    
-  end
-
-  #--------------------------------------------------------------------------------------
-  # Set the style of the axes
-  #--------------------------------------------------------------------------------------
-
-  def style
-    Proc.new do |g|
-      g.attr("fill", "none")
-      g.attr("stroke", "gray")
-      g.attr("shape-rendering", "crisEdges")
-      g.attr("font-family", "sans-serif")
-      g.attr("font-size", "11px")
-    end
-  end
-  
-  #--------------------------------------------------------------------------------------
-  # Plot the x and y axis
-  #--------------------------------------------------------------------------------------
-
-  def plot
-
-    # add x_axis
-    @chart.svg.append("g")
-      .attr("class", "axis")
-      .attr("transform", "translate(0, #{@chart.height - @chart.padding})")
-      .call(&style)
-      .call(@x_axis)
-
-    # add y_axis
-    @chart.svg.append("g")
-      .attr("class", "axis")
-      .attr("transform", "translate(#{@chart.padding}, 0)")
-      .call(&style)
-      .call(@y_axis)
-
-  end
-  
-end
+require_relative 'scale'
+require_relative 'axes'
 
 #=========================================================================================
 #
@@ -133,7 +38,8 @@ class ScatterPlot
   attr_reader :padding
 
   #--------------------------------------------------------------------------------------
-  #
+  # Initialize the scatterplot and create the main svg for the plot with the given
+  # width and height and padding
   #--------------------------------------------------------------------------------------
   
   def initialize(dataset, width:, height:, padding:)
@@ -149,7 +55,7 @@ class ScatterPlot
   end
 
   #--------------------------------------------------------------------------------------
-  #
+  # Defines the style for the labels in the plot
   #--------------------------------------------------------------------------------------
 
   def style
@@ -211,12 +117,4 @@ class ScatterPlot
   end
 
 end
-
-dataset = [
-  [5, 20], [480, 90], [250, 50], [100, 33], [330, 95],
-  [410, 12], [475, 44], [25, 67], [85, 21], [220, 88]
-]
-
-splot = ScatterPlot.new(dataset, width: 500, height: 300, padding: 50)
-splot.plot
 
