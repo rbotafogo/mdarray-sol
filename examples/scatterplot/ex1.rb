@@ -21,22 +21,39 @@
 
 require_relative 'scatterplot'
 
-=begin
-dataset = [
-  [5, 20], [480, 90], [250, 50], [100, 33], [330, 95],
-  [410, 12], [475, 44], [25, 67], [85, 21], [220, 88]
-]
-=end
+class Example
 
-# create a random set of point
-dataset = [];
-num_data_points = 30;
-x_range = rand * 1000;
-y_range = rand * 1000;
-(1..num_data_points).each do |i|
-  dataset << [(rand * x_range).floor, (rand * y_range).floor]
+  attr_reader :dataset
+
+  def initialize(num_data_points)
+    @num_data_points = num_data_points
+  end
+  
+  def gen_random_data
+    @dataset = []
+    x_range = rand * 1000;
+    y_range = rand * 1000;
+    (1..@num_data_points).each do |i|
+      @dataset << [(rand * x_range).floor, (rand * y_range).floor]
+    end
+    
+  end
+  
 end
 
-splot = ScatterPlot.new(dataset, width: 800, height: 500, padding: 50)
+$d3.select("body")
+  .append("p")
+  .text("Click here to generate new dataset at any time!")
+
+ex = Example.new(30)
+ex.gen_random_data
+splot = ScatterPlot.new(ex.dataset, width: 800, height: 450, padding: 50)
 splot.plot
+
+$d3.select("p")
+  .on('click') {
+  ex.gen_random_data
+  splot.update(ex.dataset)
+}
+
 

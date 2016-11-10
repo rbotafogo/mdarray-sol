@@ -32,8 +32,9 @@ class Axes
   #--------------------------------------------------------------------------------------
   # Creates the x and y axes for a chart.
   # chart: the chart for which the axes should be added
-  # x_scale: the x scale for the x axis
-  # y_scale: the y scale for the y axis
+  # @param chart [d3 svg] the plot into which to add the x and y axis
+  # @param x_scale [d3 scale function] the x scale for the x axis
+  # @param y_scale [d3 scale function] the y scale for the y axis
   #--------------------------------------------------------------------------------------
 
   def initialize(chart, x_scale, y_scale)
@@ -73,19 +74,38 @@ class Axes
   def plot
 
     # add x_axis
-    @chart.svg.append("g")
-      .attr("class", "x axis")
-      .attr("transform", "translate(0, #{@chart.height - @chart.padding})")
+    @x_svg = @chart.svg.append("g")
+    @x_svg.attr("transform", "translate(0, #{@chart.height - @chart.padding})")
       .call(&style)
       .call(@x_axis)
 
     # add y_axis
-    @chart.svg.append("g")
-      .attr("class", "y axis")
-      .attr("transform", "translate(#{@chart.padding}, 0)")
+    @y_svg = @chart.svg.append("g")
+    @y_svg.attr("transform", "translate(#{@chart.padding}, 0)")
       .call(&style)
       .call(@y_axis)
 
+  end
+
+  #--------------------------------------------------------------------------------------
+  # Updates the x and y axis
+  # @param x_scale [d3 scale function] the x scale for this axis
+  # @param y_scale [d3 scale function] the y scale for this axis
+  #--------------------------------------------------------------------------------------
+
+  def update(x_scale, y_scale)
+
+    @x_axis.scale = x_scale
+    @y_axis.scale = y_scale
+
+    # update x_axis
+    @x_svg.attr("transform", "translate(0, #{@chart.height - @chart.padding})")
+      .call(@x_axis)
+
+    # update y_axis
+    @y_svg.attr("transform", "translate(#{@chart.padding}, 0)")
+      .call(@y_axis)
+    
   end
   
 end

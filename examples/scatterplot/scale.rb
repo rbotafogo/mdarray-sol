@@ -28,7 +28,9 @@ class Scale
   attr_reader :scale
 
   #--------------------------------------------------------------------------------------
-  #
+  # Create a new linear scale with domain, range
+  # @param domain [Array] the domain of the scale
+  # @param range [Array] the range of the scale
   #--------------------------------------------------------------------------------------
 
   def initialize(domain, range)
@@ -39,11 +41,43 @@ class Scale
   end
 
   #--------------------------------------------------------------------------------------
-  #
+  # @scale is a d3 'free' (not inside a chain) function.  In order to call a d3
+  # free function we use the '[]' notation
+  # @param val [Number] the value to be scaled by this scale
+  # @return number [Number] the scaled value
   #--------------------------------------------------------------------------------------
 
   def[](val)
     @scale[val]
   end
-    
+
+  #--------------------------------------------------------------------------------------
+  # Sets the domain of the scale.
+  # @param domain [Array] two elements array with the scale domain
+  #--------------------------------------------------------------------------------------
+
+  def domain(domain)
+    @scale.domain(domain)
+  end
+  
+  #--------------------------------------------------------------------------------------
+  # Sets the range of the scale.
+  # @param range [Array] two elements array with the scale range
+  #--------------------------------------------------------------------------------------
+
+  def range(range)
+    @scale.range(range)
+  end
+
+  #--------------------------------------------------------------------------------------
+  # Updates the domain and range of the scale
+  # @param domain [Array] the domain of the scale
+  # @param range [Array] the range of the scale
+  #--------------------------------------------------------------------------------------
+
+  def update(domain, range)
+    @scale.domain(domain)
+    @scale.range(range)
+  end
+
 end
