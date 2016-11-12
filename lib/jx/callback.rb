@@ -70,6 +70,10 @@ class Sol
 
     #----------------------------------------------------------------------------------------
     # 
+    # @param args [Array] the first element of the array is a method to be called on the
+    # @ruby_obj variable of this instance.  The other elements are parameters for this
+    # method call
+    # @return a packed js object
     #----------------------------------------------------------------------------------------
 
     def run(*args)
@@ -217,102 +221,3 @@ class Sol
   end
   
 end
-
-=begin    
-    def self.process_args(args)
-      
-      args.map! do |arg|
-        if (arg.is_a? Java::ComTeamdevJxbrowserChromium::JSValue)
-          if (arg.isArray())
-            array = []
-            for i in 0...arg.length()
-              array << Callback.process_arg(arg.get(i))
-            end
-            array
-          else
-            Callback.process_arg(arg)
-          end
-        else
-          arg
-        end
-        
-      end
-
-      args
-      
-    end
-=end
-
-=begin
-    def self.process_args(args)
-      
-      args.map do |arg|
-        if (arg.is_a? Java::ComTeamdevJxbrowserChromium::JSObject)
-          # If arg is an JSArray, then from the point of view of Ruby we need to
-          # break this array in all its individual elements, otherwise Ruby will see
-          # only one single argument instead of an array of arguments
-          if (arg.isArray())
-            array = []
-            for i in 0...arg.length()
-              array << Callback.process_args(arg.get(i))
-            end
-            # process_args(array)
-          elsif (arg.isBooleanObject())
-            arg.getBooleanValue()
-          elsif (arg.isNumberObject())
-            arg.getNumberValue()
-          elsif (arg.isStringObject())
-            arg.getStringValue()
-          else
-            (B.eval_obj(arg, "isProxy").getValue())?
-              IRBObject.new(B.eval_obj(arg, "ruby_obj")) : JSObject.build(arg)
-          end
-        elsif (arg.is_a? Java::ComTeamdevJxbrowserChromium::JSValue)
-          if (arg.isBoolean())
-            arg.getBooleanValue()
-          elsif (arg.isNumber())
-            arg.getNumberValue()
-          elsif (arg.isString())
-            arg.getStringValue()
-          else
-            raise "Illegal argument #{arg}"
-          end
-        else
-          arg
-        end      
-        
-      end
-
-    end
-=end  
-
-=begin
-      if (@ruby_obj.is_a? Proc)
-        B.pack(instance_exec(*params, &(@ruby_obj)), to_ruby: false)
-      else
-        begin
-          # This works only with primitive Ruby parameters.  If an Ruby object is a
-          # parameter it will become an IRBObject, but there is no way to operate
-          # the @ruby_obj with this IRBObject.  Needs the next version of jxBrowser
-          # allowing for extracting the actual Ruby object from the IRBObject
-
-          # When we have an nested array such as @ruby_array = [[1, 2], [3, 4]] then
-          # if the operation is indexing with '[]' and index 0, the return value is
-          # [1, 2].  This result is packed with to_ruby: false, giving an IRObject
-          # since it is returning to a javascript script.  If the javascript now indexes
-          # this IRObject with [0], the @ruby_obj = IRBObject that has a packed [1, 2] as its
-          # ruby_obj.  Calling '[]' on this object, will hit IRBObject method_missing
-          # which calls the run method on the packed array returning the value 1.
-          B.pack(@ruby_obj.send(method, *params, &blok), to_ruby: false)
-          
-        # if trying to execute 'method' on @ruby_obj is giving a TypeError, let´s see if
-        # the receiving object implements the 'native' method that will execute the
-        # method on a native ruby object.  BUG!!! Does not work as params[0] is an IRBObject
-        # and there will be no way to operate the IRBObject with the @ruby_obj.  So this
-        # is useless.  When the new version of jxBrowser comes out, if we can extract the
-        # primitive ruby_obj from the IRBObject then we can operate on them
-        rescue TypeError
-          params[0].native(method, @ruby_obj, &blok)
-        end
-      end
-=end      

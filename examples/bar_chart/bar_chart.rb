@@ -19,55 +19,91 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-require '../config' if @platform == nil
+require '../../config' if @platform == nil
 require 'mdarray-sol'
 
-dataset = [ 25, 7, 5, 26, 11, 8, 25, 14, 23, 19,
-            14, 11, 22, 29, 11, 13, 12, 17, 18, 10,
-            24, 18, 25, 9, 3 ]
+# require_relative 'scale'
 
-body = $d3.select("body")
-      
+class BarChart
 
-$d3.select("body").append("p").text("New paragraph!")
+  attr_reader :dataset
+  attr_reader :width
+  attr_reader :height
+  attr_reader :svg
+  attr_reader :padding
+  attr_reader :scale
 
-sleep(0.5)
-$d3.select("body").selectAll("*").html("")
-      
-# 
-body.selectAll("p")
-  .data(dataset).enter(nil).append("p")
-  .text { |d, i| "I'm index #{i} couting to #{d}" }
-  .style("color") { |d, i| (d > 15)? "red" : "black" }
+  #--------------------------------------------------------------------------------------
+  # Initialize the bar chart and create the main svg for the plot with the given
+  # width and height and padding
+  #
+  # @param dataset [Array] an array of points in the form of [x, y]
+  # @param width [Number] the width of the plot
+  # @param height [Number] the height of the plot
+  # @param padding [Number] a padding for the plot. Uses the same padding for x and y
+  # dimension. Could be improved by adding different paddings for x and y
+  #--------------------------------------------------------------------------------------
+  
+  def initialize(dataset, width:, height:, padding:)
+    @dataset = dataset
+    @width = width
+    @height = height
+    @padding = padding
+    # fix!!!!
+    @scale = nil
 
+    @svg = $d3.select("body")
+           .append("svg")
+           .attr("width", @width)
+           .attr("height", @height)
+  end
 
-sleep(0.5)
-$d3.select("body").selectAll("*").html("")
-#=begin
-#
-body.selectAll('div')
-  .data(dataset).enter(nil).append('div')
-  .style('display', 'inline-block')
-  .style('width', '20px')
-  .style('background-color', 'teal')
-  .style('margin-right', '2px')
-  .style('height') { |d, i| (d * 5).to_s + "px" }
-  .on('mouseout') { $d3.select(@this).style('background-color', 'teal') }
-  .on('mouseover') { $d3.select(@this).style('background-color', 'black') }
+  #--------------------------------------------------------------------------------------
+  # @param scale [Scale] the scale for the data, this is a Scale object that
+  # encapsulates the scale function from d3.  scale defauts to the bar chart scale.
+  # Usually this will always be the case, but we need to set it since scale is used
+  # inside a block
+  #--------------------------------------------------------------------------------------
 
-sleep(0.5)
-$d3.select("body").selectAll("*").html("")
+  def add_data(scale = @scale)
+
+    length = @dataset.length
+    width = @width
+    height = @height
+    padding = @padding
+
+    @svg.selectAll("rect")
+      .data(@dataset)
+      .enter(nil)
+      .append("rect")
+      .attr("x") { |d, i| i * (width / length + 1)}
+
+=begin
+      .attr("y") { |d, i| height - (d *4) }
+      .attr("width") { |d, i| width / length - padding }
+      .attr("height") { |d, i| (d * 4) }
+      .attr("fill") { |d, i| "rgb(0, 0, #{(d * 10).to_i})" }
+=end
+    
+  end
+  
+  #--------------------------------------------------------------------------------------
+  # Plots the bar chart
+  #--------------------------------------------------------------------------------------
+
+  def plot
+    add_data(nil)
+  end
+  
+  
+end
+
 #=end
 =begin
 # 
 width = 500
 height = 100
 bar_padding = 1
-
-svg2 = $d3.select("body")
-       .append("svg")
-       .attr("width", width)
-       .attr("height", height)
 
 svg2.selectAll("rect")
   .data(dataset)
@@ -95,4 +131,18 @@ svg2.selectAll("text")
 # B.print_page
 =end
       
+dataset = [ {key: 0, value: 5},  {key: 1, value: 10},
+            {key: 2, value: 13}, {key: 3, value: 19},
+            {key: 4, value: 21}, {key: 5, value: 25},
+            {key: 6, value: 22}, {key: 7, value: 18},
+            {key: 8, value: 15}, {key: 9, value: 13},
+            {key: 10, value: 11}, {key: 11, value: 12},
+            {key: 12, value: 15}, {key: 13, value: 20},
+            {key: 14, value: 18}, {key: 15, value: 17},
+            {key: 16, value: 16}, {key: 17, value: 18},
+            {key: 18, value: 23}, {key: 19, value: 25} ]
 
+# dataset = [5, 10, 13, 19]
+
+char = BarChart.new(dataset, width: 500, height: 100, padding: 1)
+char.add_data
