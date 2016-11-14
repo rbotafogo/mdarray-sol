@@ -77,14 +77,22 @@ class BarChart
       .enter(nil)
       .append("rect")
       .attr("x") { |d, i| i * (width / length + 1)}
-
-=begin
-      .attr("y") { |d, i| height - (d *4) }
+      .attr("y") { |d, i| height - (d[:value] * 4) }
       .attr("width") { |d, i| width / length - padding }
-      .attr("height") { |d, i| (d * 4) }
-      .attr("fill") { |d, i| "rgb(0, 0, #{(d * 10).to_i})" }
-=end
+      .attr("height") { |d, i| (d[:value] * 4) }
+      .attr("fill") { |d, i| "rgb(0, 0, #{(d[:value] * 10).to_i})" }
     
+    @svg.selectAll("text")
+      .data(@dataset)
+      .enter(nil)
+      .append("text")
+      .text { |d, i| d[:value] }
+      .attr("x") { |d, i| i * (width / length + 1) + (width / length - padding) / 2 }
+      .attr("y") { |d, i| height - (d[:value] * 4) + 14 }
+      .attr("font-family", "sans-serif")
+      .attr("font-size", "11px")
+      .attr("fill", "white")
+      .attr("text-anchor", "middle")
   end
   
   #--------------------------------------------------------------------------------------
@@ -98,39 +106,8 @@ class BarChart
   
 end
 
-#=end
-=begin
-# 
-width = 500
-height = 100
-bar_padding = 1
+# Let´s work with a dataset that has key, value pairs
 
-svg2.selectAll("rect")
-  .data(dataset)
-  .enter(nil)
-  .append("rect")
-  .attr("x") { |d, i| i * (width / dataset.length + 1) }
-  .attr("y") { |d, i| height - (d * 4) }
-  .attr("width", width / dataset.length - bar_padding) 
-  .attr("height") { |d, i| (d * 4)}
-  .attr("fill") { |d, i| "rgb(0, 0, #{(d * 10).to_i})" }
-
-svg2.selectAll("text")
-  .data(dataset)
-  .enter(nil)
-  .append("text")
-  .text { |d, i| d }
-  .attr("x") { |d, i| i * (width / dataset.length + 1) +
-               (width / dataset.length - bar_padding) / 2 }
-  .attr("y") { |d, i| height - (d * 4) + 14 }
-  .attr("font-family", "sans-serif")
-  .attr("font-size", "11px")
-  .attr("fill", "white")
-  .attr("text-anchor", "middle")
-
-# B.print_page
-=end
-      
 dataset = [ {key: 0, value: 5},  {key: 1, value: 10},
             {key: 2, value: 13}, {key: 3, value: 19},
             {key: 4, value: 21}, {key: 5, value: 25},
@@ -141,8 +118,6 @@ dataset = [ {key: 0, value: 5},  {key: 1, value: 10},
             {key: 14, value: 18}, {key: 15, value: 17},
             {key: 16, value: 16}, {key: 17, value: 18},
             {key: 18, value: 23}, {key: 19, value: 25} ]
-
-# dataset = [5, 10, 13, 19]
 
 char = BarChart.new(dataset, width: 500, height: 100, padding: 1)
 char.add_data

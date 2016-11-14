@@ -139,7 +139,12 @@ class Sol
     end
 
     #------------------------------------------------------------------------------------
-    # packs and object either as a JSObject, RBObject or return it as primitive
+    # packs and object either as a JSObject, RBObject or return it as primitive. When
+    # an object is packed as a RBObject, this object is a proxied callback ruby object.
+    # A callback ruby object is one that can be called from inside a javascript by
+    # calling run on the object and passing as arguments the method name to be called by
+    # the ruby object, followed by the ruby arguments, followed by a block (not required)
+    # @param obj [JSValue || ruby object || Callback object || Object]
     #------------------------------------------------------------------------------------
 
     def pack(obj, to_ruby: false, scope: document)
@@ -150,13 +155,16 @@ class Sol
       when Java::ComTeamdevJxbrowserChromium::JSValue
         JSObject.build(obj, scope)
       when com.teamdev.jxbrowser.chromium.al
-        B.obj = Callback.pack(obj)
+        B.obj = Callback.new(obj)
         RBObject.new(jeval("new RubyProxy(obj)"), obj, true)
       when Sol::Callback
         B.obj = obj
         RBObject.new(jeval("new RubyProxy(obj)"), obj, false)
       when Object
-        B.obj = Callback.pack(obj)
+        obj.extend(InsensitiveHash) if obj.is_a? Hash
+        obj.extend(JSArrayInterface) if obj.is_a? Array
+        
+        B.obj = Callback.new(obj)
         (to_ruby)? RBObject.new(jeval("new RubyProxy(obj)"), obj, true) :
           jeval("new RubyProxy(obj)")
       else
@@ -289,7 +297,7 @@ class Sol
 
       args.map do |arg|
         case arg
-        when Sol::Callback
+        when Sol::Callback, Sol::IRBObject
           arg
         when Sol::JSObject, Sol::RBObject
           arg.jsvalue

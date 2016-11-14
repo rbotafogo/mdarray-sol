@@ -33,7 +33,14 @@ class Sol
     attr_reader :this
 
     #----------------------------------------------------------------------------------------
-    #
+    # Class Callback is used for a ruby object to be called from inside a javascript script.
+    # When a ruby object is injected into a javascript only public java methods can be
+    # called.  For this to work, the Callback class implements the RubyCallbackInterface that
+    # defines the run public method.  In order to execute a ruby method, the javascript
+    # code needs to call 'run' passing as arguments the method name to be executed in ruby
+    # and all its arguments.
+    # @param ruby_obj [Object] a Ruby object, could be any object, in particular we use
+    # Array and Hash quite often
     #----------------------------------------------------------------------------------------
 
     def initialize(ruby_obj)
@@ -61,7 +68,10 @@ class Sol
     end
     
     #----------------------------------------------------------------------------------------
-    #
+    # @this is set just before a block is called.  The this argument is the javascript 'this'
+    # at the time of calling.
+    # @param this [javascript JSObject] the javascript 'this' at the time the block is
+    # called
     #----------------------------------------------------------------------------------------
 
     def set_this(this)
@@ -69,11 +79,12 @@ class Sol
     end
 
     #----------------------------------------------------------------------------------------
-    # 
     # @param args [Array] the first element of the array is a method to be called on the
     # @ruby_obj variable of this instance.  The other elements are parameters for this
-    # method call
-    # @return a packed js object
+    # method call.  The last argument could be a block.  If it is a string, then we try to
+    # convert this string into a block.
+    # @return a packed js object, i.e., it is either a JSOBject or a proxied callback ruby
+    # object
     #----------------------------------------------------------------------------------------
 
     def run(*args)
@@ -111,35 +122,9 @@ class Sol
     end
     
     #----------------------------------------------------------------------------------------
-    # Scope can be:
-    #  * external: only the received object is packed
-    #  * internal: only the internal objects are packed.  In this case, the received object
-    #    must respond to the 'each'.
-    #  * all: packs both internal and external
-    #----------------------------------------------------------------------------------------
-
-    def self.pack(obj, scope: :external)
-      
-      case scope
-      when :internal
-        raise "Cannot jspack object's internals as it does not respond to the :each method." if
-          !obj.respond_to?(:each)
-        obj.map { |pk| Callback.new(pk) }
-      when :external
-        Callback.new(obj)
-      when :all
-        # if we can go inside the obj with 'map!' then do it, otherwise, just pack the
-        # external object. CHECK method 'each', 'map' and 'map!'
-        (obj.respond_to? :map!)? Callback.new(obj.map! { |pk| Callback.pack(pk) }) :
-          Callback.new(obj)
-      else
-        raise "Scope must be :internal, :external or :all.  Unknown #{scope} scope"
-      end
-      
-    end
-
-    #----------------------------------------------------------------------------------------
-    #
+    # Checks if the ruby_obj is an instance of the given class
+    # @param class_name [String] the name of a ruby class
+    # @return boolean [Boolean] true or false
     #----------------------------------------------------------------------------------------
 
     def is_instance_of(class_name)
@@ -148,7 +133,7 @@ class Sol
     end
     
     #----------------------------------------------------------------------------------------
-    #
+    # 
     #----------------------------------------------------------------------------------------
 
     def isCallback
@@ -175,6 +160,8 @@ class Sol
 
     #------------------------------------------------------------------------------------
     # Converts given arguments into Ruby arguments
+    # @param args [Array] array of javascript arguments to be converted into ruby
+    # arguments to be given to @ruby_obj.
     #------------------------------------------------------------------------------------
 
     def self.process_args(args)
@@ -183,17 +170,7 @@ class Sol
 
       args.each do |arg|
         if (arg.is_a? Java::ComTeamdevJxbrowserChromium::JSValue)
-          if (arg.isArray())
-            collect << Callback.process_arg(arg)
-=begin
-            # NEEDS TO CHECK IF NECESSARY... USE TO BE A PROBLEM, BUT NOW IS THE PROBLEM            
-            for i in 0...arg.length()
-              collect << Callback.process_arg(arg.get(i))
-            end
-=end
-          else
-            collect << Callback.process_arg(arg)
-          end
+          collect << Callback.process_arg(arg)
         else
           collect << arg
         end
@@ -213,11 +190,26 @@ class Sol
     # Converts given argument into Ruby arguments
     #------------------------------------------------------------------------------------
 
+=begin    
+    def self.process_arg(arg)
+      
+      if (B.eval_obj(arg, "isProxy").isUndefined())
+        JSObject.build(arg)
+      else
+        IRBObject.new(B.eval_obj(arg, "ruby_obj"))
+      end
+
+    end
+=end    
+#=begin
     def self.process_arg(arg)
       (B.eval_obj(arg, "isProxy").isUndefined())?
         JSObject.build(arg) : IRBObject.new(B.eval_obj(arg, "ruby_obj"))
     end
+#=end
     
   end
   
 end
+
+
