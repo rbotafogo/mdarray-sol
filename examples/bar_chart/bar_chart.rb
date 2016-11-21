@@ -22,7 +22,7 @@
 require '../../config' if @platform == nil
 require 'mdarray-sol'
 
-# require_relative 'scale'
+require_relative 'scale'
 
 class BarChart
 
@@ -49,8 +49,7 @@ class BarChart
     @width = width
     @height = height
     @padding = padding
-    # fix!!!!
-    @scale = nil
+    @scale = Scale.new([*0..@dataset.length], @width)
 
     @svg = $d3.select("body")
            .append("svg")
@@ -76,23 +75,26 @@ class BarChart
       .data(@dataset)
       .enter(nil)
       .append("rect")
-      .attr("x") { |d, i| i * (width / length + 1)}
+      .attr("x") { |d, i| scale[i]}
       .attr("y") { |d, i| height - (d[:value] * 4) }
-      .attr("width") { |d, i| width / length - padding }
+      .attr("width", scale.scale.rangeBand(nil))
       .attr("height") { |d, i| (d[:value] * 4) }
       .attr("fill") { |d, i| "rgb(0, 0, #{(d[:value] * 10).to_i})" }
+
+    style = {"font-family" => "sans-serif",
+             "font-size" => "11px",
+             "fill" => "white",
+             "text-anchor" => "middle"}
     
     @svg.selectAll("text")
       .data(@dataset)
       .enter(nil)
       .append("text")
       .text { |d, i| d[:value] }
-      .attr("x") { |d, i| i * (width / length + 1) + (width / length - padding) / 2 }
-      .attr("y") { |d, i| height - (d[:value] * 4) + 14 }
-      .attr("font-family", "sans-serif")
-      .attr("font-size", "11px")
-      .attr("fill", "white")
-      .attr("text-anchor", "middle")
+      .attr({"x"=> ->(d, i, z) {scale[i] + scale.scale.rangeBand(nil) / 2},
+             "y"=> ->(d, i, z) {height - (d[:value] * 4) + 14 }})
+      .attr(style)
+    
   end
   
   #--------------------------------------------------------------------------------------
@@ -108,7 +110,7 @@ end
 
 # Let´s work with a dataset that has key, value pairs
 
-dataset = [ {key: 0, value: 5},  {key: 1, value: 10},
+dataset = [ {key: 0, value: 5}, {key: 1, value: 10},
             {key: 2, value: 13}, {key: 3, value: 19},
             {key: 4, value: 21}, {key: 5, value: 25},
             {key: 6, value: 22}, {key: 7, value: 18},
@@ -119,5 +121,5 @@ dataset = [ {key: 0, value: 5},  {key: 1, value: 10},
             {key: 16, value: 16}, {key: 17, value: 18},
             {key: 18, value: 23}, {key: 19, value: 25} ]
 
-char = BarChart.new(dataset, width: 500, height: 100, padding: 1)
-char.add_data
+chart = BarChart.new(dataset, width: 600, height: 250, padding: 1)
+chart.add_data

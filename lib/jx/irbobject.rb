@@ -42,6 +42,7 @@ class Sol
     include Java::ComRbMdarray_sol.RubyCallbackInterface
 
     attr_reader :jsvalue
+    attr_reader :ruby_obj
     
     #------------------------------------------------------------------------------------
     # Undefine methods so that they are caught by method_missing and send to the
@@ -62,7 +63,6 @@ class Sol
     undef :remove_instance_variable
     undef :respond_to?
     undef :respond_to_missing?
-    # undef :singleton_method
     undef :singleton_methods
     undef :taint
     undef :tainted?
@@ -73,6 +73,7 @@ class Sol
     undef :untaint
     undef :untrust
     undef :untrusted?    
+    # undef :singleton_method
 
     #------------------------------------------------------------------------------------
     #
@@ -81,6 +82,7 @@ class Sol
     def initialize(jsvalue)
       @jsvalue = jsvalue
       @run_func = @jsvalue.getProperty("run")
+      @ruby_obj = @jsvalue.asJavaObject().ruby_obj
     end
 
     #----------------------------------------------------------------------------------------
@@ -94,10 +96,13 @@ class Sol
     #------------------------------------------------------------------------------------
     # An IRBObject is called with ruby arguments, so it does not need to call any
     # process_arguments method as it is proxies a Ruby object
+    # TODO: Might actually need to process_args on the argument since we use invoke
+    # BUG!!!
     #------------------------------------------------------------------------------------
 
     def method_missing(symbol, *args, &blk)
-      B.invoke(@jsvalue, @run_func, symbol, *args)
+      # B.invoke(@jsvalue, @run_func, symbol, *args)
+      @ruby_obj.send(symbol, *args, &blk)
     end
     
     #------------------------------------------------------------------------------------

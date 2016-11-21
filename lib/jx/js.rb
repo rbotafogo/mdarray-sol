@@ -160,10 +160,9 @@ class Sol
       when Sol::Callback
         B.obj = obj
         RBObject.new(jeval("new RubyProxy(obj)"), obj, false)
+      when Proc
+        blk2func(obj).jsvalue
       when Object
-        obj.extend(InsensitiveHash) if obj.is_a? Hash
-        obj.extend(JSArrayInterface) if obj.is_a? Array
-        
         B.obj = Callback.new(obj)
         (to_ruby)? RBObject.new(jeval("new RubyProxy(obj)"), obj, true) :
           jeval("new RubyProxy(obj)")
@@ -251,12 +250,13 @@ class Sol
     end
 
     #------------------------------------------------------------------------------------
-    #
+    # TODO: Something is wrong here!!!!  Need to set B.block, but if we pass the B.block
+    # variable to make_callback, the application crashes.
     #------------------------------------------------------------------------------------
 
     def blk2func(blk)
       B.block = Sol::Callback.new(blk)
-      B.rr.make_callback(B.block)
+      B.rr.make_callback(nil)
     end
     
     #------------------------------------------------------------------------------------
@@ -305,6 +305,9 @@ class Sol
           arg.to_s
         when Hash, Array
           proxy(arg).jsvalue
+        when Proc
+          p "i´m a proc... not implemented yet"
+          arg
         else
           arg
         end

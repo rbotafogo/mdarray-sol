@@ -55,5 +55,3 @@ $d3.select("p")
   ex.gen_random_data
   splot.update(ex.dataset)
 }
-
-

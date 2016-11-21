@@ -152,7 +152,6 @@ class ScatterPlot
   #--------------------------------------------------------------------------------------
 
   def update_points(x_scale = @x_scale, y_scale = @y_scale)
-    
     @svg.selectAll("circle")
       .data(@dataset)
       .transition(nil)

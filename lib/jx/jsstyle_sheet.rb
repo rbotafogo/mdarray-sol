@@ -94,7 +94,7 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def [](index)
-      p @jsvar
+      # p @jsvar
       B.eval("console.log(#{@jsvar})")
       CSSRule.new(@jsvar, index)
     end

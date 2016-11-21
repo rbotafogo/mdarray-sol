@@ -46,11 +46,11 @@ class MDArraySolTest < Test::Unit::TestCase
     should "proxy a Ruby hash" do
 
       # Hash with symbols as keys
-      a = {a: 1, b: 2, c: 3, d: {e: 4, f: 5, g: {h: 6, i:7}},
-           j: [1, 2, [3, [4, 5]]]}
+      a = {"a"=> 1, "b"=> 2, "c"=> 3, "d"=> {"e"=> 4, "f"=> 5, "g"=> {"h"=> 6, "i"=>7}},
+           "j"=> [1, 2, [3, [4, 5]]]}
       
       # hash with symbols and Strings as keys
-      b = {x: 100, y: 200, c: 300, "d" => 400}
+      b = {"x"=> 100, "y"=> 200, "c"=> 300, d: 400}
       
       # Ruby hash proxies javascript 'data'
       B.data = B.proxy(a)
@@ -58,24 +58,21 @@ class MDArraySolTest < Test::Unit::TestCase
       
       B.eval(<<-EOT)
         var assert = chai.assert;
-                
+        
         // retrieve the property by use of '[]'
         assert.equal(1, data["a"]);
         // retrieve the property by use of '.'
         assert.equal(1, data.a);
-        // call a function on the data
-        assert.equal(1, data.fetch("a"));
 
         assert.equal(3, data["c"]);
         assert.equal(100, d2["x"]);
 
-        // In hashes, strings are converted to symbols.  Cannot retrieve key "d"
-        // in d2 with '[]'
+        // cannot retrieve symbol 'd' from the hash with []
         assert.equal(null, d2["d"]);
         
-        // In order to retrieve a string key, we need to use the fetch with a second
-        // argument set to 'false'
-        assert.equal(400, d2.fetch("d", false));
+        // In order to retrieve a symbol key, we need to use the 'fetch' that will
+        // convert a string to symbol
+        assert.equal(400, d2.fetch("d"));
         
         // access deep data 
         assert.equal(4, data.d.e);

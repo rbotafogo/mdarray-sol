@@ -28,7 +28,8 @@ class Sol
   
   class Callback
     include Java::ComRbMdarray_sol.RubyCallbackInterface
-    
+    # java_import 'com.teamdev.jxbrowser.chromium.JSAccessible'
+
     attr_reader :ruby_obj
     attr_reader :this
 
@@ -74,10 +75,11 @@ class Sol
     # called
     #----------------------------------------------------------------------------------------
 
+    # java_annotation 'JSAccessible'
     def set_this(this)
       @this = this
     end
-
+    
     #----------------------------------------------------------------------------------------
     # @param args [Array] the first element of the array is a method to be called on the
     # @ruby_obj variable of this instance.  The other elements are parameters for this
@@ -190,23 +192,10 @@ class Sol
     # Converts given argument into Ruby arguments
     #------------------------------------------------------------------------------------
 
-=begin    
-    def self.process_arg(arg)
-      
-      if (B.eval_obj(arg, "isProxy").isUndefined())
-        JSObject.build(arg)
-      else
-        IRBObject.new(B.eval_obj(arg, "ruby_obj"))
-      end
-
-    end
-=end    
-#=begin
     def self.process_arg(arg)
       (B.eval_obj(arg, "isProxy").isUndefined())?
         JSObject.build(arg) : IRBObject.new(B.eval_obj(arg, "ruby_obj"))
     end
-#=end
     
   end
   
