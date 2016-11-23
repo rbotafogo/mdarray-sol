@@ -29,7 +29,7 @@ require_relative 'irbobject'
 class Sol
   
   #==========================================================================================
-  # Class to communicate with the embedded browser (Webview), by sending javascript
+  # Class to communicate with the embedded browser (jxBrowser), by sending javascript
   # messages
   #==========================================================================================
 
@@ -52,7 +52,11 @@ class Sol
     end
 
     #========================================================================================
-    #
+    # @attr_reader [Browser] jxBrowser instance
+    # @attr_reader identity [jsFunction] A javascript function that implements the identity
+    # function
+    # @attr_reader instanceOf [jsFunction] A javascript function that returns if a JSObject
+    # is an instance of a class
     #========================================================================================
     
     attr_reader :browser
@@ -60,7 +64,7 @@ class Sol
     attr_accessor :instanceOf
         
     #------------------------------------------------------------------------------------
-    #
+    # @param browser [Browser] the jxBrowser instance
     #------------------------------------------------------------------------------------
 
     def initialize(browser)
@@ -81,7 +85,7 @@ class Sol
     end
 
     #------------------------------------------------------------------------------------
-    # Gets the Brwoser 'window' object
+    # @return the browser 'window' object
     #------------------------------------------------------------------------------------
 
     def window
@@ -89,7 +93,7 @@ class Sol
     end
 
     #------------------------------------------------------------------------------------
-    # Gets the browser 'document' object
+    # @return the browser 'document' object
     #------------------------------------------------------------------------------------
 
     def document
@@ -97,7 +101,7 @@ class Sol
     end
 
     #------------------------------------------------------------------------------------
-    # Gets the browser JSContext
+    # @return the browser JSContext
     #------------------------------------------------------------------------------------
 
     def jscontext
@@ -115,6 +119,8 @@ class Sol
     #------------------------------------------------------------------------------------
     # Applies javascript method 'instanceOf' defined in ruby_rich.rb to the given object
     # and type.  'instanceOf' is a JSFunction.
+    # @param object [JSObject]
+    # @param type [String] the type to check
     #------------------------------------------------------------------------------------
 
     def instanceof(object, type)
@@ -122,8 +128,9 @@ class Sol
     end
     
     #------------------------------------------------------------------------------------
-    # Applies the javascript 'identity' function to the given value.  Returns a
-    # packed object
+    # Applies the javascript 'identity' function to the given value.
+    # @return [JSObject || primitive] a proxy object or a primitive that does not need to
+    # be proxied
     #------------------------------------------------------------------------------------
 
     def push(value)
@@ -131,7 +138,7 @@ class Sol
     end
     
     #------------------------------------------------------------------------------------
-    # Returns the given property from 'window'
+    # return [JSObject || primitive] the given property from the 'window' scope
     #------------------------------------------------------------------------------------
 
     def pull(name)
@@ -139,12 +146,8 @@ class Sol
     end
 
     #------------------------------------------------------------------------------------
-    # packs and object either as a JSObject, RBObject or return it as primitive. When
-    # an object is packed as a RBObject, this object is a proxied callback ruby object.
-    # A callback ruby object is one that can be called from inside a javascript by
-    # calling run on the object and passing as arguments the method name to be called by
-    # the ruby object, followed by the ruby arguments, followed by a block (not required)
-    # @param obj [JSValue || ruby object || Callback object || Object]
+    # Packs and object as primitive, Sol::JSObject, Sol::RBObject or java.JSValue. 
+    # @return [primitive || Sol::JSObject || Sol::RBObject || java.JSValue]
     #------------------------------------------------------------------------------------
 
     def pack(obj, to_ruby: false, scope: document)
@@ -154,20 +157,29 @@ class Sol
         obj
       when Java::ComTeamdevJxbrowserChromium::JSValue
         JSObject.build(obj, scope)
-      when com.teamdev.jxbrowser.chromium.al
-        B.obj = Callback.new(obj)
-        RBObject.new(jeval("new RubyProxy(obj)"), obj, true)
-      when Sol::Callback
-        B.obj = obj
-        RBObject.new(jeval("new RubyProxy(obj)"), obj, false)
       when Proc
+        # TODO: This is probably wrong.  It is being called only in file Callback
+        # which expects a jsvalue, but one might need to get a packed block
         blk2func(obj).jsvalue
       when Object
         B.obj = Callback.new(obj)
         (to_ruby)? RBObject.new(jeval("new RubyProxy(obj)"), obj, true) :
           jeval("new RubyProxy(obj)")
+=begin        
+      # this block of code does not seem to be necessary any more.  Should probably be
+      # removed.  Left here for a while to make sure that those conditions will not
+      # happen
+      when com.teamdev.jxbrowser.chromium.al
+        p "al"
+        B.obj = Callback.new(obj)
+        RBObject.new(jeval("new RubyProxy(obj)"), obj, true)
+      when Sol::Callback
+        p "Callback"
+        B.obj = obj
+        RBObject.new(jeval("new RubyProxy(obj)"), obj, false)
+=end
       else
-        p "Java::Object"
+        raise "No method do pack the given object: #{obj}"
       end
       
     end
@@ -192,6 +204,29 @@ class Sol
     end
 
     #------------------------------------------------------------------------------------
+    # Evaluates the javascript script synchronously, but does not pack in JSObject. This
+    # method should not be normally called by normal users.  This should be used only in
+    # some special cases, usually developers of this application.
+    # @param scrpt [String] a javascript script to be executed synchronously
+    # @return [java.JSObject] a java.JSObject
+    #------------------------------------------------------------------------------------
+
+    def jeval(scrpt)
+      @browser.executeJavaScriptAndReturnValue(scrpt)
+    end
+
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def eval_obj(jsobject, prop)
+      B.obj = push(jsobject)
+      jeval(<<-EOT)
+         obj.#{prop}
+      EOT
+    end
+
+    #------------------------------------------------------------------------------------
     # Invokes the function in the scope of object
     # @param object [Java::JSObject] the object that holds the function
     # @param function [java JSFunction] the function to be invoked, already in its java
@@ -207,24 +242,13 @@ class Sol
       
       if (args)
         # if the argument list has any symbol, convert the symbol to a string
-        args.map! { |arg| (arg.is_a? Symbol)? arg.to_s : arg } if !args.nil?
+        # args.map! { |arg| (arg.is_a? Symbol)? arg.to_s : arg } if !args.nil?
         jargs = []
         args.each { |arg| jargs << arg.to_java }
       end
 
       pack(function.invoke(object, *(jargs)), to_ruby: false, scope: function)
 
-    end
-
-    #------------------------------------------------------------------------------------
-    #
-    #------------------------------------------------------------------------------------
-
-    def eval_obj(jsobject, prop)
-      B.obj = push(jsobject)
-      jeval(<<-EOT)
-         obj.#{prop}
-      EOT
     end
     
     #------------------------------------------------------------------------------------
@@ -290,24 +314,31 @@ class Sol
     
     #------------------------------------------------------------------------------------
     # Converts Ruby arguments into a javascript objects to run in a javascript
-    # script
+    # script.  A Sol::JSObject and Sol::RBObject are similar in that they pack a 'native'
+    # object (either java.JSObject or ruby Object).  These objects show up in a ruby
+    # script and when injected in javascript their jsvalue is made available.  An
+    # IRBObject (Internal Ruby Object) appears when a Ruby Callback is executed and
+    # exists for the case that this object transitions between javascript and ends up
+    # in a Ruby script
     #------------------------------------------------------------------------------------
 
     def process_args(args)
 
       args.map do |arg|
         case arg
-        when Sol::Callback, Sol::IRBObject
+        when Sol::IRBObject # Sol::Callback
           arg
         when Sol::JSObject, Sol::RBObject
           arg.jsvalue
-        when Symbol
-          arg.to_s
         when Hash, Array
           proxy(arg).jsvalue
         when Proc
           p "i´m a proc... not implemented yet"
           arg
+=begin          
+        when Symbol
+          arg.to_s
+=end
         else
           arg
         end
@@ -365,16 +396,6 @@ class Sol
       window.setProperty(property_name, data)
     end
         
-    #------------------------------------------------------------------------------------
-    # Evaluates the javascript script synchronously, but does not pack in JSObject
-    # @param scrpt [String] a javascript script to be executed synchronously
-    # @return [JSObject] a java.JSObject
-    #------------------------------------------------------------------------------------
-
-    def jeval(scrpt)
-      @browser.executeJavaScriptAndReturnValue(scrpt)
-    end
-
   end
   
 end

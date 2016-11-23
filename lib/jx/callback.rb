@@ -111,12 +111,6 @@ class Sol
       case @ruby_obj
       when Proc
         B.pack(instance_exec(*params, &(@ruby_obj)), to_ruby: false)
-      when IRBObject
-        begin
-          B.pack(@ruby_obj.send(method, *params, &blok), to_ruby: false)
-        rescue TypeError
-          params[0].native(method, @ruby_obj, &blok)
-        end
       else
         B.pack(@ruby_obj.send(method, *params, &blok), to_ruby: false)
       end
