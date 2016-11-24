@@ -26,7 +26,7 @@ class Sol
   class JSObject
 
     attr_reader :jsvalue
-    attr_reader :scope
+    # attr_reader :scope
     
     #------------------------------------------------------------------------------------
     # Builds a new Ruby JSObject or one of its more specific subclasses from the given
@@ -122,7 +122,7 @@ class Sol
         ret = B.invoke(@jsvalue, member, *(B.process_args(args)))
       else
         # Build a JSObject in the scope of @jsvalue
-        ret = JSObject.build(member, @jsvalue)
+        ret = JSObject.build(member, @jsvalue)        
       end
       ret
       

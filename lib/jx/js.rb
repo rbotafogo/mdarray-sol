@@ -145,27 +145,47 @@ class Sol
       eval("#{name};")
     end
 
+    #----------------------------------------------------------------------------------------
+    # TODO: change the name of this method from pack2 to pack.  The actual pack should
+    # become proxy
+    #----------------------------------------------------------------------------------------
+
+    def pack2(obj)
+
+      case obj
+      when TrueClass, FalseClass, Numeric, String, NilClass,
+           Java::ComTeamdevJxbrowserChromium::JSValue
+        obj
+      when Proc
+        blk2func(obj).jsvalue
+      when Object
+        B.obj = Callback.new(obj)
+        jeval("new RubyProxy(obj)")
+      else
+        raise "No method do pack the given object: #{obj}"
+      end
+      
+    end
+
     #------------------------------------------------------------------------------------
     # Packs and object as primitive, Sol::JSObject, Sol::RBObject or java.JSValue. 
-    # @return [primitive || Sol::JSObject || Sol::RBObject || java.JSValue]
+    # @return [primitive || Sol::JSObject || Sol::RBObject]
     #------------------------------------------------------------------------------------
 
-    def pack(obj, to_ruby: false, scope: document)
+    def pack(obj)
 
       case obj
       when TrueClass, FalseClass, Numeric, String, NilClass
         obj
       when Java::ComTeamdevJxbrowserChromium::JSValue
-        JSObject.build(obj, scope)
+        JSObject.build(obj)
       when Proc
-        # TODO: This is probably wrong.  It is being called only in file Callback
-        # which expects a jsvalue, but one might need to get a packed block
-        blk2func(obj).jsvalue
+        # TODO: Needs to test Proc proxying.  I don´t think the code ever gets here
+        blk2func(obj)
       when Object
         B.obj = Callback.new(obj)
-        (to_ruby)? RBObject.new(jeval("new RubyProxy(obj)"), obj, true) :
-          jeval("new RubyProxy(obj)")
-=begin        
+        RBObject.new(jeval("new RubyProxy(obj)"), obj, true)
+=begin
       # this block of code does not seem to be necessary any more.  Should probably be
       # removed.  Left here for a while to make sure that those conditions will not
       # happen
@@ -189,7 +209,7 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def proxy(obj)
-      pack(obj, to_ruby: true)
+      pack(obj)
     end
 
     #------------------------------------------------------------------------------------
@@ -200,7 +220,7 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def eval(scrpt)
-      pack(@browser.executeJavaScriptAndReturnValue(scrpt), to_ruby: true)
+      pack(@browser.executeJavaScriptAndReturnValue(scrpt))
     end
 
     #------------------------------------------------------------------------------------
@@ -227,16 +247,19 @@ class Sol
     end
 
     #------------------------------------------------------------------------------------
-    # Invokes the function in the scope of object
-    # @param object [Java::JSObject] the object that holds the function
+    # Invokes the function
+    # @param scope [Java::JSObject] the object that holds the function, i.e., it´s scope
     # @param function [java JSFunction] the function to be invoked, already in its java
     # form
     # @param *args [Args] a list of arguments to pass to the function
     # @return jsobject [JSObject] a JSObject or one of its subclasses depending on the
     # result of the function invokation
+    # TODO: needs implementation/tests to call functions in the scope of a given object.
+    # method_missing in jsobject does create fix the scope, but needs to check if this
+    # also needs to be done in this (invoke) method.
     #------------------------------------------------------------------------------------
 
-    def invoke(object, function, *args)
+    def invoke(scope, function, *args)
 
       args = nil if (args.size == 1 && args[0].nil?)
       
@@ -247,7 +270,7 @@ class Sol
         args.each { |arg| jargs << arg.to_java }
       end
 
-      pack(function.invoke(object, *(jargs)), to_ruby: false, scope: function)
+      pack(function.invoke(scope, *(jargs)))
 
     end
     
@@ -319,7 +342,11 @@ class Sol
     # script and when injected in javascript their jsvalue is made available.  An
     # IRBObject (Internal Ruby Object) appears when a Ruby Callback is executed and
     # exists for the case that this object transitions between javascript and ends up
-    # in a Ruby script
+    # in a Ruby script.
+    # TODO: Can an IRBObject end up in a javascript script? If so, will it work fine?
+    # TODO: Make sure that there is no reason to convert Symbol to String.  Symbols
+    # should not be injected into javascript.  Is this always possible?
+    # TODO: Make tests that allow Proc/block to be injected into javascript
     #------------------------------------------------------------------------------------
 
     def process_args(args)

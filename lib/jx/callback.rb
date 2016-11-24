@@ -75,7 +75,6 @@ class Sol
     # called
     #----------------------------------------------------------------------------------------
 
-    # java_annotation 'JSAccessible'
     def set_this(this)
       @this = this
     end
@@ -84,9 +83,10 @@ class Sol
     # @param args [Array] the first element of the array is a method to be called on the
     # @ruby_obj variable of this instance.  The other elements are parameters for this
     # method call.  The last argument could be a block.  If it is a string, then we try to
-    # convert this string into a block.
-    # @return a packed js object, i.e., it is either a JSOBject or a proxied callback ruby
-    # object
+    # convert this string into a block.  This method is called from javascript, so all
+    # args are javascript args and need to be converted to Ruby args for the method to
+    # run
+    # @return a packed js o
     #----------------------------------------------------------------------------------------
 
     def run(*args)
@@ -110,9 +110,9 @@ class Sol
 
       case @ruby_obj
       when Proc
-        B.pack(instance_exec(*params, &(@ruby_obj)), to_ruby: false)
+        B.pack2(instance_exec(*params, &(@ruby_obj)))
       else
-        B.pack(@ruby_obj.send(method, *params, &blok), to_ruby: false)
+        B.pack2(@ruby_obj.send(method, *params, &blok))
       end
       
     end
