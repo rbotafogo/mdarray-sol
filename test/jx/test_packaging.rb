@@ -39,41 +39,40 @@ class MDArraySolTest < Test::Unit::TestCase
 
     end
 
-=begin
-
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
     
-    should "callback a jspacked Ruby Hash" do
+    should "callback a packed Ruby Hash" do
       
       # Try the same with a hash
       hh = {a: 1, b: 2}
 
-      B.hh = B.jspack(hh, scope: :external)
+      B.hh = B.pack(hh)
       
       # Retrieve the value of a key.  Keys in Javascript cannot be symbol, they have to
       # be strings.  Sol automatically converts strings to symbols and vice-versa.
       B.eval(<<-EOT)
-        var h1 = hh.run('[]', "a")
-        var h2 = hh.run('[]', "b")
+        var h1 = hh.fetch("a");
+        var h2 = hh.fetch("b");
       EOT
 
       assert_equal(1, B.h1)
       assert_equal(2, B.h2)
-
-      B.hh.run("[]=", "c", 3)
+      B.hh["c"] = 3
       
       B.eval(<<-EOT)
-         console.log(hh.run("to_s"))
+         console.log(hh.to_s());
       EOT
       
+=begin      
       B.hh.run("[]=", "d", 4)
       
       assert_equal(3, B.hh.run("[]", "c"))
       assert_equal(4, B.hh.run("[]", "d"))
-
+=end
     end
+=begin
 
     #--------------------------------------------------------------------------------------
     #

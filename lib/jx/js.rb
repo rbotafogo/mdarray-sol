@@ -145,34 +145,15 @@ class Sol
       eval("#{name};")
     end
 
-    #----------------------------------------------------------------------------------------
-    # TODO: change the name of this method from pack2 to pack.  The actual pack should
-    # become proxy
-    #----------------------------------------------------------------------------------------
-
-    def pack2(obj)
-
-      case obj
-      when TrueClass, FalseClass, Numeric, String, NilClass,
-           Java::ComTeamdevJxbrowserChromium::JSValue
-        obj
-      when Proc
-        blk2func(obj).jsvalue
-      when Object
-        B.obj = Callback.new(obj)
-        jeval("new RubyProxy(obj)")
-      else
-        raise "No method do pack the given object: #{obj}"
-      end
-      
-    end
-
     #------------------------------------------------------------------------------------
-    # Packs and object as primitive, Sol::JSObject, Sol::RBObject or java.JSValue. 
-    # @return [primitive || Sol::JSObject || Sol::RBObject]
+    # Proxies a ruby object into a javascript object.  The javascript object captures
+    # all method calls and forwads them to a packed ruby object, by calling method 'run'
+    # on this packed object
+    # @param obj [Object] The ruby object to be proxied
+    # @return [JSObject || RBObject]
     #------------------------------------------------------------------------------------
 
-    def pack(obj)
+    def proxy(obj)
 
       case obj
       when TrueClass, FalseClass, Numeric, String, NilClass
@@ -185,42 +166,46 @@ class Sol
       when Object
         B.obj = Callback.new(obj)
         RBObject.new(jeval("new RubyProxy(obj)"), obj, true)
-=begin
-      # this block of code does not seem to be necessary any more.  Should probably be
-      # removed.  Left here for a while to make sure that those conditions will not
-      # happen
-      when com.teamdev.jxbrowser.chromium.al
-        p "al"
-        B.obj = Callback.new(obj)
-        RBObject.new(jeval("new RubyProxy(obj)"), obj, true)
-      when Sol::Callback
-        p "Callback"
-        B.obj = obj
-        RBObject.new(jeval("new RubyProxy(obj)"), obj, false)
-=end
       else
-        raise "No method do pack the given object: #{obj}"
+        raise "No method to proxy the given object: #{obj}"
+      end
+      
+    end
+    
+    #----------------------------------------------------------------------------------------
+    # Pack a ruby object for use inside a javascript script.  A packed ruby object is
+    # identical to a proxy object exect by the return value that is a java.JSValue and not
+    # a Sol::xxx object.
+    # @param obj [Object] The ruby object to be packed
+    # @return [java.JSObject] A java.JSObject that that implements the 'run' interface
+    #----------------------------------------------------------------------------------------
+
+    def pack(obj)
+
+      case obj
+      when TrueClass, FalseClass, Numeric, String, NilClass,
+           Java::ComTeamdevJxbrowserChromium::JSValue
+        obj
+      when Proc
+        blk2func(obj).jsvalue
+      when Object
+        B.obj = Callback.new(obj)
+        jeval("new RubyProxy(obj)")
+      else
+        raise "No method to pack the given object: #{obj}"
       end
       
     end
 
     #------------------------------------------------------------------------------------
-    # Proxies the ruby object (obj) into a javascript object.  Return an RBObject.
-    #------------------------------------------------------------------------------------
-
-    def proxy(obj)
-      pack(obj)
-    end
-
-    #------------------------------------------------------------------------------------
-    # Evaluates the javascript script synchronously and then pack the result in a
-    # Ruby JSObject
+    # Evaluates the javascript script synchronously and then proxies the result in a
+    # Ruby JSObject or RBObject
     # @param scrpt [String] a javascript script to be executed synchronously
-    # @return [JSObject] a JSObject or one of its subclasses
+    # @return [JSObject || RBObject] a JSObject or one of its subclasses
     #------------------------------------------------------------------------------------
 
     def eval(scrpt)
-      pack(@browser.executeJavaScriptAndReturnValue(scrpt))
+      proxy(@browser.executeJavaScriptAndReturnValue(scrpt))
     end
 
     #------------------------------------------------------------------------------------
@@ -262,15 +247,14 @@ class Sol
     def invoke(scope, function, *args)
 
       args = nil if (args.size == 1 && args[0].nil?)
-      
+
+      # convert arguments to java arguments so that we can invoke the function
       if (args)
-        # if the argument list has any symbol, convert the symbol to a string
-        # args.map! { |arg| (arg.is_a? Symbol)? arg.to_s : arg } if !args.nil?
         jargs = []
         args.each { |arg| jargs << arg.to_java }
       end
 
-      pack(function.invoke(scope, *(jargs)))
+      proxy(function.invoke(scope, *(jargs)))
 
     end
     
@@ -358,7 +342,7 @@ class Sol
         when Sol::JSObject, Sol::RBObject
           arg.jsvalue
         when Hash, Array
-          proxy(arg).jsvalue
+          pack(arg)
         when Proc
           p "i´m a proc... not implemented yet"
           arg
@@ -426,3 +410,18 @@ class Sol
   end
   
 end
+
+
+=begin
+      # this block of code does not seem to be necessary any more.  Should probably be
+      # removed.  Left here for a while to make sure that those conditions will not
+      # happen
+      when com.teamdev.jxbrowser.chromium.al
+        p "al"
+        B.obj = Callback.new(obj)
+        RBObject.new(jeval("new RubyProxy(obj)"), obj, true)
+      when Sol::Callback
+        p "Callback"
+        B.obj = obj
+        RBObject.new(jeval("new RubyProxy(obj)"), obj, false)
+=end

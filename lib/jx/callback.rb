@@ -90,11 +90,12 @@ class Sol
     #----------------------------------------------------------------------------------------
 
     def run(*args)
-
+      
       # first argument is the 'method' name 
       method = args.shift
       
-      # try to convert last argument to block
+      # try to convert last argument to block if it is a String.  If fails to convert
+      # the String to a block, then leave the string untouched as the last argument.
       if ((last = args[-1]).is_a? String)
         args.pop
         begin
@@ -110,9 +111,9 @@ class Sol
 
       case @ruby_obj
       when Proc
-        B.pack2(instance_exec(*params, &(@ruby_obj)))
+        B.pack(instance_exec(*params, &(@ruby_obj)))
       else
-        B.pack2(@ruby_obj.send(method, *params, &blok))
+        B.pack(@ruby_obj.send(method, *params, &blok))
       end
       
     end
@@ -128,6 +129,7 @@ class Sol
       @ruby_obj.instance_of? klass
     end
     
+=begin    
     #----------------------------------------------------------------------------------------
     # 
     #----------------------------------------------------------------------------------------
@@ -135,7 +137,7 @@ class Sol
     def isCallback
       true
     end
-    
+=end    
     #----------------------------------------------------------------------------------------
     #
     #----------------------------------------------------------------------------------------
@@ -183,7 +185,12 @@ class Sol
     private
     
     #------------------------------------------------------------------------------------
-    # Converts given argument into Ruby arguments
+    # Converts given argument into Ruby argument.
+    # @param arg [jsvalue] A javascript value that needs to be converted to a ruby
+    # object for processing by the 'run' method.
+    # @return [Sol::JSObject || Sol::IRBObject] The jsvalue wrapped into a ruby object
+    # if the jsvalue is actually a proxied ruby object, then wrapp it in an IRBObject
+    # otherwise wrapp it into a JSObject.  
     #------------------------------------------------------------------------------------
 
     def self.process_arg(arg)

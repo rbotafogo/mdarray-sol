@@ -45,8 +45,8 @@ class MDArraySolTest < Test::Unit::TestCase
 
     should "proxy a Ruby hash" do
 
-      # Hash with symbols as keys
-      a = {"a"=> 1, "b"=> 2, "c"=> 3, "d"=> {"e"=> 4, "f"=> 5, "g"=> {"h"=> 6, "i"=>7}},
+      # Hash with symbols and strings as keys
+      a = {:a=> 1, "b"=> 2, "c"=> 3, :d=> {:e=> 4, :f=> 5, "g"=> {"h"=> 6, "i"=>7}},
            "j"=> [1, 2, [3, [4, 5]]]}
       
       # hash with symbols and Strings as keys
@@ -57,28 +57,27 @@ class MDArraySolTest < Test::Unit::TestCase
       B.d2 = B.proxy(b)
       
       B.eval(<<-EOT)
-        var assert = chai.assert;
-        
-        // retrieve the property by use of '[]'
-        assert.equal(1, data["a"]);
-        // retrieve the property by use of '.'
-        assert.equal(1, data.a);
 
+        var assert = chai.assert;
+
+        // When the key is a ruby symbol, in javascript we need to use the 'fetch' method
+        assert.equal(1, data.fetch("a"));
+        // When the key is a String then '[]' can be used
+        assert.equal(2, data["b"]);
+        // Can also use '.' notation to reach a String key
+        assert.equal(2, data.b);
+        // However symbol keys cannot be reached with '.' notation
+        assert.equal(null, data.a);
+        // Somo more examples
         assert.equal(3, data["c"]);
         assert.equal(100, d2["x"]);
 
-        // cannot retrieve symbol 'd' from the hash with []
-        assert.equal(null, d2["d"]);
-        
-        // In order to retrieve a symbol key, we need to use the 'fetch' that will
-        // convert a string to symbol
-        assert.equal(400, d2.fetch("d"));
-        
         // access deep data 
-        assert.equal(4, data.d.e);
-        assert.equal(7, data.d.g.i);
+        assert.equal(4, data.fetch("d").fetch("e"));
+        assert.equal(7, data.fetch("d").g.i);
         assert.equal(1, data.j[0]);
         assert.equal(4, data.j[2][1][0]);
+
       EOT
       
 =begin      
