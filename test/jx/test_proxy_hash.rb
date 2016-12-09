@@ -100,6 +100,59 @@ class MDArraySolTest < Test::Unit::TestCase
 =end
     end
     
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+    
+    should "allow adding key, value data to a proxied ruby hash" do
+      
+      # New Ruby hash
+      hh = {a: 1, b: 2}
+
+      # Pack a Ruby hash into javascript hh variable.  We could also use B.proxy(hh)
+      # instead of B.pack(hh).  Method pack return a java object and not a Ruby object.
+      # This is ok here since the value is 'injected' into javascript.  Method proxy
+      # return a Ruby object.  Using proxy is less efficient than pack.
+      B.hh = B.pack(hh)
+      
+      # Retrieve the value of a key.  Keys in Javascript cannot be symbol, they have to
+      # be strings.  Sol automatically converts strings to symbols and vice-versa.
+      B.eval(<<-EOT)
+        var h1 = hh.fetch("a");
+        var h2 = hh.fetch("b");
+      EOT
+
+      assert_equal(1, B.h1)
+      assert_equal(2, B.h2)
+
+      # assign values to new keys.
+      B.hh["c"] = 3
+
+      # Not however that we cannot add a Symbol as key when going through a javascript
+      # variable (hh in B)
+      assert_raise (RuntimeError) { B.hh[:d] = 4 }
+
+      # But, of course, we can still add symbols directly in the Ruby hash.  Doing this
+      # way is more efficient than going through javascript.
+      hh[:d] = 4
+
+      # method 'store' converts a string key into a symbol key
+      B.hh.store("f", 6)
+
+      B.eval(<<-EOT)
+        hh["e"] = 5;
+        // add a value to the hash from this javascript
+        hh.store("g", 7);
+        console.log(hh.to_s());
+      EOT
+
+      # Both B.hh (javascript) and hh (ruby) hashes share the same backstore
+      assert_equal(5, hh["e"])
+      assert_equal(6, hh[:f])
+      assert_equal(1, B.hh.fetch("a"))
+      
+    end
+
   end
 
 end

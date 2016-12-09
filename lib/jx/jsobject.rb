@@ -55,8 +55,10 @@ class Sol
         JSObject.new(jsvalue, scope)
       elsif (jsvalue.isUndefined())
         JSUndefined.new(jsvalue, scope)
+      elsif (jsvalue.is_a? Java::ComTeamdevJxbrowserChromium::am)
+        raise "This is probably a Symbol"
       else
-        
+        raise "Unknown jsvalue type #{jsvalue}"
       end
 
     end
@@ -93,13 +95,7 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def assign(property_name, data)
-      
-      if (data.is_a? Sol::JSObject)
-        @jsvalue.setProperty(property_name, data.jsvalue)
-      else
-        @jsvalue.setProperty(property_name, data)
-      end
-      
+      @jsvalue.setProperty(property_name, data) 
     end
 
     #------------------------------------------------------------------------------------
@@ -113,18 +109,19 @@ class Sol
       args.push(B.blk2func(blk)) if (blk)
 
       name = symbol.id2name
-      
-      if name =~ /(.*)=$/
-        ret = assign($1, B.process_args(args)[0])
+
+      if name == "[]="
+        assign(*(B.process_args(args)))
+      elsif name =~ /(.*)=$/
+        assign($1, B.process_args(args)[0])
       elsif (@jsvalue.undefined?)
         raise "Cannot extract property '#{name}' from undefined object"
       elsif ((member = @jsvalue.getProperty(name)).function? && args.size > 0)
-        ret = B.invoke(@jsvalue, member, *(B.process_args(args)))
+        B.invoke(@jsvalue, member, *(B.process_args(args)))
       else
         # Build a JSObject in the scope of @jsvalue
-        ret = JSObject.build(member, @jsvalue)        
+        JSObject.build(member, @jsvalue)        
       end
-      ret
       
     end
 
@@ -184,6 +181,7 @@ require_relative 'jsfunction'
 require_relative 'jsarray'
 require_relative 'jsstyle_sheet'
 require_relative 'jsundefined'
+# require_relative 'jssymbol'
 require_relative 'callback'
 require_relative 'proxy_array'
 

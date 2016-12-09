@@ -327,9 +327,10 @@ class Sol
     # IRBObject (Internal Ruby Object) appears when a Ruby Callback is executed and
     # exists for the case that this object transitions between javascript and ends up
     # in a Ruby script.
+    # @param args [Array] Ruby array with ruby arguments
+    # @return args [Array] Ruby array with ruby arguments converted to javascript
+    # arguments
     # TODO: Can an IRBObject end up in a javascript script? If so, will it work fine?
-    # TODO: Make sure that there is no reason to convert Symbol to String.  Symbols
-    # should not be injected into javascript.  Is this always possible?
     # TODO: Make tests that allow Proc/block to be injected into javascript
     #------------------------------------------------------------------------------------
 
@@ -343,13 +344,22 @@ class Sol
           arg.jsvalue
         when Hash, Array
           pack(arg)
+        when Symbol
+=begin          
+          jeval(<<-EOT)
+            var sym = Symbol("#{arg}");
+          EOT
+          Sol::JSSymbol.new(jeval("sym"))
+
+          # We can convert a Ruby Symbol to a string, but I think it is best to just
+          # raise an exception, since this might be confusing and generate errors that
+          # are not expected by the user.
+          arg.id2name
+=end
+          raise "Ruby Symbols are not supported in jxBrowser.  Converting ':#{arg}' not supported."
         when Proc
           p "i´m a proc... not implemented yet"
           arg
-=begin          
-        when Symbol
-          arg.to_s
-=end
         else
           arg
         end
