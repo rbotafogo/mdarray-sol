@@ -38,11 +38,11 @@ class MDArraySolTest < Test::Unit::TestCase
     setup do 
 
     end
-
+        
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
-
+    
     should "proxy flat ruby array" do
 
       a1 = [1, 2, 3]
@@ -82,27 +82,10 @@ class MDArraySolTest < Test::Unit::TestCase
         assert.equal(5, p1[-1]);
         assert.equal(2, p1[-4]);
 
-        // call ruby functions on the array, including functions that require a block
-        // or have names that do not exist in javascript
-        console.log("should output values 1 to 5 in javascript output");
-        p1.each(function(x) { console.log(x); });
-        p2["<<"] = 6
-
-        // concat the two arrays since this is not yet possible with the concat 
-        // method
-        p2.each(function(x) { p1["<<"] = x; });
-
       EOT
-
-=begin      
-      # These do not work yet.
-      B.eval(<<-EOT)
-        p1.concat(p2);
-      EOT
-=end
 
     end
-    
+
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
@@ -122,18 +105,7 @@ class MDArraySolTest < Test::Unit::TestCase
         // to_s requires '()', otherwise a function is returned
         console.log("should print the array elements of: [[1, 2], [3, 4], [5, 6, [7, [8, 9]]]]");
         p3.each(function(x) { console.log(x.to_s()); })      
-        
-        // Merge p3 with p1, equivalent to p1.concat(p2) but less efficient
-        // probably since this is done elementwise
-        p3.each(function(x) { p1["<<"] = x; });
-
-        // 4th element of p1 is now the pair [1, 2]
-        assert.equal("[1, 2]", p1[3].to_s())
-
-        // access deep nested element
-        assert.equal(6, p1[5][1]);
-        assert.equal(8, p3[2][2][1][0]);
-        
+                
       EOT
 
       # Note that inspect with 'p' shows IRBObjects
@@ -144,21 +116,6 @@ class MDArraySolTest < Test::Unit::TestCase
       # ... but puts makes the elements look like normal array elements
       puts "But a normal puts will show the array as a normal array"
       puts a1
-      
-    end
-
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
-
-    should "Allow access directly from a js file" do
-      
-      B.data = [1, 2, 3, 4]
-      B.d2 = [10, 20, 30, 40, 50, 60]
-      
-      # load a javascript file to test arrays.  assert clauses in the javascript file
-      # will not be shown as tests, unfortunately.
-      B.load("test_ruby_array.js")
       
     end
     
@@ -183,7 +140,100 @@ class MDArraySolTest < Test::Unit::TestCase
       EOT
 
     end
-    
+        
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "Allow access directly from a js file" do
+      
+      B.data = [1, 2, 3, 4]
+      B.d2 = [10, 20, 30, 40, 50, 60]
+      
+      # load a javascript file to test arrays.  assert clauses in the javascript file
+      # will not be shown as tests, unfortunately.
+      B.load("test_ruby_array.js")
+      
+    end
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "allow array updates" do
+
+      a1 = [1, 2, 3]
+
+      # B.p1 is a javascript object that proxies the a1 ruby array
+      B.p1 = B.proxy(a1)
+
+      assert_equal(1, B.p1[0])
+
+      # assing a value to an array index
+      B.p1[3] = 4
+      assert_equal(4, B.p1[3])
+
+      B.eval(<<-EOT)
+        var assert = chai.assert;
+        assert.equal(4, p1[3]);
+        p1[5] = 5
+        console.log(p1.to_s());        
+      EOT
+      
+    end
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "call ruby methods passing javascript functions as blocks" do
+
+      a1 = [1, 2, 3, 4, 5]
+
+      B.p1 = B.proxy(a1)
+      
+      B.eval(<<-EOT)
+
+        var assert = chai.assert;
+        // call ruby functions on the array, including functions that require a block
+        // or have names that do not exist in javascript
+        console.log("should output values 1 to 5 in javascript output");
+        p1.each(function(x) { console.log(x); });
+
+      EOT
+      
+    end
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "call ruby methods with invalid javascript names" do
+
+      a1 = [1, 2, 3]
+      a2 = [4, 5]
+      
+      # p1 and p2 are proxy elements for arrays a1 and a2.  They will work as array
+      # in ruby
+      B.p1 = B.proxy(a1)
+      B.p2 = B.proxy(a2)
+      
+      B.eval(<<-EOT)
+        var assert = chai.assert;
+
+        p1.concat(p2);
+        console.log(p1.to_s());
+
+        // Concate two arrays going element by element.  Better use ruby´s concat
+        // method... just an example of using a function as block for the each
+        // method and the use of a method with a name not valid in javascript
+        p2.each(function(x) { p1.send("<<", x); });
+        console.log(p1.to_s());
+
+      EOT
+      
+    end
+
   end
 
 end

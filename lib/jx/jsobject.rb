@@ -181,8 +181,8 @@ require_relative 'jsfunction'
 require_relative 'jsarray'
 require_relative 'jsstyle_sheet'
 require_relative 'jsundefined'
-# require_relative 'jssymbol'
 require_relative 'callback'
 require_relative 'proxy_array'
+# require_relative 'jssymbol'
 
 
