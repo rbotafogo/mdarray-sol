@@ -24,10 +24,10 @@
 # by Scott Muray
 ##########################################################################################
 
-require '../../config' if @platform == nil
+require_relative '../../config' if @platform == nil
 require 'mdarray-sol'
 
-require_relative 'scale'
+require_relative '../util/linear_scale'
 require_relative 'axes'
 
 #=========================================================================================
@@ -68,11 +68,11 @@ class ScatterPlot
   end
 
   #--------------------------------------------------------------------------------------
-  # @param x_scale [Scale] the x scale for the data, this is a Scale object that
+  # @param x_scale [LinearScale] the x scale for the data, this is a Scale object that
   # encapsulates the scale function from d3.  x_scale defauts to the scatterplot x scale.
   # Usually this will always be the case, but we need to set it since x_scale is used
   # inside a block
-  # @param y_scale [Scale] the y scale for the data, this is a Scale object that
+  # @param y_scale [LinearScale] the y scale for the data, this is a Scale object that
   # encapsulates the scale function from d3. Same observation as above to y_scale.
   #--------------------------------------------------------------------------------------
 
@@ -101,11 +101,11 @@ class ScatterPlot
   end
 
   #--------------------------------------------------------------------------------------
-  # @param x_scale [Scale] the x scale for the data, this is a Scale object that
+  # @param x_scale [LinearScale] the x scale for the data, this is a Scale object that
   # encapsulates the scale function from d3.  x_scale defauts to the scatterplot x scale.
   # Usually this will always be the case, but we need to set it since x_scale is used
   # inside a block
-  # @param y_scale [Scale] the y scale for the data, this is a Scale object that
+  # @param y_scale [LinearScale] the y scale for the data, this is a Scale object that
   # encapsulates the scale function from d3. Same observation as above to y_scale.
   #--------------------------------------------------------------------------------------
 
@@ -130,8 +130,8 @@ class ScatterPlot
     y_min, y_max = @dataset.minmax_by { |d| d[1] }
 
     # Creates a new x and y scale and the axes for the plot
-    @x_scale = Scale.new([0, x_max[0]], [@padding, @width - @padding * 2])
-    @y_scale = Scale.new([0, y_max[1]], [@height - @padding, @padding])
+    @x_scale = LinearScale.new([0, x_max[0]], [@padding, @width - @padding * 2])
+    @y_scale = LinearScale.new([0, y_max[1]], [@height - @padding, @padding])
     @axes = Axes.new(self, @x_scale.scale, @y_scale.scale)
 
     add_data
@@ -145,10 +145,12 @@ class ScatterPlot
   # This method updates and plots all the points in the scatter plot. Note that we use
   # transition, duration and each methods to animate the update process.
   #
-  # @param x_scale [Scale] the x scale for the updated dataset. Uses @x_scale as default
-  # since x_scale is used inside a block.  @x_scale should have already being updated
-  # @param y_scale [Scale] the y scale for the updated dataset. Uses @y_scale as default
-  # since y_scale is used inside a block.  @y_scale should have already being updated
+  # @param x_scale [LinearScale] the x scale for the updated dataset. Uses @x_scale as
+  # default since x_scale is used inside a block.  @x_scale should have already being
+  # updated
+  # @param y_scale [LinearScale] the y scale for the updated dataset. Uses @y_scale as
+  # default since y_scale is used inside a block.  @y_scale should have already being
+  # updated
   #--------------------------------------------------------------------------------------
 
   def update_points(x_scale = @x_scale, y_scale = @y_scale)

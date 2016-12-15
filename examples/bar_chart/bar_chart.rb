@@ -19,10 +19,11 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-require '../../config' if @platform == nil
+require_relative '../../config' if @platform == nil
 require 'mdarray-sol'
 
-require_relative 'scale'
+require_relative '../util/ordinal_scale'
+require_relative '../util/linear_scale'
 
 class BarChart
 
@@ -31,7 +32,7 @@ class BarChart
   attr_reader :height
   attr_reader :svg
   attr_reader :padding
-  attr_reader :scale
+  attr_reader :x_scale
 
   #--------------------------------------------------------------------------------------
   # Initialize the bar chart and create the main svg for the plot with the given
@@ -49,7 +50,6 @@ class BarChart
     @width = width
     @height = height
     @padding = padding
-    @scale = Scale.new([*0..@dataset.length], @width)
 
     @svg = $d3.select("body")
            .append("svg")
@@ -58,68 +58,167 @@ class BarChart
   end
 
   #--------------------------------------------------------------------------------------
-  # @param scale [Scale] the scale for the data, this is a Scale object that
+  # @param x_scale [OrdinalScale] the scale for the data, this is a Scale object that
   # encapsulates the scale function from d3.  scale defauts to the bar chart scale.
   # Usually this will always be the case, but we need to set it since scale is used
   # inside a block
   #--------------------------------------------------------------------------------------
 
-  def add_data(scale = @scale)
-
-    length = @dataset.length
-    width = @width
-    height = @height
-    padding = @padding
+  def add_data(x_scale = @x_scale, y_scale = @y_scale, height = @height)
 
     @svg.selectAll("rect")
       .data(@dataset)
       .enter(nil)
       .append("rect")
-      .attr("x") { |d, i| scale[i]}
-      .attr("y") { |d, i| height - (d[:value] * 4) }
-      .attr("width", scale.scale.rangeBand(nil))
-      .attr("height") { |d, i| (d[:value] * 4) }
+      .attr("x") { |d, i| x_scale[i]}
+      .attr("y") { |d, i| height - y_scale[d[:value]] }
+      .attr("width", x_scale.scale.rangeBand(nil))
+      .attr("height") { |d, i| y_scale[d[:value]] }
       .attr("fill") { |d, i| "rgb(0, 0, #{(d[:value] * 10).to_i})" }
 
-    style = {"font-family" => "sans-serif",
-             "font-size" => "11px",
-             "fill" => "white",
-             "text-anchor" => "middle"}
+  end
+
+  #--------------------------------------------------------------------------------------
+  # Defines the style of the labels.  Although this does not make much sense, since this
+  # is fixed, one could consider building the style dynamically.
+  #--------------------------------------------------------------------------------------
+
+  def style
+    
+    {"font-family" => "sans-serif",
+     "font-size" => "11px",
+     "fill" => "white",
+     "text-anchor" => "middle"}
+    
+  end
+
+  #--------------------------------------------------------------------------------------
+  # @param x_scale [OrdinalScale] the x scale for the data, this is a Scale object that
+  # encapsulates the scale function from d3.  x_scale defauts to the bar_chart x scale.
+  # Usually this will always be the case, but we need to set it since x_scale is used
+  # inside a block
+  # @param y_scale [LinearScale] the y scale for the data, this is a Scale object that
+  # encapsulates the scale function from d3. Same observation as above to y_scale.
+  # @param height [Number] the height of the plot.  Defaults to the bar_char height.
+  #--------------------------------------------------------------------------------------
+
+  def add_labels(x_scale = @x_scale, y_scale = @y_scale, height = @height)
     
     @svg.selectAll("text")
       .data(@dataset)
       .enter(nil)
       .append("text")
       .text { |d, i| d[:value] }
-      .attr({"x"=> ->(d, i, z) {scale[i] + scale.scale.rangeBand(nil) / 2},
-             "y"=> ->(d, i, z) {height - (d[:value] * 4) + 14 }})
+      .attr({"x"=> ->(d, i, z) {x_scale[i] + x_scale.scale.rangeBand(nil) / 2},
+             "y"=> ->(d, i, z) {height - y_scale[d[:value]] + 14 }})
       .attr(style)
     
   end
-  
+
   #--------------------------------------------------------------------------------------
   # Plots the bar chart
   #--------------------------------------------------------------------------------------
 
   def plot
-    add_data(nil)
+
+    y_min, y_max = @dataset.minmax_by { |d| d[:value] }
+    
+    # Creates a new x and y scale for the plot
+    @x_scale = OrdinalScale.new([*0..@dataset.length], @width)
+    @y_scale = LinearScale.new([0, y_max[:value]], [0, @height])
+    
+    add_data
+    add_labels
+    
+  end
+
+  #--------------------------------------------------------------------------------------
+  # updates the bars with new data
+  #--------------------------------------------------------------------------------------
+
+  def update_bars(x_scale = @x_scale, y_scale = @y_scale, height = @height)
+
+    svg.selectAll("rect")
+      .data(@dataset)
+      .transition(nil)
+      .delay { |d, i| i * 100 }
+      .duration(100)
+      .attr("x"=> ->(d, i, z) { x_scale[i] })
+      .attr("y"=> ->(d, i, z) {height - y_scale[d[:value]] })
+      .attr("width", x_scale.scale.rangeBand(nil))
+      .attr("height"=> ->(d, i, z) {y_scale[d[:value]]})
+      .attr("fill") { |d, i| "rgb(0, 0, #{(d[:value] * 10).to_i})" }
+    
+  end
+
+  #--------------------------------------------------------------------------------------
+  # updates the labels
+  #--------------------------------------------------------------------------------------
+
+  def update_labels(x_scale = @x_scale, y_scale = @y_scale, height = @height)
+
+    svg.selectAll("text")
+      .data(@dataset)
+      .transition(nil)
+      .delay { |d, i| i * 100 }
+      .duration(500)
+      .text { |d, i| d[:value] }
+      .attr({"x"=> ->(d, i, z) {x_scale[i] + x_scale.scale.rangeBand(nil) / 2},
+             "y"=> ->(d, i, z) {height - y_scale[d[:value]] + 14 }})
+      .attr(style)
+
   end
   
+  #--------------------------------------------------------------------------------------
+  # This method is called when the dataset is updated.  This will trigger the update of
+  # points, labels and axes
+  #
+  # @param dataset [Array] a new dataset with the same number of elements as the previous
+  # dataset
+  #--------------------------------------------------------------------------------------
+
+  def update(dataset)
+
+    @dataset = dataset
+
+    # correct the y scale to the new dataset
+    y_min, y_max = @dataset.minmax_by { |d| d[:value] }
+
+    # fix the scale to the new dataset
+    @y_scale.update([0, y_max[:value]], [0, @height])
+
+    # update the points, axes and labels
+    update_bars
+    update_labels
+    
+  end
+
+  #--------------------------------------------------------------------------------------
+  # Adds a single bar to the chart. The @dataset was already updated
+  #--------------------------------------------------------------------------------------
+
+  def add_bar(x_scale = @x_scale, y_scale = @y_scale, height = @height)
+
+    x_scale.domain([*0..@dataset.length])
+    
+    # add the new bar. No need to add attributes as the whole plot will be updated next
+    @svg.selectAll("rect")
+      .data(@dataset)
+      .enter(nil)
+      .append("rect")
+
+    update_bars
+
+    # add the new label.  Need only to add the text value as all attributes will be set
+    # by update_labels
+    @svg.selectAll("text")
+      .data(@dataset)
+      .enter(nil)
+      .append("text")
+      .text { |d, i| d[:value] }
+
+    update_labels
+    
+  end
   
 end
-
-# Let´s work with a dataset that has key, value pairs
-
-dataset = [ {key: 0, value: 5}, {key: 1, value: 10},
-            {key: 2, value: 13}, {key: 3, value: 19},
-            {key: 4, value: 21}, {key: 5, value: 25},
-            {key: 6, value: 22}, {key: 7, value: 18},
-            {key: 8, value: 15}, {key: 9, value: 13},
-            {key: 10, value: 11}, {key: 11, value: 12},
-            {key: 12, value: 15}, {key: 13, value: 20},
-            {key: 14, value: 18}, {key: 15, value: 17},
-            {key: 16, value: 16}, {key: 17, value: 18},
-            {key: 18, value: 23}, {key: 19, value: 25} ]
-
-chart = BarChart.new(dataset, width: 600, height: 250, padding: 1)
-chart.add_data

@@ -19,39 +19,69 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-require_relative 'scatterplot'
+require_relative 'bar_chart/bar_chart'
 
 class Example
 
   attr_reader :dataset
+  attr_reader :x_range
 
+  #--------------------------------------------------------------------------------------
+  #
+  #--------------------------------------------------------------------------------------
+  
   def initialize(num_data_points)
     @num_data_points = num_data_points
+    @x_range = rand * 200;
   end
   
+  #--------------------------------------------------------------------------------------
+  #
+  #--------------------------------------------------------------------------------------
+
   def gen_random_data
     @dataset = []
-    x_range = rand * 1000;
-    y_range = rand * 1000;
     (1..@num_data_points).each do |i|
-      @dataset << [(rand * x_range).floor, (rand * y_range).floor]
+      @dataset << {key: i, value: (rand * @x_range).floor}
     end
     
+  end
+
+  #--------------------------------------------------------------------------------------
+  #
+  #--------------------------------------------------------------------------------------
+
+  def gen_bar
+    @num_data_points += 1
+    @dataset << {key: (@dataset[-1][:key] + 1), value: (rand * @x_range).floor}
   end
   
 end
 
 $d3.select("body")
   .append("p")
+  .attr("class", "new_data")
   .text("Click here to generate new dataset at any time!")
 
-ex = Example.new(30)
-ex.gen_random_data
-splot = ScatterPlot.new(ex.dataset, width: 800, height: 450, padding: 50)
-splot.plot
+$d3.select("body")
+  .append("p")
+  .attr("class", "new_bar")
+  .text("Ckick here to add a new bar")
 
-$d3.select("p")
+ex = Example.new(20)
+ex.gen_random_data
+
+bplot = BarChart.new(ex.dataset, width: 600, height: 250, padding: 50)
+bplot.plot
+
+$d3.select(".new_data")
   .on('click') {
   ex.gen_random_data
-  splot.update(ex.dataset)
+  bplot.update(ex.dataset)
+}
+
+$d3.select(".new_bar")
+  .on('click') {
+  ex.gen_bar
+  bplot.add_bar
 }
