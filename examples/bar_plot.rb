@@ -68,20 +68,29 @@ $d3.select("body")
   .attr("class", "new_bar")
   .text("Ckick here to add a new bar")
 
+$d3.select("body")
+  .append("p")
+  .attr("class", "del_data")
+  .text("Click here to remove a bar")
+
+
 ex = Example.new(20)
 ex.gen_random_data
 
 bplot = BarChart.new(ex.dataset, width: 600, height: 250, padding: 50)
 bplot.plot
 
-$d3.select(".new_data")
-  .on('click') {
+$d3.select(".new_data").on('click') {
   ex.gen_random_data
   bplot.update(ex.dataset)
 }
 
-$d3.select(".new_bar")
-  .on('click') {
+$d3.select(".new_bar").on('click') {
   ex.gen_bar
   bplot.add_bar
 }
+
+$d3.select(".del_data").on('click') {
+  bplot.remove_bar
+}
+

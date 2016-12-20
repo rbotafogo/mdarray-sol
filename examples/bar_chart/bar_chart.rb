@@ -64,12 +64,19 @@ class BarChart
   # inside a block
   #--------------------------------------------------------------------------------------
 
-  def add_data(x_scale = @x_scale, y_scale = @y_scale, height = @height)
+  def add_data
+
+    x_scale, y_scale, height = @x_scale, @y_scale, @height
 
     @svg.selectAll("rect")
-      .data(@dataset)
+      .data(@dataset) { |d| d[:key] }
       .enter(nil)
       .append("rect")
+      .on("mouseover") { $d3.select(@this).attr("fill", "orange") }
+      .on("mouseout") { |d| $d3.select(@this)
+                          .transition(nil)
+                          .duration(500)
+                          .attr("fill", "rgb(0, 0, #{(d[:value] * 10).to_i})" )} 
       .attr("x") { |d, i| x_scale[i]}
       .attr("y") { |d, i| height - y_scale[d[:value]] }
       .attr("width", x_scale.scale.rangeBand(nil))
@@ -102,10 +109,12 @@ class BarChart
   # @param height [Number] the height of the plot.  Defaults to the bar_char height.
   #--------------------------------------------------------------------------------------
 
-  def add_labels(x_scale = @x_scale, y_scale = @y_scale, height = @height)
+  def add_labels
     
+    x_scale, y_scale, height = @x_scale, @y_scale, @height
+
     @svg.selectAll("text")
-      .data(@dataset)
+      .data(@dataset) { |d| d[:key] }
       .enter(nil)
       .append("text")
       .text { |d, i| d[:value] }
@@ -136,10 +145,22 @@ class BarChart
   # updates the bars with new data
   #--------------------------------------------------------------------------------------
 
-  def update_bars(x_scale = @x_scale, y_scale = @y_scale, height = @height)
+  def update_bars
 
+    # correct the x scale to the new dataset
+    @x_scale.domain([*0..@dataset.length])
+    
+    # correct the y scale to the new dataset
+    y_min, y_max = @dataset.minmax_by { |d| d[:value] }
+    @y_scale.update([0, y_max[:value]], [0, @height])
+
+    # Set local variable to their equivalent instance variable so that they are
+    # available inside blocks.  I don´t know if there is a better way of doing
+    # this.  Tried googling for a better solution but without success!
+    x_scale, y_scale, height = @x_scale, @y_scale, @height
+    
     svg.selectAll("rect")
-      .data(@dataset)
+      .data(@dataset) { |d| d[:key] }
       .transition(nil)
       .delay { |d, i| i * 100 }
       .duration(100)
@@ -155,10 +176,12 @@ class BarChart
   # updates the labels
   #--------------------------------------------------------------------------------------
 
-  def update_labels(x_scale = @x_scale, y_scale = @y_scale, height = @height)
+  def update_labels
+
+    x_scale, y_scale, height = @x_scale, @y_scale, @height
 
     svg.selectAll("text")
-      .data(@dataset)
+      .data(@dataset) { |d| d[:key] }
       .transition(nil)
       .delay { |d, i| i * 100 }
       .duration(500)
@@ -180,14 +203,7 @@ class BarChart
   def update(dataset)
 
     @dataset = dataset
-
-    # correct the y scale to the new dataset
-    y_min, y_max = @dataset.minmax_by { |d| d[:value] }
-
-    # fix the scale to the new dataset
-    @y_scale.update([0, y_max[:value]], [0, @height])
-
-    # update the points, axes and labels
+    
     update_bars
     update_labels
     
@@ -197,22 +213,25 @@ class BarChart
   # Adds a single bar to the chart. The @dataset was already updated
   #--------------------------------------------------------------------------------------
 
-  def add_bar(x_scale = @x_scale, y_scale = @y_scale, height = @height)
+  def add_bar
 
-    x_scale.domain([*0..@dataset.length])
-    
     # add the new bar. No need to add attributes as the whole plot will be updated next
     @svg.selectAll("rect")
-      .data(@dataset)
+      .data(@dataset) { |d| d[:key] }
       .enter(nil)
       .append("rect")
-
+      .on("mouseover") { $d3.select(@this).attr("fill", "orange") }
+      .on("mouseout") { |d| $d3.select(@this)
+                          .transition(nil)
+                          .duration(500)
+                          .attr("fill", "rgb(0, 0, #{(d[:value] * 10).to_i})" )} 
+    
     update_bars
 
     # add the new label.  Need only to add the text value as all attributes will be set
     # by update_labels
     @svg.selectAll("text")
-      .data(@dataset)
+      .data(@dataset) { |d| d[:key] }
       .enter(nil)
       .append("text")
       .text { |d, i| d[:value] }
@@ -221,4 +240,29 @@ class BarChart
     
   end
   
+  #--------------------------------------------------------------------------------------
+  # Removes a bar from the plot
+  #--------------------------------------------------------------------------------------
+
+  def remove_bar
+
+    @dataset.shift
+
+    @svg.selectAll("rect")
+      .data(@dataset) { |d| d[:key] }
+      .exit(nil)
+      .transition(nil)
+      .duration(500)
+      .remove(nil)
+
+    @svg.selectAll("text")
+      .data(@dataset) { |d| d[:key] }
+      .exit(nil)
+      .remove(nil)
+
+    update_bars
+    update_labels
+
+  end
+
 end
