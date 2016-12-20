@@ -26,38 +26,65 @@ require 'mdarray-sol'
 
 class Map
 
-  def initialize
-    
-    path = $d3.geo.path(nil)
-    @width = 500
-    @height = 500
-    
-    svg = $d3.select("body")
-            .append("svg")
-            .attr("width", @width)
-            .attr("height", @height)
+  attr_reader :path
+  attr_reader :svg
+  attr_reader :us_states
 
+  #------------------------------------------------------------------------------------
+  #
+  #------------------------------------------------------------------------------------
+  
+  def initialize(width, height)
+    
+    @width = width
+    @height = height
+
+    # Create svg for the map
+    @svg = $d3.select("body")
+             .append("svg")
+             .attr("width", @width)
+             .attr("height", @height)
+    
+  end
+  
+  #------------------------------------------------------------------------------------
+  # Parses a file in GeoJson format and saves it as @us_states
+  # @param filename [String] the name of the file to parse
+  #------------------------------------------------------------------------------------
+
+  def json(filename)
+    
     dir = File.expand_path(File.dirname(__FILE__))
-    file_name = dir + "/us-states.json"
+    file_name = dir + "/#{filename}"
     file = File.read(file_name)
-      
-    us_states = JSON.parse(file)
+    
+    # parse the json file
+    @us_states = JSON.parse(file)
 
-    projection = $d3.geo.albersUsa(nil)
-                   .translate([@width/2, @height/2])
-                   .scale(500)
+  end
+  
+  #------------------------------------------------------------------------------------
+  #
+  #------------------------------------------------------------------------------------
+
+  def plot(projection)
+
+    proj = projection
+             .translate([@width/2, @height/2])
+             .scale(500)
+    @path = $d3.geo.path[].projection(proj);    
     
-    path = $d3.geo.path(nil).projection(projection);    
-    
-    svg.selectAll("path")
-      .data(us_states["features"])
-      .enter(nil)
+    @svg.selectAll("path")
+      .data(@us_states["features"])
+      .enter[]
       .append("path")
-      .attr("d", path)
+      .attr("d", @path)
       .style("fill", "steelblue")
     
   end
   
 end
 
-map = Map.new
+map = Map.new(500, 500)
+map.json("us-states.json")
+map.plot($d3.geo.albersUsa[])

@@ -230,7 +230,7 @@ class Sol
          obj.#{prop}
       EOT
     end
-
+    
     #------------------------------------------------------------------------------------
     # Invokes the function
     # @param scope [Java::JSObject] the object that holds the function, i.e., it´s scope
@@ -245,19 +245,10 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def invoke(scope, function, *args)
-
       args = nil if (args.size == 1 && args[0].nil?)
-
-      # convert arguments to java arguments so that we can invoke the function
-      if (args)
-        jargs = []
-        args.each { |arg| jargs << arg.to_java }
-      end
-
-      proxy(function.invoke(scope, *(jargs)))
-
+      proxy(function.invoke(scope, *(args)))
     end
-    
+
     #------------------------------------------------------------------------------------
     # Duplicates the given Ruby data into a javascript object in the Browser
     # @param name [Symbol, String] the name of the javascript variable into which to dup
@@ -318,7 +309,7 @@ class Sol
       end
       ret
     end
-    
+#=begin    
     #------------------------------------------------------------------------------------
     # Converts Ruby arguments into a javascript objects to run in a javascript
     # script.  A Sol::JSObject and Sol::RBObject are similar in that they pack a 'native'
@@ -345,17 +336,6 @@ class Sol
         when Hash, Array
           pack(arg)
         when Symbol
-=begin          
-          jeval(<<-EOT)
-            var sym = Symbol("#{arg}");
-          EOT
-          Sol::JSSymbol.new(jeval("sym"))
-
-          # We can convert a Ruby Symbol to a string, but I think it is best to just
-          # raise an exception, since this might be confusing and generate errors that
-          # are not expected by the user.
-          arg.id2name
-=end
           raise "Ruby Symbols are not supported in jxBrowser.  Converting ':#{arg}' not supported."
         when Proc
           p "i´m a proc... not implemented yet"
@@ -366,7 +346,44 @@ class Sol
       end
       
     end
-    
+#=end    
+    #------------------------------------------------------------------------------------
+    # Converts Ruby arguments into a javascript objects to run in a javascript
+    # script.  A Sol::JSObject and Sol::RBObject are similar in that they pack a 'native'
+    # object (either java.JSObject or ruby Object).  These objects show up in a ruby
+    # script and when injected in javascript their jsvalue is made available.  An
+    # IRBObject (Internal Ruby Object) appears when a Ruby Callback is executed and
+    # exists for the case that this object transitions between javascript and ends up
+    # in a Ruby script.
+    # @param args [Array] Ruby array with ruby arguments
+    # @return args [Array] Ruby array with ruby arguments converted to javascript
+    # arguments
+    # TODO: Can an IRBObject end up in a javascript script? If so, will it work fine?
+    # TODO: Make tests that allow Proc/block to be injected into javascript
+    #------------------------------------------------------------------------------------
+
+    def process_args2(args)
+
+      args.map do |arg|
+        case arg
+        when Sol::IRBObject
+          arg.to_java
+        when Sol::JSObject, Sol::RBObject
+          arg.jsvalue.to_java
+        when Hash, Array
+          pack(arg).to_java
+        when Symbol
+          raise "Ruby Symbols are not supported in jxBrowser.  Converting ':#{arg}' not supported."
+        when Proc
+          p "i´m a proc... not implemented yet"
+          arg.to_java
+        else
+          arg.to_java
+        end
+      end
+      
+    end
+
     #------------------------------------------------------------------------------------
     # Loads a javascript file relative to the callers directory
     #------------------------------------------------------------------------------------
@@ -420,18 +437,3 @@ class Sol
   end
   
 end
-
-
-=begin
-      # this block of code does not seem to be necessary any more.  Should probably be
-      # removed.  Left here for a while to make sure that those conditions will not
-      # happen
-      when com.teamdev.jxbrowser.chromium.al
-        p "al"
-        B.obj = Callback.new(obj)
-        RBObject.new(jeval("new RubyProxy(obj)"), obj, true)
-      when Sol::Callback
-        p "Callback"
-        B.obj = obj
-        RBObject.new(jeval("new RubyProxy(obj)"), obj, false)
-=end

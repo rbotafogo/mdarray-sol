@@ -117,7 +117,7 @@ class Sol
       elsif (@jsvalue.undefined?)
         raise "Cannot extract property '#{name}' from undefined object"
       elsif ((member = @jsvalue.getProperty(name)).function? && args.size > 0)
-        B.invoke(@jsvalue, member, *(B.process_args(args)))
+        B.invoke(@jsvalue, member, *(B.process_args2(args)))
       else
         # Build a JSObject in the scope of @jsvalue
         JSObject.build(member, @jsvalue)        

@@ -49,7 +49,7 @@ class Sol
 
     def send(*args)
       # args need to be processed before invokation converting then to JSObjects
-      B.invoke(@scope, @jsvalue, *(B.process_args(args)))
+      B.invoke(@scope, @jsvalue, *(B.process_args2(args)))
     end
 
     #------------------------------------------------------------------------------------
