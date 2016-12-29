@@ -30,6 +30,12 @@ public interface RubyCallbackInterface {
 
     // sets the 'this' variable for a Ruby callback
     public void set_this(Object obj);
+
+    // get an element from a matrix or similar class
+    public Object get(int index);
+
+    // get an element from a hash or similar class
+    public Object get_key(Object obj);
     
     // run method to be called from a Ruby script
     public Object run(String function_name);

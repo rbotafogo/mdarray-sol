@@ -21,6 +21,8 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
+require 'benchmark'
+
 require 'json'
 require_relative 'jsobject'
 require_relative 'rbobject'
@@ -164,7 +166,8 @@ class Sol
         # TODO: Needs to test Proc proxying.  I don´t think the code ever gets here
         blk2func(obj)
       when Object
-        B.obj = Callback.new(obj)
+        # B.obj = Callback.new(obj)
+        B.obj = Callback.build(obj)
         RBObject.new(jeval("new RubyProxy(obj)"), obj, true)
       else
         raise "No method to proxy the given object: #{obj}"
@@ -189,7 +192,7 @@ class Sol
       when Proc
         blk2func(obj).jsvalue
       when Object
-        B.obj = Callback.new(obj)
+        B.obj = Callback.build(obj)
         jeval("new RubyProxy(obj)")
       else
         raise "No method to pack the given object: #{obj}"
@@ -236,7 +239,7 @@ class Sol
     # @param scope [Java::JSObject] the object that holds the function, i.e., it´s scope
     # @param function [java JSFunction] the function to be invoked, already in its java
     # form
-    # @param *args [Args] a list of arguments to pass to the function
+    # @param *args [Args] a list of java arguments to pass to the function
     # @return jsobject [JSObject] a JSObject or one of its subclasses depending on the
     # result of the function invokation
     # TODO: needs implementation/tests to call functions in the scope of a given object.
@@ -277,7 +280,7 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def blk2func(blk)
-      B.block = Sol::Callback.new(blk)
+      B.block = Callback.build(blk)
       B.rr.make_callback(nil)
     end
     

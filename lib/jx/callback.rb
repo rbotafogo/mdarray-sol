@@ -25,6 +25,15 @@ require_relative 'js_hash'
 require_relative 'js_array'
 
 class Sol
+
+  #========================================================================================
+  # Class Callback is used for a ruby object to be called from inside a javascript script.
+  # When a ruby object is injected into a javascript only public java methods can be
+  # called.  For this to work, the Callback class implements the RubyCallbackInterface that
+  # defines the run public method.  In order to execute a ruby method, the javascript
+  # code needs to call 'run' passing as arguments the method name to be executed in ruby
+  # and all its arguments.
+  #========================================================================================
   
   class Callback
     include Java::ComRbMdarray_sol.RubyCallbackInterface
@@ -34,29 +43,29 @@ class Sol
     attr_reader :this
 
     #----------------------------------------------------------------------------------------
-    # Class Callback is used for a ruby object to be called from inside a javascript script.
-    # When a ruby object is injected into a javascript only public java methods can be
-    # called.  For this to work, the Callback class implements the RubyCallbackInterface that
-    # defines the run public method.  In order to execute a ruby method, the javascript
-    # code needs to call 'run' passing as arguments the method name to be executed in ruby
-    # and all its arguments.
+    #
+    #----------------------------------------------------------------------------------------
+
+    def self.build(ruby_obj)
+
+      case ruby_obj
+      when Hash
+        HashCallback.new(ruby_obj)
+      when Array
+        ArrayCallback.new(ruby_obj)
+      else
+        Callback.new(ruby_obj)
+      end
+        
+    end
+    
+    #----------------------------------------------------------------------------------------
     # @param ruby_obj [Object] a Ruby object, could be any object, in particular we use
     # Array and Hash quite often
     #----------------------------------------------------------------------------------------
 
-    def initialize(ruby_obj)
-
-      # if ruby_obj is a hash, then make it accessible both by key or by string since
-      # javascript does not allow key access
-      case ruby_obj
-      when Hash
-        ruby_obj.extend(InsensitiveHash)
-      when Array
-        ruby_obj.extend(JSArrayInterface)
-      end
-
+    def initialize(ruby_obj)      
       @ruby_obj = ruby_obj
-      
     end
 
     #----------------------------------------------------------------------------------------
@@ -129,15 +138,6 @@ class Sol
       @ruby_obj.instance_of? klass
     end
     
-=begin    
-    #----------------------------------------------------------------------------------------
-    # 
-    #----------------------------------------------------------------------------------------
-
-    def isCallback
-      true
-    end
-=end    
     #----------------------------------------------------------------------------------------
     #
     #----------------------------------------------------------------------------------------
@@ -196,6 +196,56 @@ class Sol
     def self.process_arg(arg)
       (B.eval_obj(arg, "isProxy").isUndefined())?
         JSObject.build(arg) : IRBObject.new(B.eval_obj(arg, "ruby_obj"))
+    end
+    
+  end
+
+  #=======================================================================================
+  #
+  #=======================================================================================
+  
+  class ArrayCallback < Callback
+
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def initialize(ruby_obj)
+      ruby_obj.extend(JSArrayInterface)
+      super(ruby_obj)
+    end
+    
+    #----------------------------------------------------------------------------------------
+    # @return a packed js object
+    #----------------------------------------------------------------------------------------
+
+    def get(index)
+      B.pack(@ruby_obj.send('[]', index))
+    end
+
+  end
+
+  #=======================================================================================
+  #
+  #=======================================================================================
+  
+  class HashCallback < Callback
+
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def initialize(ruby_obj)
+      ruby_obj.extend(InsensitiveHash)
+      super(ruby_obj)
+    end
+    
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def get_key(key)
+      B.pack(@ruby_obj.send('[]', key))
     end
     
   end
