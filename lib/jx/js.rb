@@ -70,7 +70,7 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def initialize(browser)
-      
+
       @browser = browser
 
       # listen for console events

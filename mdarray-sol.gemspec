@@ -24,7 +24,7 @@ EOF
   gem.authors  = ['Rodrigo Botafogo']
   gem.email    = 'rodrigo.a.botafogo@gmail.com'
   gem.homepage = 'http://github.com/rbotafogo/mdarray-sol/wiki'
-  gem.license = 'BSD 2-clause'
+  gem.license = 'BSD-2-Clause'
 
   gem.add_dependency('jrubyfx','~>1.1')
   gem.add_runtime_dependency('mdarray', '~> 0.5')
@@ -33,14 +33,16 @@ EOF
   # gem.add_runtime_dependency('opal', '~> 0.9')
   # gem.add_runtime_dependency('opal-jquery', '~> 0.4')
   
-  gem.add_development_dependency('shoulda')
-  gem.add_development_dependency('simplecov', [">= 0.7.1"])
-  gem.add_development_dependency('yard', [">= 0.8.5.2"])
-  gem.add_development_dependency('kramdown', [">= 1.0.1"])
+  gem.add_development_dependency('shoulda', '~> 3.5')
+  gem.add_development_dependency('simplecov', '~> 0.12')
+  gem.add_development_dependency('yard', '~> 0.9')
+  gem.add_development_dependency('kramdown', '~> 1.13')
 
   # ensure the gem is built out of versioned files
-  gem.files = Dir['Rakefile', 'version.rb', 'config.rb', '{lib,test}/**/*.rb', 'test/**/*.csv',
-                  'test/**/*.xlsx',
+  gem.files = Dir['Rakefile', 'version.rb', 'config.rb', '{lib,util,test,examples}/**/*.rb',
+                  '{lib,node_modules}/**/*.js', 'util/cacert.pem', 'lib/**/*.html',
+                  '{test,examples}/**/*.csv',
+                  '{test,examples}/**/*.xlsx', 
                   '{bin,doc,spec,vendor,target}/**/*', 
                   'README*', 'LICENSE*'] # & `git ls-files -z`.split("\0")
 

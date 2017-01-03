@@ -206,5 +206,3 @@ end
 Dir["#{Sol.target_dir}/*.jar"].each do |jar|
   require jar
 end
-
-Sol::jxBrowser?

@@ -6,3 +6,6 @@ doc
 .yardoc
 src/build/
 *.nc
+vendor/jxbrowser-win-6.8.jar
+*.gem
+*.lock

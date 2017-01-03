@@ -1,30 +1,9 @@
-# require 'opal'
-# require 'opal-jquery'
 require 'rake/testtask'
 
 require_relative 'version'
 require_relative 'config'
 
 name = "#{$gem_name}-#{$version}.gem"
-
-#==========================================================================================
-# For building with Opal
-#==========================================================================================
-
-desc "Build our app to conway.js"
-task :build do
-  # Opal.append_path "lib/app"
-  Opal.append_path File.expand_path('lib/sol_engine', __FILE__)
-  parser = Opal::Parser.new
-  files = Dir['lib/sol_engine/**/*.rb']
-  
-  File.open("lib/mdarray-sol.js", "w+") do |stream|
-    # stream << parser.parse(File.read("lib/sol_engine/mdarray-sol.rb"))
-    files.each do |file|
-      stream << Opal.compile(File.read(file))
-    end
-  end
-end
 
 #==========================================================================================
 # Compiling Java classes
