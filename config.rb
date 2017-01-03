@@ -1,6 +1,5 @@
 require 'rbconfig'
 require 'java'
-require 'net/http'
 
 #
 # In principle should not be in this file.  The right way of doing this is by executing
@@ -13,6 +12,8 @@ begin
   require 'bundler/setup'
 rescue LoadError
 end
+
+require_relative 'util/download.rb'
 
 #---------------------------------------------------------------------------------------
 # Set the project directories
@@ -40,9 +41,17 @@ class Sol
   @js_dir = Sol.home_dir + "/node_modules"
 
   # directory where jxbrowser jar files are stored on the web
-  @jxbrowser_dir = "https://gist.github.com/rbotafogo/8e5425494c08b8db1d7228a1f4a726fe/raw"
-  @jxwin = "fd2d0248522759dd5325b411825df7c2015119e4/jxbrowser-win-6.8.jar"
-  
+  @rbotafogo_gist_dir = "https://gist.github.com/rbotafogo/8e5425494c08b8db1d7228a1f4a726fe/raw"
+  # Windows platform
+  @jx_dir = "902699d3017e6cda80370f9bcb7aba6a331070a8"
+  @jxwin = "jxbrowser-win-6.8.jar"
+  # Linux32 platform
+  @jxlinux32 = "jxbrowser-linux32-6.8.jar"
+  # Linux64 platform
+  @jxlinux64 = "jxbrowser-linux64-6.8.jar"
+  # Mac platform
+  @jxmac = "jxbrowser-mac-6.8.jar"
+
   class << self
     attr_reader :project_dir
     attr_reader :doc_dir
@@ -52,8 +61,12 @@ class Sol
     attr_reader :test_dir
     attr_reader :vendor_dir
     attr_reader :js_dir
-    attr_reader :jxbrowser_dir
+    attr_reader :rbotafogo_gist_dir
+    attr_reader :jx_dir
     attr_reader :jxwin
+    attr_reader :jxlinux32
+    attr_reader :jxlinux64
+    attr_reader :jxmac
   end
 
   @build_dir = Sol.src_dir + "/build"
@@ -122,56 +135,44 @@ class Sol
   def self.mac?
     !(@host_os =~ /mac|darwin/).nil?
   end
-
-  #----------------------------------------------------------------------------------------
-  #
-  #----------------------------------------------------------------------------------------
-
-  def self.http_download_uri(uri, filename)
-    puts "Starting HTTP download for: " + uri.to_s
-    http_object = Net::HTTP.new(uri.host, uri.port)
-    http_object.use_ssl = true if uri.scheme == 'https'
-    begin
-      http_object.start do |http|
-        request = Net::HTTP::Get.new uri.request_uri
-        http.read_timeout = 500
-        http.request request do |response|
-          open filename, 'wb' do |io|
-            response.read_body do |chunk|
-              io.write chunk
-            end
-          end
-        end
-      end
-    rescue Exception => e
-      puts "=> Exception: '#{e}'. Skipping download."
-      return
-    end
-    puts "Stored download as " + filename + "."
-  end
   
   #-------------------------------------------------------------------------------------
   #
   #-------------------------------------------------------------------------------------
 
   def self.jxBrowser?
-    
+
+    ENV['CA_CERT_FILE'] = "#@home_dir/util/cacert.pem"
+
     case @host_os
     when /mswin|mingw/
-      if (!FileTest.exists?("#@vendor_dir/jxbrowser-win-6.8.jar"))
+      if (!FileTest.exists?("#@vendor_dir/#@jxwin"))
         puts "Missing jxBrowser for Windows Platform... "
-        spec = "#@jxbrowser_dir/#@jxwin"
+        spec = "#@rbotafogo_gist_dir/#@jx_dir/#@jxwin"
         puts "Downloading file: #{spec}"
-        uri = URI(spec)
-        http_download_uri(uri, Sol::vendor_dir + "/#@jxwin")
+        Downloader.download_file(spec, "#@vendor_dir/#@jxwin")
       end
     when /linux32/
-
-    # https://gist.github.com/rbotafogo/8e5425494c08b8db1d7228a1f4a726fe/raw/902699d3017e6cda80370f9bcb7aba6a331070a8/jxbrowser-linux32-6.8.jar
-      
+      if (!FileTest.exists?("#@vendor_dir/#@jxlinux32"))
+        puts "Missing jxBrowser for Windows Platform... "
+        spec = "#@rbotafogo_gist_dir/#@jx_dir/#@jxlinux32"
+        puts "Downloading file: #{spec}"
+        Downloader.download_file(spec, "#@vendor_dir/#@jxlinux32")
+      end
     when /linux64/
-
+      if (!FileTest.exists?("#@vendor_dir/#@jxlinux64"))
+        puts "Missing jxBrowser for Windows Platform... "
+        spec = "#@rbotafogo_gist_dir/#@jx_dir/#@jxlinux64"
+        puts "Downloading file: #{spec}"
+        Downloader.download_file(spec, "#@vendor_dir/#@jxlinux64")
+      end
     when /mac|darwin/
+      if (!FileTest.exists?("#@vendor_dir/#@jxmac"))
+        puts "Missing jxBrowser for Windows Platform... "
+        spec = "#@rbotafogo_gist_dir/#@jx_dir/#@jxmac"
+        puts "Downloading file: #{spec}"
+        Downloader.download_file(spec, "#@vendor_dir/#@jxmac")
+      end
 
     end
     
