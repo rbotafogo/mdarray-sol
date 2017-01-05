@@ -21,14 +21,19 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-require 'jrubyfx'
-require 'mdarray'
+#=========================================================================================
+# check to see if jxBrowser is installed and if not download it
+#=========================================================================================
+Sol::jxBrowser?
 
-require_relative '../config'
-require_relative '../init'
+#=========================================================================================
+# Load necessary jar files
+#=========================================================================================
 
-# require_relative 'webview/sol'
-# require_relative 'charts/chart'
+Dir["#{Sol.vendor_dir}/*.jar"].each do |jar|
+  require jar
+end
 
-require_relative 'ruby_rich/ruby_rich'
-require_relative 'mdarray/jsmdarray'
+Dir["#{Sol.target_dir}/*.jar"].each do |jar|
+  require jar
+end

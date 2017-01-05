@@ -1,12 +1,35 @@
+# -*- coding: utf-8 -*-
+
+##########################################################################################
+# @author Rodrigo Botafogo
+#
+# Copyright © 2015 Rodrigo Botafogo. All Rights Reserved. Permission to use, copy, modify, 
+# and distribute this software and its documentation, without fee and without a signed 
+# licensing agreement, is hereby granted, provided that the above copyright notice, this 
+# paragraph and the following two paragraphs appear in all copies, modifications, and 
+# distributions.
+#
+# IN NO EVENT SHALL RODRIGO BOTAFOGO BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT, SPECIAL, 
+# INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS, ARISING OUT OF THE USE OF 
+# THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF RODRIGO BOTAFOGO HAS BEEN ADVISED OF THE 
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# RODRIGO BOTAFOGO SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, 
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE 
+# SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". 
+# RODRIGO BOTAFOGO HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, 
+# OR MODIFICATIONS.
+##########################################################################################
+
 require 'rbconfig'
 require 'java'
 
-#
+#=========================================================================================
 # In principle should not be in this file.  The right way of doing this is by executing
 # bundler exec, but I don't know how to do this from inside emacs.  So, should comment
 # the next line before publishing the GEM.  If not commented, this should be harmless
 # anyway.
-#
+#=========================================================================================
 
 begin
   require 'bundler/setup'
@@ -43,7 +66,8 @@ class Sol
   # directory where jxbrowser jar files are stored on the web
   @rbotafogo_gist_dir = "https://gist.github.com/rbotafogo/8e5425494c08b8db1d7228a1f4a726fe/raw"
   # Windows platform
-  @jx_dir = "902699d3017e6cda80370f9bcb7aba6a331070a8"
+  # @jx_dir = "902699d3017e6cda80370f9bcb7aba6a331070a8"
+  @jx_dir = "0dac333673300a1f0132df9298de807c82372e25"
   @jxwin = "jxbrowser-win-6.8.jar"
   # Linux32 platform
   @jxlinux32 = "jxbrowser-linux32-6.8.jar"
@@ -103,6 +127,7 @@ class Sol
     end
   
   @host_os = RbConfig::CONFIG['host_os']
+  @host_cpu = RbConfig::CONFIG['host_cpu']
 
   #-------------------------------------------------------------------------------------
   #
@@ -117,7 +142,7 @@ class Sol
   #-------------------------------------------------------------------------------------
 
   def self.linux32?
-    !(@host_os =~ /linux32/).nil?
+    (!(@host_os =~ /linux/).nil? && !(@host_cpu =~ /x86_32/).nil?)
   end
 
   #-------------------------------------------------------------------------------------
@@ -125,7 +150,7 @@ class Sol
   #-------------------------------------------------------------------------------------
 
   def self.linux64?
-    !(@host_os =~ /linux64/).nil?
+    (!(@host_os =~ /linux/).nil? && !(@host_cpu =~ /x86_64/).nil?)
   end
 
   #-------------------------------------------------------------------------------------
@@ -144,31 +169,32 @@ class Sol
 
     ENV['CA_CERT_FILE'] = "#@home_dir/util/cacert.pem"
 
-    case @host_os
-    when /mswin|mingw/
+    case true
+    when -> (n) { windows? }
       if (!FileTest.exists?("#@vendor_dir/#@jxwin"))
         puts "Missing jxBrowser for Windows Platform... "
         spec = "#@rbotafogo_gist_dir/#@jx_dir/#@jxwin"
         puts "Downloading file: #{spec}"
         Downloader.download_file(spec, "#@vendor_dir/#@jxwin")
       end
-    when /linux32/
+    when -> (n) { linux32? }
       if (!FileTest.exists?("#@vendor_dir/#@jxlinux32"))
-        puts "Missing jxBrowser for Windows Platform... "
+        puts "Missing jxBrowser for Linux32 Platform... "
         spec = "#@rbotafogo_gist_dir/#@jx_dir/#@jxlinux32"
         puts "Downloading file: #{spec}"
         Downloader.download_file(spec, "#@vendor_dir/#@jxlinux32")
       end
-    when /linux64/
+    when -> (n) { linux64? }
+      p "linux64"
       if (!FileTest.exists?("#@vendor_dir/#@jxlinux64"))
-        puts "Missing jxBrowser for Windows Platform... "
+        puts "Missing jxBrowser for Linux64 Platform... "
         spec = "#@rbotafogo_gist_dir/#@jx_dir/#@jxlinux64"
         puts "Downloading file: #{spec}"
         Downloader.download_file(spec, "#@vendor_dir/#@jxlinux64")
       end
-    when /mac|darwin/
+    when -> (n) { mac? }
       if (!FileTest.exists?("#@vendor_dir/#@jxmac"))
-        puts "Missing jxBrowser for Windows Platform... "
+        puts "Missing jxBrowser for Mac Platform... "
         spec = "#@rbotafogo_gist_dir/#@jx_dir/#@jxmac"
         puts "Downloading file: #{spec}"
         Downloader.download_file(spec, "#@vendor_dir/#@jxmac")
@@ -195,14 +221,3 @@ if $COVERAGE == 'true'
   
 end
 
-##########################################################################################
-# Load necessary jar files
-##########################################################################################
-
-Dir["#{Sol.vendor_dir}/*.jar"].each do |jar|
-  require jar
-end
-
-Dir["#{Sol.target_dir}/*.jar"].each do |jar|
-  require jar
-end

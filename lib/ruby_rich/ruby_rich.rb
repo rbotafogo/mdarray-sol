@@ -45,9 +45,6 @@ class RubyRich < JRubyFX::Application
   #----------------------------------------------------------------------------------------
   
   def start(stage)
-
-    # check to see if jxBrowser is installed and if not download it
-    Sol::jxBrowser?
       
     # Create a Browser and BrowserView and embedd it in FX.  Use the default Browser
     # context.  Also create a javascript class for operating on this browser
