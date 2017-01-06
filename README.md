@@ -16,7 +16,14 @@ for instance, in a Ruby array or hash, is made available directly to the browser
 Since Sol is just a normal Ruby libary, it can be used inside IRB or PRY, without
 the need of installing a web server to serve javascript.  Once mdarray-sol is
 required, an empty browser window is automatically open and any command in the
-command line that adds or removes data from the browser will do so interactively.
+command line that adds or removes data from the browser will do so interactively, for
+instance just copy and paste the following lines into IRB or PRY:
+
+  + body = $d3.select("body")
+  + dataset = [ 25, 7, 5, 26, 11, 8, 25, 14, 23, 19,
+            14, 11, 22, 29, 11, 13, 12, 17, 18, 10,
+            24, 18, 25, 9, 3 ]
+  + body.selectAll('div').data(dataset).enter(nil).append('div').style('display', 'inline-block').style('width', '20px').style('background-color', 'teal').style('margin-right', '2px').style('height') { |d, i| (d * 5).to_s + "px" }.on('mouseout') { $d3.select(@this).style('background-color', 'teal') }.on('mouseover') { $d3.select(@this).style('background-color', 'black') }
 
 This is an initial version that focus on the integration of Ruby with the D3.js library.
 In order to test this integration we have implemented many of the examples of the
