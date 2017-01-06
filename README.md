@@ -11,7 +11,12 @@ it implements a DSL that interfaces with javascript through jxBrowser java inter
 more in line with what is provided by the javascript node-webkit, now called NW.js.
 To the Ruby developer, no javascript is ever required.  Also, since there is no
 compilation there is no need to 'send' data from Ruby to Javascript.  Data in Ruby,
-for instance, in a Ruby array or hash, is made available directly to the browser. 
+for instance, in a Ruby array or hash, is made available directly to the browser.
+
+Since Sol is just a normal Ruby libary, it can be used inside IRB or PRY, without
+the need of installing a web server to serve javascript.  Once mdarray-sol is
+required, an empty browser window is automatically open and any command in the
+command line that adds or removes data from the browser will do so interactively.
 
 This is an initial version that focus on the integration of Ruby with the D3.js library.
 In order to test this integration we have implemented many of the examples of the
@@ -21,7 +26,9 @@ https://github.com/rbotafogo/mdarray-sol/wiki, quite complex behaviour is alread
 possible in this version.
 
 This version was tested on Cygwin, Windows and Linux64.  It has not yet been tested on
-Linux32 nor Mac.  
+Linux32 nor Mac.  Since Sol requires jxBrowser and this is a large download, the
+browser is not included directly into the RubyGem.  However, requiring Sol will check for
+the appropriate version of the browser and automatically download it.  
 
 Bellow is an example of the integration of D3.js with Ruby that plots the US States map:
     
