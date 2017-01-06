@@ -97,6 +97,9 @@ Bellow is an example of the integration of D3.js with Ruby that plots the US Sta
     map.plot($d3.geo.albersUsa[])
 
 
+![US States Map](https://github.com/rbotafogo/mdarray-sol/blob/master/images/Map.JPG)
+
+
 LICENSE
 =======
 
