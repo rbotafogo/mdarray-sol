@@ -21,7 +21,7 @@
 # OR MODIFICATIONS.
 ##########################################################################################
 
-module JSArrayInterface
+module JS2ArrayInterface
 
   def is_instance_of(class_name)
     klass = Object.const_get(class_name)

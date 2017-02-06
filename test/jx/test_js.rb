@@ -39,7 +39,40 @@ class MDArraySolTest < Test::Unit::TestCase
 
     end
 
+#=begin
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
 
+    should "interface with javascript functions by passing blocks" do
+
+      B.eval(<<-EOT)
+        function eat(food1, food2) {
+           console.log("I like to eat " + food1 + " and " + food2 );
+        }
+      EOT
+
+      B.f = B.function(<<-EOF)
+        myFunc(callback) {
+            callback.call(this, "banana", "milk");
+        }
+      EOF
+
+      # B.f("hello")
+      B.f() { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
+                  
+      # Define a function f3 in javascript.  This is  equivalent to the above
+      # B.eval...
+      B.f3 = B.function(<<-EOF)
+        add(x, y) { return x + y; } 
+      EOF
+
+      puts B.f3(4, 5)
+
+    end
+#=end
+    
+#=begin    
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
@@ -238,6 +271,14 @@ class MDArraySolTest < Test::Unit::TestCase
       f5 = B.function("(x, y) { return x - y; }")
       assert_equal(1, f5[5, 4])
       assert_equal(9, f4[5, 4])
+      
+    end
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "create function that accepts a JSObject" do
 
       # Javascript function that receives a JSObject as argument
       f6 = B.function(<<-EOT)
@@ -258,7 +299,7 @@ class MDArraySolTest < Test::Unit::TestCase
 
       # use the B.dup function to duplicate a Ruby array to javascript
       assert_equal("123", f6[B.dup([1, 2, 3])])
-      
+
     end
 
     #--------------------------------------------------------------------------------------
@@ -537,7 +578,7 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal(8, f[3, 5])
       
     end
-
+#=end  
   end
-  
+
 end

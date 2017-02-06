@@ -33,7 +33,7 @@ class Sol
   #   this.make_callback = function(blk) {
   #     return function (...args) { blk.set_this(this); return blk.run("call", ...args); }
   #   }
-  # When this function is called, blk.run is called, which call Callback.run.  In
+  # When this function is called, blk.run is called, which calls Callback.run.  In
   # Callback.run the arguments are converted to ruby arguments.  If the block returns
   # a ruby Object, this Object is packed in a IRBObject.
   ##########################################################################################
@@ -88,20 +88,18 @@ class Sol
     #----------------------------------------------------------------------------------------
     #
     #----------------------------------------------------------------------------------------
-
+=begin
     def is_instance_of(class_name)
+      p "==========================================================================="
+      p class_name
       B.invoke(@jsvalue, @run_func, "is_instance_of", class_name)
     end
-
+=end
     #------------------------------------------------------------------------------------
-    # An IRBObject is called with ruby arguments, so it does not need to call any
-    # process_arguments method as it is proxies a Ruby object
-    # TODO: Might actually need to process_args on the argument since we use invoke
-    # BUG!!!
+    # 
     #------------------------------------------------------------------------------------
 
     def method_missing(symbol, *args, &blk)
-      # B.invoke(@jsvalue, @run_func, symbol, *args)
       @ruby_obj.send(symbol, *args, &blk)
     end
     

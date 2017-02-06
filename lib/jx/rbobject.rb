@@ -34,6 +34,37 @@ class Sol
     attr_reader :native
 
     #------------------------------------------------------------------------------------
+    # Undefine methods so that they are caught by method_missing and send to the
+    # actual object
+    #------------------------------------------------------------------------------------
+
+    undef :instance_variable_defined?
+    undef :instance_variable_get
+    undef :instance_variable_set
+    undef :instance_variables
+    undef :method
+    undef :methods
+    undef :private_methods
+    undef :protected_methods
+    undef :public_method
+    undef :public_methods
+    undef :public_send
+    undef :remove_instance_variable
+    undef :respond_to?
+    undef :respond_to_missing?
+    undef :singleton_methods
+    undef :taint
+    undef :tainted?
+    undef :tap
+    undef :to_enum
+    undef :to_s
+    undef :trust
+    undef :untaint
+    undef :untrust
+    undef :untrusted?    
+    # undef :singleton_method
+
+    #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
 
@@ -57,6 +88,11 @@ class Sol
 
     def method_missing(symbol, *args, &blk)
 
+      p @ruby_obj
+      p symbol
+      p args
+      p blk
+      
       begin
         @ruby_obj.send(symbol, *args, &blk)
       rescue TypeError

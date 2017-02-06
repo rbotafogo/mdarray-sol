@@ -211,7 +211,7 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def initialize(ruby_obj)
-      ruby_obj.extend(JSArrayInterface)
+      ruby_obj.extend(JS2ArrayInterface)
       super(ruby_obj)
     end
     
@@ -236,7 +236,7 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def initialize(ruby_obj)
-      ruby_obj.extend(InsensitiveHash)
+      ruby_obj.extend(JS2HashInterface)
       super(ruby_obj)
     end
     

@@ -39,7 +39,8 @@ EOF
   gem.add_development_dependency('kramdown', '~> 1.13')
 
   # ensure the gem is built out of versioned files
-  gem.files = Dir['Rakefile', 'version.rb', 'config.rb', '{lib,util,test,examples}/**/*.rb',
+  gem.files = Dir['Rakefile', 'version.rb', 'config.rb', 'init.rb',
+                  '{lib,util,test,examples}/**/*.rb',
                   '{lib,node_modules}/**/*.js', 'util/cacert.pem', 'lib/**/*.html',
                   '{test,examples}/**/*.csv',
                   '{test,examples}/**/*.xlsx', 

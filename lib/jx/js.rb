@@ -162,13 +162,12 @@ class Sol
         obj
       when Java::ComTeamdevJxbrowserChromium::JSValue
         JSObject.build(obj)
+      when Object
+        B.obj = Callback.build(obj)
+        RBObject.new(jeval("new RubyProxy(obj)"), obj, true)
       when Proc
         # TODO: Needs to test Proc proxying.  I don´t think the code ever gets here
         blk2func(obj)
-      when Object
-        # B.obj = Callback.new(obj)
-        B.obj = Callback.build(obj)
-        RBObject.new(jeval("new RubyProxy(obj)"), obj, true)
       else
         raise "No method to proxy the given object: #{obj}"
       end
