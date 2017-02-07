@@ -30,7 +30,7 @@ B.load("array_handler.js")
 
 B.identity = Sol::JSObject.build(
   B.browser.executeJavaScriptAndReturnValue(<<-EOT)
-    rr.identity  
+    rr.identity
   EOT
 )
 

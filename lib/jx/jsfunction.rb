@@ -47,19 +47,38 @@ class Sol
     #
     #------------------------------------------------------------------------------------
 
-    def send(*args)
+    def send(*args, &blk)
+
+      # if block is given, then create a javascript function that will call the block
+      # passing the args
+      args.push(B.blk2func(blk)) if blk
+      
       # args need to be processed before invokation converting then to JSObjects
       B.invoke(@scope, @jsvalue, *(B.process_args2(args)))
+      
     end
 
     #------------------------------------------------------------------------------------
     #
     #------------------------------------------------------------------------------------
 
-    def[](*args)
-      send(*args)
+    def[](*args, &blk)
+      send(*args, &blk)
     end
           
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def _(*args, &blk)
+
+      # if block is given, then create a javascript function that will call the block
+      # passing the args
+      # args.push(B.blk2func(blk)) if blk
+      send(*args, &blk)
+      
+    end
+    
     #------------------------------------------------------------------------------------
     # Create a new object using this function as a constructor
     #------------------------------------------------------------------------------------

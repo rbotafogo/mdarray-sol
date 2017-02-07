@@ -40,36 +40,6 @@ class MDArraySolTest < Test::Unit::TestCase
     end
 
 #=begin
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
-
-    should "interface with javascript functions by passing blocks" do
-
-      B.eval(<<-EOT)
-        function eat(food1, food2) {
-           console.log("I like to eat " + food1 + " and " + food2 );
-        }
-      EOT
-
-      B.f = B.function(<<-EOF)
-        myFunc(callback) {
-            callback.call(this, "banana", "milk");
-        }
-      EOF
-
-      # B.f("hello")
-      B.f() { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
-                  
-      # Define a function f3 in javascript.  This is  equivalent to the above
-      # B.eval...
-      B.f3 = B.function(<<-EOF)
-        add(x, y) { return x + y; } 
-      EOF
-
-      puts B.f3(4, 5)
-
-    end
 #=end
     
 #=begin    
@@ -234,6 +204,9 @@ class MDArraySolTest < Test::Unit::TestCase
       # the necessary parameters
       assert_equal(5, f.send(2, 3))
 
+      # Another notation for send is function '_'
+      assert_equal(5, f._(2, 3))
+
       # Access function through '.' Functions f and f2 are defined in the B namespace
       assert_equal(true, B.f2.function?)
       assert_equal(17, B.f(8, 9))
@@ -241,9 +214,15 @@ class MDArraySolTest < Test::Unit::TestCase
       # In order to call a function with no arguments in javascript we need to either
       # use the send method or call with nil as argument
       assert_equal(1, B.f2(nil))
+
+      # Function '_' is especially useful when the function has no parameters, instead
+      # of calling it with 'nil' as parameter we just call '_'.  This notation is
+      # also interesting when passing blocks to the function as will be seen later
+      assert_equal(1, B.f2._)
       
       # Instead of using send, we can also use '[]' to call a javascript function.
-      # This looks more like a function call
+      # This looks more like a function call.  This notation does not allow passing a
+      # block, since B.f2[] { ... } is not valid Ruby syntax
       assert_equal(1, B.f2[])
 
       # Define a function f3 in javascript.  This is  equivalent to the above
@@ -271,6 +250,39 @@ class MDArraySolTest < Test::Unit::TestCase
       f5 = B.function("(x, y) { return x - y; }")
       assert_equal(1, f5[5, 4])
       assert_equal(9, f4[5, 4])
+      
+    end
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "interface with javascript top level functions by passing blocks" do
+
+      f = B.function(<<-EOT)
+        (callback) {
+            callback.call(this, "banana", "milk");
+        }
+      EOT
+
+      # f is an object that represents a function in javascript.  Can be called by
+      # passing method '_'.  SHOULD BE DOCUMENTED ELSEWHERE AND CHECK IF CONSISTENT
+      f._ { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
+      f.send { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
+
+      # The following syntax is not valid in Ruby:
+      # f[] { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
+      
+      B.eval(<<-EOT)
+        var obj = {
+          callback: function(func) { func.call(this, "arroz", "feijao"); }
+          }
+      EOT
+
+      jsobj = B.pull("obj")
+
+      jsobj.callback._ { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
+      jsobj.callback.send { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
       
     end
 
