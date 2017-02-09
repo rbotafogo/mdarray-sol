@@ -104,9 +104,8 @@ class Sol
 
     def method_missing(symbol, *args, &blk)
 
-      # if block is given, then create a javascript function that will call the block
-      # passing the args
-      args.push(B.blk2func(blk)) if (blk)
+      # if block is given, add the block as the last argument of the method
+      args.push(blk) if blk
 
       name = symbol.id2name
 
@@ -116,7 +115,7 @@ class Sol
         assign($1, B.process_args(args)[0])
       elsif (@jsvalue.undefined?)
         raise "Cannot extract property '#{name}' from undefined object"
-      elsif ((member = @jsvalue.getProperty(name)).function? && args.size > 0)
+      elsif ((member = @jsvalue.getProperty(name)).isFunction() && args.size > 0)
         B.invoke(@jsvalue, member, *(B.process_args2(args)))
       else
         # Build a JSObject in the scope of @jsvalue
@@ -133,42 +132,10 @@ class Sol
       false
     end
 
-    def boolean?
-      false
-    end
-
-    def boolean_object?
-      false
-    end
-
     def function?
       false
     end
-
-    def nil?
-      false
-    end
-
-    def number?
-      false
-    end
-
-    def number_object?
-      false
-    end
-    
-    def object?
-      true
-    end
-    
-    def string?
-      false
-    end
-    
-    def string_object?
-     false
-    end
-    
+           
     def undefined?
       false
     end
@@ -177,10 +144,11 @@ class Sol
   
 end
 
-require_relative 'jsfunction'
 require_relative 'jsarray'
-require_relative 'jsstyle_sheet'
+require_relative 'jsfunction'
 require_relative 'jsundefined'
+
+require_relative 'jsstyle_sheet'
 require_relative 'callback'
 
 

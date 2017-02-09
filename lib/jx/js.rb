@@ -140,7 +140,8 @@ class Sol
     end
     
     #------------------------------------------------------------------------------------
-    # return [JSObject || primitive] the given property from the 'window' scope
+    # @param name [String] 
+    # @return [JSObject || primitive] the given property from the 'window' scope
     #------------------------------------------------------------------------------------
 
     def pull(name)
@@ -247,7 +248,8 @@ class Sol
     #------------------------------------------------------------------------------------
 
     def invoke(scope, function, *args)
-      args = nil if (args.size == 1 && args[0].nil?)
+      # args = nil if (args.size == 1 && args[0].nil?)
+      args.shift if args[0].nil?
       proxy(function.invoke(scope, *(args)))
     end
 
@@ -274,8 +276,15 @@ class Sol
     end
 
     #------------------------------------------------------------------------------------
-    # TODO: Something is wrong here!!!!  Need to set B.block, but if we pass the B.block
-    # variable to make_callback, the application crashes.
+    # Creates a Ruby Callback object encapsulating the given block and then generates
+    # a javascript callback function that calls the block.  The reason we need the
+    # javascript function around the Ruby callback is to be able to set the context,
+    # 'this' variable.
+    # We first need to inject the block in jxBrowser and the call javascript
+    # make_callback that will wrap this object.
+    # @param blk [Block] a Ruby Block
+    # @return [JSFunction] a javascript function that sets the 'this' variable and
+    # calls the given block
     #------------------------------------------------------------------------------------
 
     def blk2func(blk)
@@ -289,28 +298,18 @@ class Sol
 
     def method_missing(symbol, *args, &blk)
 
-      # if block is given, then create a javascript function that will call the block
-      # passing the args
-      args.push(blk2func(blk)) if (blk)
-        
       name = symbol.id2name
       name.gsub!(/__/,"$")
 
       if name =~ /(.*)=$/
-        ret = assign_window($1, process_args(args)[0])
+        assign_window($1, process_args(args)[0])
+      elsif (((obj = pull(name)).is_a? Sol::JSObject) && obj.function? && args.size > 0)
+        obj.send(*args, &blk)
       else
-        if (((ret = pull(name)).is_a? Sol::JSObject) && ret.function?)
-          if (args.size > 0)
-            if (args.size == 1 && args[0].nil?)
-              ret = ret.send
-            else
-              ret = ret.send(*args)
-            end
-          end
-        end
+        obj
       end
-      ret
     end
+    
 #=begin    
     #------------------------------------------------------------------------------------
     # Converts Ruby arguments into a javascript objects to run in a javascript
@@ -323,8 +322,6 @@ class Sol
     # @param args [Array] Ruby array with ruby arguments
     # @return args [Array] Ruby array with ruby arguments converted to javascript
     # arguments
-    # TODO: Can an IRBObject end up in a javascript script? If so, will it work fine?
-    # TODO: Make tests that allow Proc/block to be injected into javascript
     #------------------------------------------------------------------------------------
 
     def process_args(args)
@@ -335,13 +332,12 @@ class Sol
           arg
         when Sol::JSObject, Sol::RBObject
           arg.jsvalue
-        when Hash, Array
+        when Hash, Array, Proc
           pack(arg)
+        when Proc
+          blk2func(arg).jsvalue
         when Symbol
           raise "Ruby Symbols are not supported in jxBrowser.  Converting ':#{arg}' not supported."
-        when Proc
-          p "i´m a proc... not implemented yet"
-          arg
         else
           arg
         end
@@ -350,18 +346,15 @@ class Sol
     end
 #=end    
     #------------------------------------------------------------------------------------
-    # Converts Ruby arguments into a javascript objects to run in a javascript
-    # script.  A Sol::JSObject and Sol::RBObject are similar in that they pack a 'native'
-    # object (either java.JSObject or ruby Object).  These objects show up in a ruby
-    # script and when injected in javascript their jsvalue is made available.  An
+    # Converts Ruby arguments into a java objects so that they can be used as parameters
+    # to a java function call.
+    # A Sol::JSObject and Sol::RBObject are similar in that they pack a 'native'
+    # object (either java.JSObject or ruby Object). An
     # IRBObject (Internal Ruby Object) appears when a Ruby Callback is executed and
     # exists for the case that this object transitions between javascript and ends up
     # in a Ruby script.
     # @param args [Array] Ruby array with ruby arguments
-    # @return args [Array] Ruby array with ruby arguments converted to javascript
-    # arguments
-    # TODO: Can an IRBObject end up in a javascript script? If so, will it work fine?
-    # TODO: Make tests that allow Proc/block to be injected into javascript
+    # @return args [Array] Ruby array with ruby arguments converted to java arguments
     #------------------------------------------------------------------------------------
 
     def process_args2(args)
@@ -372,13 +365,12 @@ class Sol
           arg.to_java
         when Sol::JSObject, Sol::RBObject
           arg.jsvalue.to_java
-        when Hash, Array
+        when Hash, Array # , Proc
           pack(arg).to_java
+        when Proc
+          blk2func(arg).jsvalue.to_java
         when Symbol
           raise "Ruby Symbols are not supported in jxBrowser.  Converting ':#{arg}' not supported."
-        when Proc
-          p "i´m a proc... not implemented yet"
-          arg.to_java
         else
           arg.to_java
         end

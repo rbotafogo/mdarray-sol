@@ -39,9 +39,6 @@ class MDArraySolTest < Test::Unit::TestCase
 
     end
 
-#=begin
-#=end
-    
 #=begin    
     #--------------------------------------------------------------------------------------
     #
@@ -212,7 +209,10 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal(17, B.f(8, 9))
       
       # In order to call a function with no arguments in javascript we need to either
-      # use the send method or call with nil as argument
+      # use the send method, the '_' method, the '[]' method, or call with nil
+      # as argument.  If we did not do that, it would not be possible to retrieve the
+      # actual function from javascript as in the example above in which we do
+      # B.f2.function?, since B.f2 would imediately evaluate to 1.
       assert_equal(1, B.f2(nil))
 
       # Function '_' is especially useful when the function has no parameters, instead
@@ -259,19 +259,57 @@ class MDArraySolTest < Test::Unit::TestCase
 
     should "interface with javascript top level functions by passing blocks" do
 
-      f = B.function(<<-EOT)
+      # Create two objects car1 and car2 in order to test that when a method is
+      # called back the 'this' variable is properly set
+      B.eval(<<-EOF)
+        var car1 = {
+          type: "Fiat",
+          model: 500,
+          color: "white",
+        }
+
+        var car2 = {
+          type: "VW",
+          model: 100,
+          color: "blue",
+        }
+
+        p_elmt = function(elmt, comp) {
+           console.log(elmt[comp]);
+        }
+      EOF
+
+      # Function f1 will call the callback method with car1 as the 'this' variable
+      f1 = B.function(<<-EOT)
         (callback) {
-            callback.call(this, "banana", "milk");
+            callback.call(car1, "banana", "milk");
         }
       EOT
 
-      # f is an object that represents a function in javascript.  Can be called by
-      # passing method '_'.  SHOULD BE DOCUMENTED ELSEWHERE AND CHECK IF CONSISTENT
-      f._ { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
-      f.send { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
 
-      # The following syntax is not valid in Ruby:
+      # Function f2 will call the callback method with car2 as the 'this' variable
+      f2 = B.function(<<-EOT)
+        (callback) {
+            callback.call(car2, "arroz", "feijao");
+        }
+      EOT
+
+      # f1 is a Ruby object that represents a top level (document) function in
+      # javascript. In order to call this function we need to use one of the f
+      # methods 'send', '_', '[]'.  However, the last notation cannot be used with
+      # blocks.
+      # Note here that Ruby variable @this is the 'this' variable (context) from javascript
+      f1._ { |food1, food2| B.p_elmt(@this, "type"); puts "eu gosto de #{food1} e #{food2}" }
+      f2.send { |food1, food2| B.p_elmt(@this, "type"); puts "eu gosto de #{food1} e #{food2}" }
+
+      # The @this variable does not appear as a block variable and we do not need to use it
+      f1._ { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
+      f2.send { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
+
+      # The following syntax is not valid in Ruby and will generate a syntax error
       # f[] { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
+      # Also the syntax bellow is an invalid Ruby syntax
+      # f() { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
       
       B.eval(<<-EOT)
         var obj = {
@@ -281,11 +319,36 @@ class MDArraySolTest < Test::Unit::TestCase
 
       jsobj = B.pull("obj")
 
+      # Here jsobj.callback is also a Ruby object representing a javascript
+      # function and it can be called by using the same syntax as above.
+      # However the syntas with '()' and '[]' are valid Ruby syntax and are
+      # thus available to be used.  The latter one, though, does not work with
+      # blocks
       jsobj.callback._ { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
       jsobj.callback.send { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
+      jsobj.callback() { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
       
     end
 
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "interface with javascript functions with multiple function arguments" do
+
+      # Function f1 will call the callback method with car1 as the 'this' variable
+      f1 = B.function(<<-EOT)
+        (cb1, cb2) {
+            cb1.call(this, "banana", "milk");
+            cb2.call(this, "arroz", "feijao");
+        }
+      EOT
+
+      proc = Proc.new { |food1, food2| puts "I hate #{food1} and #{food2}" }
+      f1.send(proc) { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
+      
+    end
+    
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
