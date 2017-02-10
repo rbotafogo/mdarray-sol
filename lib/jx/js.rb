@@ -38,7 +38,8 @@ class Sol
   class Js
     java_import com.teamdev.jxbrowser.chromium.events.ConsoleListener
     java_import com.teamdev.jxbrowser.chromium.JSONString
-    
+    java_import com.teamdev.jxbrowser.chromium.SavePageType
+
     #========================================================================================
     # Class RBListener listen for the Browser console.log messages
     #========================================================================================
@@ -403,6 +404,15 @@ class Sol
       
     end
  
+    #------------------------------------------------------------------------------------
+    #
+    #------------------------------------------------------------------------------------
+
+    def save_page
+      @browser.saveWebPage("T:\\Rodrigo\\complete.html", "T:\\Rodrigo\\Desenv",
+                           Java::ComTeamdevJxbrowserChromium::SavePageType::COMPLETE_HTML)
+    end
+    
     #------------------------------------------------------------------------------------
     # Returns a list of StyleSheet's
     #------------------------------------------------------------------------------------

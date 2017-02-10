@@ -88,6 +88,7 @@ $d3.select(".new_data").on('click') {
 $d3.select(".new_bar").on('click') {
   ex.gen_bar
   bplot.add_bar
+  B.save_page
 }
 
 $d3.select(".del_data").on('click') {

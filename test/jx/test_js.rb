@@ -186,201 +186,6 @@ class MDArraySolTest < Test::Unit::TestCase
     #
     #--------------------------------------------------------------------------------------
 
-    should "interface with functions" do
-
-      # functions f and f2 are defined in the B namespace
-      B.eval(<<-EOT)
-        var f = function sum(x, y) { return x + y; };
-        var f2 = function myFunc() { return 1; } 
-      EOT
-
-      # pulling function 'f' from the B namespace to the Ruby namespace
-      f = B.pull("f")
-      
-      # To call a javascript function we need to call 'send' on the method with
-      # the necessary parameters
-      assert_equal(5, f.send(2, 3))
-
-      # Another notation for send is function '_'
-      assert_equal(5, f._(2, 3))
-
-      # Access function through '.' Functions f and f2 are defined in the B namespace
-      assert_equal(true, B.f2.function?)
-      assert_equal(17, B.f(8, 9))
-      
-      # In order to call a function with no arguments in javascript we need to either
-      # use the send method, the '_' method, the '[]' method, or call with nil
-      # as argument.  If we did not do that, it would not be possible to retrieve the
-      # actual function from javascript as in the example above in which we do
-      # B.f2.function?, since B.f2 would imediately evaluate to 1.
-      assert_equal(1, B.f2(nil))
-
-      # Function '_' is especially useful when the function has no parameters, instead
-      # of calling it with 'nil' as parameter we just call '_'.  This notation is
-      # also interesting when passing blocks to the function as will be seen later
-      assert_equal(1, B.f2._)
-      
-      # Instead of using send, we can also use '[]' to call a javascript function.
-      # This looks more like a function call.  This notation does not allow passing a
-      # block, since B.f2[] { ... } is not valid Ruby syntax
-      assert_equal(1, B.f2[])
-
-      # Define a function f3 in javascript.  This is  equivalent to the above
-      # B.eval...
-      B.f3 = B.function(<<-EOF)
-        add(x, y) { return x + y; } 
-      EOF
-      
-      # use standard notation for method call in the B namespace
-      assert_equal(9, B.f3(4, 5))
-      # or use '[]'
-      assert_equal(9, B.f[4, 5])
-
-      # We can also create a javascript function with the notation bellow. In
-      # this case the function f4 lives in the Ruby namespace.
-      f4 = B.function("(x, y) { return x + y; }")
-      assert_equal(9, f4.send(4, 5))
-      assert_equal(9, f4[4, 5])
-
-      # in the Ruby namespace, standard '()' function call does not work
-      assert_raise (NoMethodError) { f4(4,5) }
-
-      # Just making sure that the creation of a new method does not affect
-      # the previous one.
-      f5 = B.function("(x, y) { return x - y; }")
-      assert_equal(1, f5[5, 4])
-      assert_equal(9, f4[5, 4])
-      
-    end
-
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
-
-    should "interface with javascript top level functions by passing blocks" do
-
-      # Create two objects car1 and car2 in order to test that when a method is
-      # called back the 'this' variable is properly set
-      B.eval(<<-EOF)
-        var car1 = {
-          type: "Fiat",
-          model: 500,
-          color: "white",
-        }
-
-        var car2 = {
-          type: "VW",
-          model: 100,
-          color: "blue",
-        }
-
-        p_elmt = function(elmt, comp) {
-           console.log(elmt[comp]);
-        }
-      EOF
-
-      # Function f1 will call the callback method with car1 as the 'this' variable
-      f1 = B.function(<<-EOT)
-        (callback) {
-            callback.call(car1, "banana", "milk");
-        }
-      EOT
-
-
-      # Function f2 will call the callback method with car2 as the 'this' variable
-      f2 = B.function(<<-EOT)
-        (callback) {
-            callback.call(car2, "arroz", "feijao");
-        }
-      EOT
-
-      # f1 is a Ruby object that represents a top level (document) function in
-      # javascript. In order to call this function we need to use one of the f
-      # methods 'send', '_', '[]'.  However, the last notation cannot be used with
-      # blocks.
-      # Note here that Ruby variable @this is the 'this' variable (context) from javascript
-      f1._ { |food1, food2| B.p_elmt(@this, "type"); puts "eu gosto de #{food1} e #{food2}" }
-      f2.send { |food1, food2| B.p_elmt(@this, "type"); puts "eu gosto de #{food1} e #{food2}" }
-
-      # The @this variable does not appear as a block variable and we do not need to use it
-      f1._ { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
-      f2.send { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
-
-      # The following syntax is not valid in Ruby and will generate a syntax error
-      # f[] { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
-      # Also the syntax bellow is an invalid Ruby syntax
-      # f() { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
-      
-      B.eval(<<-EOT)
-        var obj = {
-          callback: function(func) { func.call(this, "arroz", "feijao"); }
-          }
-      EOT
-
-      jsobj = B.pull("obj")
-
-      # Here jsobj.callback is also a Ruby object representing a javascript
-      # function and it can be called by using the same syntax as above.
-      # However the syntas with '()' and '[]' are valid Ruby syntax and are
-      # thus available to be used.  The latter one, though, does not work with
-      # blocks
-      jsobj.callback._ { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
-      jsobj.callback.send { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
-      jsobj.callback() { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
-      
-    end
-
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
-
-    should "interface with javascript functions with multiple function arguments" do
-
-      # Function f1 will call the callback method with car1 as the 'this' variable
-      f1 = B.function(<<-EOT)
-        (cb1, cb2) {
-            cb1.call(this, "banana", "milk");
-            cb2.call(this, "arroz", "feijao");
-        }
-      EOT
-
-      proc = Proc.new { |food1, food2| puts "I hate #{food1} and #{food2}" }
-      f1.send(proc) { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
-      
-    end
-    
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
-
-    should "create function that accepts a JSObject" do
-
-      # Javascript function that receives a JSObject as argument
-      f6 = B.function(<<-EOT)
-        (x) { text = ""
-                for (i = 0; i < x.length; i++) { 
-                  text += x[i];
-                }
-              return text
-            }
-      EOT
-
-      # add variable 'a' into the B namespace 
-      # B.dup(:a, [1, 2, 3])
-      B.a = B.dup([1, 2, 3])
-
-      # call function f6 passign a JSObject
-      assert_equal("123", f6[B.a])
-
-      # use the B.dup function to duplicate a Ruby array to javascript
-      assert_equal("123", f6[B.dup([1, 2, 3])])
-
-    end
-
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
-
     should "interface with js arrays" do
       
       # cars is a js array
@@ -588,7 +393,8 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal("Volvo", B.cars[1])
       assert_equal("BMW", B.cars[2])
 
-      # A more complex array
+      # A more complex array: each element is a hash.  Note that although this looks
+      # like a javascript array of objects, its a Ruby array of hashes.
       data = [
         {date: "2011-11-14T16:17:54Z", quantity: 2, total: 190, tip: 100, type: "tab"},
         {date: "2011-11-14T16:20:19Z", quantity: 2, total: 190, tip: 100, type: "tab"},
@@ -652,6 +458,220 @@ class MDArraySolTest < Test::Unit::TestCase
       f = jscar.print
       assert_equal(8, f[3, 5])
       
+    end
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "interface with functions" do
+
+      # functions f and f2 are defined in the B namespace
+      B.eval(<<-EOT)
+        var f = function sum(x, y) { return x + y; };
+        var f2 = function myFunc() { return 1; } 
+      EOT
+
+      # pulling function 'f' from the B namespace to the Ruby namespace
+      f = B.pull("f")
+      
+      # To call a javascript function we need to call 'send' on the method with
+      # the necessary parameters
+      assert_equal(5, f.send(2, 3))
+
+      # Another notation for send is function '_'
+      assert_equal(5, f._(2, 3))
+
+      # Access function through '.' Functions f and f2 are defined in the B namespace
+      assert_equal(true, B.f2.function?)
+      assert_equal(17, B.f(8, 9))
+      
+      # In order to call a function with no arguments in javascript we need to either
+      # use the send method, the '_' method, the '[]' method, or call with nil
+      # as argument.  If we did not do that, it would not be possible to retrieve the
+      # actual function from javascript as in the example above in which we do
+      # B.f2.function?, since B.f2 would imediately evaluate to 1.
+      assert_equal(1, B.f2(nil))
+
+      # Function '_' is especially useful when the function has no parameters, instead
+      # of calling it with 'nil' as parameter we just call '_'.  This notation is
+      # also interesting when passing blocks to the function as will be seen later
+      assert_equal(1, B.f2._)
+      
+      # Instead of using send, we can also use '[]' to call a javascript function.
+      # This looks more like a function call.  This notation does not allow passing a
+      # block, since B.f2[] { ... } is not valid Ruby syntax
+      assert_equal(1, B.f2[])
+
+      # Define a function f3 in javascript.  This is  equivalent to the above
+      # B.eval...
+      B.f3 = B.function(<<-EOF)
+        add(x, y) { return x + y; } 
+      EOF
+      
+      # use standard notation for method call in the B namespace
+      assert_equal(9, B.f3(4, 5))
+      # or use '[]'
+      assert_equal(9, B.f[4, 5])
+
+      # We can also create a javascript function with the notation bellow. In
+      # this case the function f4 lives in the Ruby namespace.
+      f4 = B.function("(x, y) { return x + y; }")
+      assert_equal(9, f4.send(4, 5))
+      assert_equal(9, f4[4, 5])
+
+      # in the Ruby namespace, standard '()' function call does not work
+      assert_raise (NoMethodError) { f4(4,5) }
+
+      # Just making sure that the creation of a new method does not affect
+      # the previous one.
+      f5 = B.function("(x, y) { return x - y; }")
+      assert_equal(1, f5[5, 4])
+      assert_equal(9, f4[5, 4])
+      
+    end
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "interface with javascript top level functions by passing blocks" do
+
+      # Create two objects car1 and car2 in order to test that when a method is
+      # called back the 'this' variable is properly set
+      B.eval(<<-EOF)
+        var car1 = {
+          type: "Fiat",
+          model: 500,
+          color: "white",
+        }
+
+        var car2 = {
+          type: "VW",
+          model: 100,
+          color: "blue",
+        }
+
+        p_elmt = function(elmt, comp) {
+           //console.log(elmt[comp]);
+           return elmt[comp];
+        }
+      EOF
+
+      # Function f1 will call the callback method with car1 as the 'this' variable
+      f1 = B.function(<<-EOT)
+        (callback) {
+          return callback.call(car1, "banana", "milk");
+        }
+      EOT
+
+
+      # Function f2 will call the callback method with car2 as the 'this' variable
+      f2 = B.function(<<-EOT)
+        (callback) {
+          return callback.call(car2, "arroz", "feijao");
+        }
+      EOT
+
+      # f1 is a Ruby object that represents a top level (document) function in
+      # javascript. In order to call this function we need to use one of the f
+      # methods 'send', '_', '[]'.  However, the last notation cannot be used with
+      # blocks.
+      # Note here that Ruby variable @this is the 'this' variable (context) from javascript
+      assert_equal("Fiat, banana, milk",
+                   f1._ { |food1, food2|
+                     B.p_elmt(@this, "type") + ", #{food1}, #{food2}" })
+      assert_equal("VW, arroz, feijao", 
+                   f2.send { |food1, food2|
+                     B.p_elmt(@this, "type") + ", #{food1}, #{food2}" })
+
+      # The @this variable does not appear as a block variable and we do not need to use it
+      assert_equal("eu gosto de banana e milk",
+                   f1._ { |food1, food2| "eu gosto de #{food1} e #{food2}" })
+
+      assert_equal("eu gosto de arroz e feijao",
+                   f2.send { |food1, food2| "eu gosto de #{food1} e #{food2}" })
+
+      # The following syntax is not valid in Ruby and will generate a syntax error
+      # f[] { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
+      # Also the syntax bellow is an invalid Ruby syntax
+      # f() { |food1, food2| puts "eu gosto de #{food1} e #{food2}" }
+      
+      B.eval(<<-EOT)
+        var obj = {
+          callback: function(func) { return func.call(this, "arroz", "feijao"); }
+          }
+      EOT
+
+      jsobj = B.pull("obj")
+
+      # Here jsobj.callback is also a Ruby object representing a javascript
+      # function and it can be called by using the same syntax as above.
+      # However the syntas with '()' and '[]' are valid Ruby syntax and are
+      # thus available to be used.  The latter one, though, does not work with
+      # blocks
+      assert_equal("eu gosto de arroz e feijao",
+                   jsobj.callback._ { |food1, food2| "eu gosto de #{food1} e #{food2}" })
+      assert_equal("eu gosto de arroz e feijao",
+                   jsobj.callback.send { |food1, food2| "eu gosto de #{food1} e #{food2}" })
+      assert_equal("eu gosto de arroz e feijao",
+                   jsobj.callback(nil) { |food1, food2| "eu gosto de #{food1} e #{food2}" })
+      # Note here that we call call the callback method without 'nil' since the block
+      # after the method already indicates that this is a function call.
+      assert_equal("eu gosto de arroz e feijao",
+                   jsobj.callback() { |food1, food2| "eu gosto de #{food1} e #{food2}" })
+      # We can even remove the parenthesys since this has to be a function call
+      assert_equal("eu gosto de arroz e feijao",
+                   jsobj.callback { |food1, food2| "eu gosto de #{food1} e #{food2}" })
+      
+    end
+
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "interface with javascript functions with multiple function arguments" do
+
+      # Function f1 will call the callback method with car1 as the 'this' variable
+      f1 = B.function(<<-EOT)
+        (cb1, cb2) {
+          return cb1.call(this, "banana", "milk") + "; " + 
+                 cb2.call(this, "arroz", "feijao");
+        }
+      EOT
+
+      proc = Proc.new { |food1, food2| "I hate #{food1} and #{food2}" }
+      assert_equal("I hate banana and milk; eu gosto de arroz e feijao",
+                   f1.send(proc) { |food1, food2| "eu gosto de #{food1} e #{food2}" })
+      
+    end
+    
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "create function that accepts a JSObject" do
+
+      # Javascript function that receives a JSObject as argument
+      f6 = B.function(<<-EOT)
+        (x) { text = ""
+                for (i = 0; i < x.length; i++) { 
+                  text += x[i];
+                }
+              return text
+            }
+      EOT
+
+      # add variable 'a' into the B namespace 
+      # B.dup(:a, [1, 2, 3])
+      B.a = B.dup([1, 2, 3])
+
+      # call function f6 passign a JSObject
+      assert_equal("123", f6[B.a])
+
+      # use the B.dup function to duplicate a Ruby array to javascript
+      assert_equal("123", f6[B.dup([1, 2, 3])])
+
     end
 #=end  
   end

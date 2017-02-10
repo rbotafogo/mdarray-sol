@@ -70,18 +70,22 @@ class BarChart
 
     @svg.selectAll("rect")
       .data(@dataset) { |d| d[:key] }
-      .enter(nil)
+      .enter._ # note (1)
       .append("rect")
       .on("mouseover") { $d3.select(@this).attr("fill", "orange") }
       .on("mouseout") { |d| $d3.select(@this)
-                          .transition(nil)
+                          .transition(nil) # note (2)
                           .duration(500)
                           .attr("fill", "rgb(0, 0, #{(d[:value] * 10).to_i})" )} 
       .attr("x") { |d, i| x_scale[i]}
       .attr("y") { |d, i| height - y_scale[d[:value]] }
-      .attr("width", x_scale.scale.rangeBand(nil))
+      .attr("width", x_scale.scale.rangeBand[]) # note (3)
       .attr("height") { |d, i| y_scale[d[:value]] }
       .attr("fill") { |d, i| "rgb(0, 0, #{(d[:value] * 10).to_i})" }
+
+    # note (1): calling the 'enter' function with '_' notation
+    # note (2): calling the 'transition' function with '(nil)' notation
+    # note (3): calling the 'rangeBand' function with the '[]' notation
 
   end
 
