@@ -42,14 +42,75 @@ class MDArraySolTest < Test::Unit::TestCase
     #--------------------------------------------------------------------------------------
     #
     #--------------------------------------------------------------------------------------
+
+#=begin
+    should "proxy a ruby arrays" do
+
+      a1 = [1, 2, 3]
+
+      B.p1 = B.proxy(a1)
+
+      B.eval(<<-EOT)
+        var assert = chai.assert;
+
+        // val is a proxied Ruby object
+        var val = p1.map(function(x) { return x; });
+
+        // val can be inspected by calling method to_s()
+        assert.equal('[1.0, 2.0, 3.0]', val.to_s());
+
+        // Note that each_with_index is a Ruby array method that accepts a block.
+        // Here we pass a javascript function in place of a block.
+        var cumSum = 0;
+        p1.each_with_index(function(x, i) {
+          if (i % 2 == 0) {
+            cumSum = cumSum + x;
+          }
+        });
+        assert.equal(4, cumSum);
+        
+      EOT
+
+    end
+#=end
     
+#=begin
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
+    should "proxy nested ruby arrays" do
+      
+      a3 = [[1, 2], [3, 4], [5, 6, [7, [8, 9]]]]
+      
+      B.p3 = B.proxy(a3)
+
+      B.eval(<<-EOT)
+        var assert = chai.assert;
+        
+        var val = p3.map(function(x) { return x; });
+        assert.equal(1, val[0][0]);
+        assert.equal(3, val[1][0]);
+        assert.equal(6, val[2][1]);
+        assert.equal(7, val[2][2][0]);
+        assert.equal(9, val[2][2][1][1]);
+
+      EOT
+
+    end
+#=end    
+#=begin    
+    #--------------------------------------------------------------------------------------
+    #
+    #--------------------------------------------------------------------------------------
+
     should "proxy flat ruby array" do
 
       a1 = [1, 2, 3]
       a2 = [4, 5]
       
-      # p1 and p2 are proxy elements for arrays a1 and a2.  They will work as array
-      # in ruby
+      # p1 and p2 are proxy elements for arrays a1 and a2.  They will work as ruby arrays
+      # in javascript
       p1 = B.proxy(a1)
       p2 = B.proxy(a2)
 
@@ -63,9 +124,9 @@ class MDArraySolTest < Test::Unit::TestCase
       assert_equal(4, p1.fetch(3))
       assert_equal("ooops", p1.fetch(100, "ooops"))
 
-      # ... and each
-      puts "should print values from 1 to 5 as ruby output"
-      p1.each { |d| p d }
+      # ... and the each family of methods
+      val = p1.map { |d| d}
+      assert_equal([1, 2, 3, 4, 5], val)
 
       # Now lets see p1 and p2 in javascript
       B.p1, B.p2 = p1, p2
@@ -84,39 +145,6 @@ class MDArraySolTest < Test::Unit::TestCase
 
       EOT
 
-    end
-
-    #--------------------------------------------------------------------------------------
-    #
-    #--------------------------------------------------------------------------------------
-
-    should "proxy nested ruby arrays" do
-
-      a1 = [1, 2, 3]
-      a3 = [[1, 2], [3, 4], [5, 6, [7, [8, 9]]]]
-
-      B.p1 = B.proxy(a1)
-      B.p3 = B.proxy(a3)
-
-      B.eval(<<-EOT)
-        var assert = chai.assert;
-
-        // access each element of the array and call to_s on them.  Note that calling
-        // to_s requires '()', otherwise a function is returned
-        console.log("should print the array elements of: [[1, 2], [3, 4], [5, 6, [7, [8, 9]]]]");
-        p3.each(function(x) { console.log(x.to_s()); })      
-                
-      EOT
-
-      # Note that inspect with 'p' shows IRBObjects
-      puts "This is an inspection of the array.  Note that there are Sol::IRBObject"
-      puts "Sol::IRBObjects are ruby objects packaged for use in javascript"
-      p a1
-
-      # ... but puts makes the elements look like normal array elements
-      puts "But a normal puts will show the array as a normal array"
-      puts a1
-      
     end
     
     #--------------------------------------------------------------------------------------
@@ -233,7 +261,7 @@ class MDArraySolTest < Test::Unit::TestCase
       EOT
       
     end
-
+#=end
   end
-
+  
 end

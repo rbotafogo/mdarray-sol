@@ -175,7 +175,7 @@ class Sol
       end
       
     end
-    
+
     #----------------------------------------------------------------------------------------
     # Pack a ruby object for use inside a javascript script.  A packed ruby object is
     # identical to a proxy object exect by the return value that is a java.JSValue and not
@@ -333,7 +333,7 @@ class Sol
           arg
         when Sol::JSObject, Sol::RBObject
           arg.jsvalue
-        when Hash, Array, Proc
+        when Hash, Array
           pack(arg)
         when Proc
           blk2func(arg).jsvalue

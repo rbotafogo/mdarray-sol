@@ -27,5 +27,5 @@ module JS2ArrayInterface
     klass = Object.const_get(class_name)
     instance_of? klass
   end
-  
+
 end

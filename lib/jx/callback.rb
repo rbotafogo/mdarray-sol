@@ -53,6 +53,8 @@ class Sol
         HashCallback.new(ruby_obj)
       when Array
         ArrayCallback.new(ruby_obj)
+      when Proc
+        ProcCallback.new(ruby_obj)
       else
         Callback.new(ruby_obj)
       end
@@ -99,10 +101,11 @@ class Sol
     #----------------------------------------------------------------------------------------
 
     def run(*args)
-      
+
       # first argument is the 'method' name 
       method = args.shift
-      
+
+      blok = nil
       # try to convert last argument to block if it is a String.  If fails to convert
       # the String to a block, then leave the string untouched as the last argument.
       if ((last = args[-1]).is_a? String)
@@ -118,13 +121,9 @@ class Sol
       # convert all remaining arguments to Ruby 
       params = Callback.process_args(args)
 
-      case @ruby_obj
-      when Proc
-        B.pack(instance_exec(*params, &(@ruby_obj)))
-      else
-        B.pack(@ruby_obj.send(method, *params, &blok))
-      end
-      
+      # call the method with the given arguments
+      B.pack(@ruby_obj.send(method, *params, &blok))
+
     end
     
     #----------------------------------------------------------------------------------------
@@ -246,6 +245,26 @@ class Sol
 
     def get_key(key)
       B.pack(@ruby_obj.send('[]', key))
+    end
+    
+  end
+  
+  #=======================================================================================
+  #
+  #=======================================================================================
+  
+  class ProcCallback < Callback
+
+    def run(*args)
+
+      # first argument is the 'method' name 
+      method = args.shift
+      
+      # convert all remaining arguments to Ruby 
+      params = Callback.process_args(args)
+
+      B.pack(instance_exec(*params, &(@ruby_obj)))
+
     end
     
   end
