@@ -53,8 +53,8 @@ class Sol
       # passing the args
       args.push(blk) if blk
       
-      # args need to be processed before invokation converting then to JSObjects
-      B.invoke(@scope, @jsvalue, *(B.process_args2(args)))
+      # args need to be processed before invokation converting then to java objects
+      B.invoke(@scope, @jsvalue, *(B.ruby2java(args)))
       
     end
 

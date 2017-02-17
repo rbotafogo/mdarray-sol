@@ -110,13 +110,13 @@ class Sol
       name = symbol.id2name
 
       if name == "[]="
-        assign(*(B.process_args(args)))
+        assign(*(B.ruby2js(args)))
       elsif name =~ /(.*)=$/
-        assign($1, B.process_args(args)[0])
+        assign($1, B.ruby2js(args)[0])
       elsif (@jsvalue.undefined?)
         raise "Cannot extract property '#{name}' from undefined object"
       elsif ((member = @jsvalue.getProperty(name)).isFunction() && args.size > 0)
-        B.invoke(@jsvalue, member, *(B.process_args2(args)))
+        B.invoke(@jsvalue, member, *(B.ruby2java(args)))
       else
         # Build a JSObject in the scope of @jsvalue
         JSObject.build(member, @jsvalue)        

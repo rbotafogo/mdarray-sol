@@ -119,7 +119,7 @@ class Sol
       end
 
       # convert all remaining arguments to Ruby 
-      params = Callback.process_args(args)
+      params = Callback.js2ruby(args)
 
       # call the method with the given arguments
       B.pack(@ruby_obj.send(method, *params, &blok))
@@ -161,7 +161,7 @@ class Sol
     # arguments to be given to @ruby_obj.
     #------------------------------------------------------------------------------------
 
-    def self.process_args(args)
+    def self.js2ruby(args)
 
       collect = []
 
@@ -261,7 +261,7 @@ class Sol
       method = args.shift
       
       # convert all remaining arguments to Ruby 
-      params = Callback.process_args(args)
+      params = Callback.js2ruby(args)
 
       B.pack(instance_exec(*params, &(@ruby_obj)))
 

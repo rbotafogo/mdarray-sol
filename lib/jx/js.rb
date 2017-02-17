@@ -303,7 +303,7 @@ class Sol
       name.gsub!(/__/,"$")
 
       if name =~ /(.*)=$/
-        assign_window($1, process_args(args)[0])
+        assign_window($1, ruby2js(args)[0])
       elsif (((obj = pull(name)).is_a? Sol::JSObject) && obj.function? && args.size > 0)
         obj.send(*args, &blk)
       else
@@ -311,7 +311,6 @@ class Sol
       end
     end
     
-#=begin    
     #------------------------------------------------------------------------------------
     # Converts Ruby arguments into a javascript objects to run in a javascript
     # script.  A Sol::JSObject and Sol::RBObject are similar in that they pack a 'native'
@@ -325,7 +324,7 @@ class Sol
     # arguments
     #------------------------------------------------------------------------------------
 
-    def process_args(args)
+    def ruby2js(args)
 
       args.map do |arg|
         case arg
@@ -345,7 +344,7 @@ class Sol
       end
       
     end
-#=end    
+
     #------------------------------------------------------------------------------------
     # Converts Ruby arguments into a java objects so that they can be used as parameters
     # to a java function call.
@@ -358,7 +357,7 @@ class Sol
     # @return args [Array] Ruby array with ruby arguments converted to java arguments
     #------------------------------------------------------------------------------------
 
-    def process_args2(args)
+    def ruby2java(args)
 
       args.map do |arg|
         case arg
