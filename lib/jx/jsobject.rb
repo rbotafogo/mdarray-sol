@@ -52,7 +52,11 @@ class Sol
       elsif (jsvalue.isFunction())
         JSFunction.new(jsvalue.asFunction(), scope)
       elsif (jsvalue.isObject())
-        JSObject.new(jsvalue, scope)
+        # check to see if the object is a proxied object. If it is then return the
+        # ruby_obj otherwise, wrap the object in a JSObject
+        B.assign_window("test", jsvalue)
+        (B.jeval("test.isProxy").isUndefined())?
+          JSObject.new(jsvalue, scope) : B.jeval("test.ruby_obj").asJavaObject().ruby_obj        
       elsif (jsvalue.isUndefined())
         JSUndefined.new(jsvalue, scope)
       elsif (jsvalue.is_a? Java::ComTeamdevJxbrowserChromium::am)

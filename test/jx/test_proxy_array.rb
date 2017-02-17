@@ -48,7 +48,7 @@ class MDArraySolTest < Test::Unit::TestCase
 
       a1 = [1, 2, 3]
 
-      B.p1 = B.proxy(a1)
+      B.p1 = a1
 
       B.eval(<<-EOT)
         var assert = chai.assert;
@@ -71,6 +71,11 @@ class MDArraySolTest < Test::Unit::TestCase
         
       EOT
 
+      # extracts back the B.p1 variable.  It will be a ruby object
+      b1 = B.p1
+      assert_equal(2, b1[1])
+
+
     end
 #=end
     
@@ -83,7 +88,7 @@ class MDArraySolTest < Test::Unit::TestCase
       
       a3 = [[1, 2], [3, 4], [5, 6, [7, [8, 9]]]]
       
-      B.p3 = B.proxy(a3)
+      B.p3 = a3
 
       B.eval(<<-EOT)
         var assert = chai.assert;
@@ -109,30 +114,15 @@ class MDArraySolTest < Test::Unit::TestCase
       a1 = [1, 2, 3]
       a2 = [4, 5]
       
-      # p1 and p2 are proxy elements for arrays a1 and a2.  They will work as ruby arrays
-      # in javascript
-      p1 = B.proxy(a1)
-      p2 = B.proxy(a2)
+      B.p1 = a1
+      B.p2 = a2
 
-      assert_equal(1, p1[0])
-      assert_equal(5, p2[1])
-
-      # call method concat
-      assert_equal([1, 2, 3, 4, 5], p1.concat(p2))
-
-      # ... and method fetch
-      assert_equal(4, p1.fetch(3))
-      assert_equal("ooops", p1.fetch(100, "ooops"))
-
-      # ... and the each family of methods
-      val = p1.map { |d| d}
-      assert_equal([1, 2, 3, 4, 5], val)
-
-      # Now lets see p1 and p2 in javascript
-      B.p1, B.p2 = p1, p2
-      
       B.eval(<<-EOT)
         var assert = chai.assert;
+
+        // use ruby method concat
+        p1.concat(p2);
+
         // Check that proxied arrays share the same data as the original ruby arrays
         assert.equal(2, p1[1]);
         assert.equal(5, p1[4]);
@@ -156,7 +146,7 @@ class MDArraySolTest < Test::Unit::TestCase
       a1 = [{name: "John", "age" => 25}, {name: "Mary", "age" => 30},
             {name: "Paul", "age" => 18}, {name: "Anton", "age" => 45}]
 
-      B.data = B.proxy(a1)
+      B.data = a1
 
       B.eval(<<-EOT)
         var assert = chai.assert;
@@ -193,7 +183,7 @@ class MDArraySolTest < Test::Unit::TestCase
       a1 = [1, 2, 3]
 
       # B.p1 is a javascript object that proxies the a1 ruby array
-      B.p1 = B.proxy(a1)
+      B.p1 = a1
 
       assert_equal(1, B.p1[0])
 
@@ -218,7 +208,7 @@ class MDArraySolTest < Test::Unit::TestCase
 
       a1 = [1, 2, 3, 4, 5]
 
-      B.p1 = B.proxy(a1)
+      B.p1 = a1
       
       B.eval(<<-EOT)
 
@@ -243,8 +233,8 @@ class MDArraySolTest < Test::Unit::TestCase
       
       # p1 and p2 are proxy elements for arrays a1 and a2.  They will work as array
       # in ruby
-      B.p1 = B.proxy(a1)
-      B.p2 = B.proxy(a2)
+      B.p1 = a1
+      B.p2 = a2
       
       B.eval(<<-EOT)
         var assert = chai.assert;

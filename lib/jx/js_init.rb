@@ -42,6 +42,12 @@ B.instanceOf = Sol::JSObject.build(
 
 B.freeze
 
+$d3 = B.pull("d3")
+$dc = B.pull("dc")
+
+$d3.freeze
+$dc.freeze
+
 module ObjectExtension
 
   def extend_by_name(obj, module_name)
@@ -50,13 +56,3 @@ module ObjectExtension
   end
   
 end
-
-$robject = B.proxy(Object.new)
-$robject.extend(ObjectExtension)
-B.robject = $robject
-
-$d3 = B.pull("d3")
-$dc = B.pull("dc")
-
-$d3.freeze
-$dc.freeze

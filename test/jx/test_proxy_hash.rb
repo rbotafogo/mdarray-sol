@@ -53,8 +53,8 @@ class MDArraySolTest < Test::Unit::TestCase
       b = {"x"=> 100, "y"=> 200, "c"=> 300, d: 400}
       
       # Ruby hash proxies javascript 'data'
-      B.data = B.proxy(a)
-      B.d2 = B.proxy(b)
+      B.data = a
+      B.d2 = b
       
       B.eval(<<-EOT)
 
@@ -95,7 +95,7 @@ class MDArraySolTest < Test::Unit::TestCase
       # instead of B.pack(hh).  Method pack return a java object and not a Ruby object.
       # This is ok here since the value is 'injected' into javascript.  Method proxy
       # return a Ruby object.  Using proxy is less efficient than pack.
-      B.hh = B.pack(hh)
+      B.hh = hh
       
       # Retrieve the value of a key.  Keys in Javascript cannot be symbol, they have to
       # be strings.  Sol automatically converts strings to symbols and vice-versa.
@@ -112,7 +112,8 @@ class MDArraySolTest < Test::Unit::TestCase
 
       # Not however that we cannot add a Symbol as key when going through a javascript
       # variable (hh in B)
-      assert_raise (RuntimeError) { B.hh[:d] = 4 }
+      # assert_raise (RuntimeError) { B.hh[:d] = 4 }
+      p B.hh
 
       # But, of course, we can still add symbols directly in the Ruby hash.  Doing this
       # way is more efficient than going through javascript.

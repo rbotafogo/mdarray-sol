@@ -25,7 +25,6 @@ require 'benchmark'
 
 require 'json'
 require_relative 'jsobject'
-require_relative 'rbobject'
 require_relative 'irbobject'
 
 class Sol
@@ -150,62 +149,10 @@ class Sol
     end
 
     #------------------------------------------------------------------------------------
-    # Proxies a ruby object into a javascript object.  The javascript object captures
-    # all method calls and forwads them to a packed ruby object, by calling method 'run'
-    # on this packed object
-    # @param obj [Object] The ruby object to be proxied
-    # @return [JSObject || RBObject]
-    #------------------------------------------------------------------------------------
-
-    def proxy(obj)
-
-      case obj
-      when TrueClass, FalseClass, Numeric, String, NilClass
-        obj
-      when Java::ComTeamdevJxbrowserChromium::JSValue
-        JSObject.build(obj)
-      when Object
-        B.obj = Callback.build(obj)
-        RBObject.new(jeval("new RubyProxy(obj)"), obj, true)
-      when Proc
-        # TODO: Needs to test Proc proxying.  I don´t think the code ever gets here
-        blk2func(obj)
-      else
-        raise "No method to proxy the given object: #{obj}"
-      end
-      
-    end
-
-    #----------------------------------------------------------------------------------------
-    # Pack a ruby object for use inside a javascript script.  A packed ruby object is
-    # identical to a proxy object exect by the return value that is a java.JSValue and not
-    # a Sol::xxx object.
-    # @param obj [Object] The ruby object to be packed
-    # @return [java.JSObject] A java.JSObject that that implements the 'run' interface
-    #----------------------------------------------------------------------------------------
-
-    def pack(obj)
-
-      case obj
-      when TrueClass, FalseClass, Numeric, String, NilClass,
-           Java::ComTeamdevJxbrowserChromium::JSValue
-        obj
-      when Proc
-        blk2func(obj).jsvalue
-      when Object
-        B.obj = Callback.build(obj)
-        jeval("new RubyProxy(obj)")
-      else
-        raise "No method to pack the given object: #{obj}"
-      end
-      
-    end
-
-    #------------------------------------------------------------------------------------
     # Evaluates the javascript script synchronously and then proxies the result in a
-    # Ruby JSObject or RBObject
+    # Ruby JSObject or native ruby object
     # @param scrpt [String] a javascript script to be executed synchronously
-    # @return [JSObject || RBObject] a JSObject or one of its subclasses
+    # @return [JSObject || native Ruby object] a JSObject or an Object
     #------------------------------------------------------------------------------------
 
     def eval(scrpt)
@@ -313,9 +260,7 @@ class Sol
     
     #------------------------------------------------------------------------------------
     # Converts Ruby arguments into a javascript objects to run in a javascript
-    # script.  A Sol::JSObject and Sol::RBObject are similar in that they pack a 'native'
-    # object (either java.JSObject or ruby Object).  These objects show up in a ruby
-    # script and when injected in javascript their jsvalue is made available.  An
+    # script.  An
     # IRBObject (Internal Ruby Object) appears when a Ruby Callback is executed and
     # exists for the case that this object transitions between javascript and ends up
     # in a Ruby script.
@@ -328,18 +273,20 @@ class Sol
 
       args.map do |arg|
         case arg
-        when Sol::IRBObject # Sol::Callback
+        when TrueClass, FalseClass, Numeric, String, NilClass, Callback
           arg
-        when Sol::JSObject, Sol::RBObject
+        when Sol::IRBObject
+          arg
+        when Sol::JSObject
           arg.jsvalue
-        when Hash, Array
-          pack(arg)
         when Proc
           blk2func(arg).jsvalue
         when Symbol
           raise "Ruby Symbols are not supported in jxBrowser.  Converting ':#{arg}' not supported."
+        when Object
+          pack(arg)
         else
-          arg
+          raise "This is not a proper argument #{arg}.  Did you use 'proxy' or 'pack'?"
         end
       end
       
@@ -348,8 +295,7 @@ class Sol
     #------------------------------------------------------------------------------------
     # Converts Ruby arguments into a java objects so that they can be used as parameters
     # to a java function call.
-    # A Sol::JSObject and Sol::RBObject are similar in that they pack a 'native'
-    # object (either java.JSObject or ruby Object). An
+    # An
     # IRBObject (Internal Ruby Object) appears when a Ruby Callback is executed and
     # exists for the case that this object transitions between javascript and ends up
     # in a Ruby script.
@@ -361,11 +307,13 @@ class Sol
 
       args.map do |arg|
         case arg
+        when TrueClass, FalseClass, Numeric, String, NilClass, Callback
+          arg.to_java
         when Sol::IRBObject
           arg.to_java
-        when Sol::JSObject, Sol::RBObject
+        when Sol::JSObject
           arg.jsvalue.to_java
-        when Hash, Array # , Proc
+        when Array, Hash
           pack(arg).to_java
         when Proc
           blk2func(arg).jsvalue.to_java
@@ -423,6 +371,39 @@ class Sol
       CSSStyleSheets.new
     end
     
+    #----------------------------------------------------------------------------------------
+    # Pack a ruby object for use inside a javascript script.  A packed ruby object is
+    # identical to a proxy object exect by the return value that is a java.JSValue and not
+    # a Sol::xxx object.
+    # @param obj [Object] The ruby object to be packed
+    # @return [java.JSObject] A java.JSObject that that implements the 'run' interface
+    #----------------------------------------------------------------------------------------
+
+    def pack(obj)
+
+      case obj
+      when TrueClass, FalseClass, Numeric, String, NilClass,
+           Java::ComTeamdevJxbrowserChromium::JSValue
+        obj
+      when Proc
+        blk2func(obj).jsvalue
+      when Object
+        B.obj = Callback.build(obj)
+        jeval("new RubyProxy(obj)")
+      else
+        raise "No method to pack the given object: #{obj}"
+      end
+      
+    end
+
+    #------------------------------------------------------------------------------------
+    # Assign the data to the given named window property
+    #------------------------------------------------------------------------------------
+
+    def assign_window(property_name, data)
+      window.setProperty(property_name, data)
+    end
+
     #------------------------------------------------------------------------------------
     # Private methods
     #------------------------------------------------------------------------------------
@@ -430,11 +411,27 @@ class Sol
     private
     
     #------------------------------------------------------------------------------------
-    # Assign the data to the given named window property
+    # Proxies a ruby object into a javascript object.  The javascript object captures
+    # all method calls and forwads them to a packed ruby object, by calling method 'run'
+    # on this packed object
+    # @param obj [Object] The ruby object to be proxied
+    # @return [JSObject]
     #------------------------------------------------------------------------------------
 
-    def assign_window(property_name, data)
-      window.setProperty(property_name, data)
+    def proxy(obj)
+
+      case obj
+      when TrueClass, FalseClass, Numeric, String, NilClass
+        obj
+      when Java::ComTeamdevJxbrowserChromium::JSValue
+        JSObject.build(obj)
+      when Proc
+        # TODO: Needs to test Proc proxying.  I don´t think the code ever gets here
+        blk2func(obj)
+      else
+        raise "No method to proxy the given object: #{obj}"
+      end
+      
     end
         
   end
